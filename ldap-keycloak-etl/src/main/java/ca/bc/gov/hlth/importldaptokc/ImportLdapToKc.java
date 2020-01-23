@@ -34,34 +34,48 @@ import javax.naming.ldap.LdapContext;
 public class ImportLdapToKc {
     
     private static String kcAccessToken;
-
-    public static void main(String[] args) throws NamingException, IOException, InterruptedException {
+    private static String ldapUrl;
+    private static String ldapCredentials; 
+    private static String objectClass;
+    private static String userAttribute;
+    private static String kcClientName;
+    private static String kcAdminUser;
+    private static String kcAdminPass;
+    private static String kcBaseUrl;
+    private static String kcRealmName;
+    
+    public static void main(String[] args) throws NamingException, InterruptedException, IOException {
         
+        loadProperties();
+        kcAccessToken = getKcAccessToken();
+       
+        importFromLdapToKcAndCreateRoles();
+    }
+    
+    private static void loadProperties() throws IOException {
         Properties configProperties = new Properties();
         InputStream inputStream = ImportLdapToKc.class.getResourceAsStream("/configuration.properties");
         configProperties.load(inputStream);
         
-        String kc_admin_user = configProperties.getProperty("kc_admin_user");
-        String kc_admin_pass = configProperties.getProperty("kc_admin_pass");
-        kcAccessToken = getKcAccessToken(kc_admin_user, kc_admin_pass);
-       
-        importFromLdapToKcAndCreateRoles(configProperties);
+        ldapUrl = configProperties.getProperty("ldap_url");
+        ldapCredentials = configProperties.getProperty("ldap_credentials"); 
+        objectClass = configProperties.getProperty("object_class");
+        userAttribute = configProperties.getProperty("user_attribute");
+        kcClientName = configProperties.getProperty("kc_client");
+        kcAdminUser = configProperties.getProperty("kc_admin_user");
+        kcAdminPass = configProperties.getProperty("kc_admin_pass");
+        kcBaseUrl = configProperties.getProperty("kc_base_url");
+        kcRealmName = configProperties.getProperty("kc_realm_name");
     }
     
     
-    private static void importFromLdapToKcAndCreateRoles(Properties configProperties) throws IOException, InterruptedException, NamingException {
+    private static void importFromLdapToKcAndCreateRoles() throws IOException, InterruptedException, NamingException {
         
         //Get the LDAP Users and Their roles for the configured application
-        String ldapUrl = configProperties.getProperty("ldap_url");
-        String ldapCredentials = configProperties.getProperty("ldap_credentials");
-        String objectClass = configProperties.getProperty("object_class");
-        String userAttribute = configProperties.getProperty("user_attribute");
-        
         HashMap<String, String> ldapUsersAndRoles = queryLdapUsersAndRoles(ldapUrl, ldapCredentials, objectClass, userAttribute);
         Set<String> ldapRoles = new HashSet<>(ldapUsersAndRoles.values()); 
         
         //Get the KC Client ID
-        String kcClientName = configProperties.getProperty("kc_client");
         String kcClientId = queryKcClientId(kcClientName);
         
         //Add the Roles to the KC Client
@@ -137,7 +151,7 @@ public class ImportLdapToKc {
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/admin/realms/moh-users-realm/clients/" + clientId + "/roles"))
+                .uri(URI.create(kcBaseUrl + "auth/admin/realms/"+kcRealmName+"/clients/" + clientId + "/roles"))
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .GET()
                 .build();
@@ -159,7 +173,7 @@ public class ImportLdapToKc {
 
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/admin/realms/moh-users-realm/clients?viewableOnly=true"))
+                .uri(URI.create(kcBaseUrl + "auth/admin/realms/"+kcRealmName+"/clients?viewableOnly=true"))
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .GET()
                 .build();
@@ -182,7 +196,7 @@ public class ImportLdapToKc {
         
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/admin/realms/moh-users-realm/clients/" + clientId + "/roles"))
+                .uri(URI.create(kcBaseUrl + "auth/admin/realms/"+kcRealmName+"/clients/" + clientId + "/roles"))
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
@@ -201,7 +215,7 @@ public class ImportLdapToKc {
         
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/admin/realms/moh-users-realm/users?username=" + username))
+                .uri(URI.create(kcBaseUrl + "auth/admin/realms/"+kcRealmName+"/users?username=" + username))
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .GET()
                 .build();
@@ -225,7 +239,7 @@ public class ImportLdapToKc {
     
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/admin/realms/moh-users-realm/users/" + userId + "/role-mappings/clients/" + clientId))
+                .uri(URI.create(kcBaseUrl + "auth/admin/realms/"+kcRealmName+"/users/" + userId + "/role-mappings/clients/" + clientId))
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
@@ -245,10 +259,10 @@ public class ImportLdapToKc {
     
     //TODO Paramaterize admin credentials
     //Retrieve a keycloak access token
-    private static String getKcAccessToken(String kcAdminUser, String kcAdminPass) throws IOException, InterruptedException {
+    private static String getKcAccessToken() throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8180/auth/realms/master/protocol/openid-connect/token"))
+                .uri(URI.create(kcBaseUrl + "auth/realms/master/protocol/openid-connect/token"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("cache-control", "no-cache")
