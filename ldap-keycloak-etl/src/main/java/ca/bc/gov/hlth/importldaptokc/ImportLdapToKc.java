@@ -1,7 +1,15 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package ca.bc.gov.hlth.importldaptokc;
 
@@ -58,14 +66,23 @@ public class ImportLdapToKc {
         configProperties.load(inputStream);
         
         ldapUrl = configProperties.getProperty("ldap_url");
+        mandatory(ldapUrl);
         ldapCredentials = configProperties.getProperty("ldap_credentials"); 
+        mandatory(ldapCredentials);
         objectClass = configProperties.getProperty("object_class");
+        mandatory(objectClass);
         userAttribute = configProperties.getProperty("user_attribute");
+        mandatory(userAttribute);
         kcClientName = configProperties.getProperty("kc_client");
+        mandatory(kcClientName);
         kcAdminUser = configProperties.getProperty("kc_admin_user");
+        mandatory(kcAdminUser);
         kcAdminPass = configProperties.getProperty("kc_admin_pass");
+        mandatory(kcAdminPass);
         kcBaseUrl = configProperties.getProperty("kc_base_url");
+        mandatory(kcBaseUrl);
         kcRealmName = configProperties.getProperty("kc_realm_name");
+        mandatory(kcRealmName);
     }
     
     
@@ -274,4 +291,10 @@ public class ImportLdapToKc {
         
         return access_token;
     }
+
+  private static void mandatory(String value) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException(String.format("Value is mandatory but was '%s'.", value));
+    }
+  }
 }
