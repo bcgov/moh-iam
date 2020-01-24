@@ -115,6 +115,7 @@ public class ImportLdapToKc {
         }       
     }
     
+    
     //Retrieve the list of users and associated role from LDAP that map to the input object class and attribute
     private static HashMap<String, String> queryLdapUsersAndRoles(String serverUrl, String password, String objectClass, String attributeName) throws NamingException {
         Hashtable env = new Hashtable(11);
@@ -147,8 +148,7 @@ public class ImportLdapToKc {
             if (namingEnum != null) {
                 namingEnum.close();
             }
-        }
-        
+        }       
         return usersAndRoles;      
     }
     
@@ -250,8 +250,7 @@ public class ImportLdapToKc {
         return kcUser;
     }
     
-    
-    //TODO accept role and username and client id as parameters
+
     private static void addRolesToKcUser(String clientId, String userId, String role, String roleId) throws IOException, InterruptedException {
     
         HttpClient httpClient = HttpClient.newHttpClient();
@@ -273,8 +272,7 @@ public class ImportLdapToKc {
         }                   
     }
     
-    
-    //TODO Paramaterize admin credentials
+
     //Retrieve a keycloak access token
     private static String getKcAccessToken() throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
