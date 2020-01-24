@@ -29,7 +29,7 @@ import javax.naming.ldap.LdapContext;
 /**
  * This program queries an LDAP server for users.
  */
-public class LdapUserProvider {
+class LdapUserProvider {
 
     private final String ldapUrl;
     private final String ldapCredentials;

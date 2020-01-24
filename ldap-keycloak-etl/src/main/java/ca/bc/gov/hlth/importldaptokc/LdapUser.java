@@ -13,22 +13,22 @@
  */
 package ca.bc.gov.hlth.importldaptokc;
 
-public class LdapUser {
-    
+class LdapUser {
+
     private final String username;
     private final String role;
 
-    public LdapUser(String username, String role) {
+    LdapUser(String username, String role) {
         this.username = username;
         this.role = role;
     }
 
-    public String getUsername() {
+    String getUsername() {
         return username;
     }
 
-    public String getRole() {
+    String getRole() {
         return role;
     }
-    
+
 }

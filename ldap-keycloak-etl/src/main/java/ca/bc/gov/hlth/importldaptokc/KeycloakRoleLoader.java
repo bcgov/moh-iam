@@ -31,7 +31,7 @@ import javax.naming.NamingException;
  * This program accepts a list of LDAP users, adds their roles to a Keycloak
  * client, and assigns the roles to Keycloak users.
  */
-public class KeycloakRoleLoader {
+class KeycloakRoleLoader {
 
     private final String kcClientName;
     private final String kcAdminUser;
@@ -152,8 +152,8 @@ public class KeycloakRoleLoader {
                 .header("Authorization", "Bearer " + kcAccessToken)
                 .GET()
                 .build();
-        HttpResponse<String> response2 = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        String body = response2.body();
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        String body = response.body();
 
         JsonArray userList = JsonParser.parseString(body).getAsJsonArray();
 
