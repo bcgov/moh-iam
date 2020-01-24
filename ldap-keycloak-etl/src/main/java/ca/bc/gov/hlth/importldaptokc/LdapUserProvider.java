@@ -81,10 +81,10 @@ public class LdapUserProvider {
     }
 
     // Set the search Controls for LDAP Query
-    private static SearchControls getSimpleSearchControls() {
+    private SearchControls getSimpleSearchControls() {
         SearchControls searchControls = new SearchControls();
         searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        searchControls.setReturningAttributes(new String[]{"uid", "fmdbuserrole"});
+        searchControls.setReturningAttributes(new String[]{"uid", userAttribute});
         searchControls.setTimeLimit(30000);
         return searchControls;
     }
