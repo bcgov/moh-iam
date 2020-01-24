@@ -33,7 +33,7 @@ import javax.naming.NamingException;
  * <li>Add roles to Keycloak users.</li>
  * </ol>
  */
-public class ImportLdapToKc {
+public class Main {
 
     private static String configPath;
     
@@ -50,7 +50,7 @@ public class ImportLdapToKc {
     private static LdapUserProvider ldap;
     private static KeycloakRoleLoader keycloak;
 
-    private static final Logger LOG = Logger.getLogger(ImportLdapToKc.class.getName());
+    private static final Logger LOG = Logger.getLogger(Main.class.getName());
     
     public static void main(String[] args) throws NamingException, InterruptedException, IOException {
         if (args != null && args.length != 0) {
@@ -71,7 +71,7 @@ public class ImportLdapToKc {
         if (file.exists()) {
             inputStream = new FileInputStream(file);
         } else {
-            inputStream = ImportLdapToKc.class.getResourceAsStream(configPath);
+            inputStream = Main.class.getResourceAsStream(configPath);
         }
         Objects.requireNonNull(inputStream, String.format("Configuration file not found at '%s'.", configPath));
 

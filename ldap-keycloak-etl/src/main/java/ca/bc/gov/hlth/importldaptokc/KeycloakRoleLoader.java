@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import javax.naming.NamingException;
 
 /**
- * This program accepts a list of LDAP users, add their roles to a Keycloak
+ * This program accepts a list of LDAP users, adds their roles to a Keycloak
  * client, and assigns the roles to Keycloak users.
  */
 public class KeycloakRoleLoader {
