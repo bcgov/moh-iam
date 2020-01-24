@@ -23,3 +23,19 @@
 hs_err_pid*
 ldap-keycloak-etl/nb-configuration.xml
 ldap-keycloak-etl/target/*
+
+# Created by https://www.gitignore.io/api/netbeans
+# Edit at https://www.gitignore.io/?templates=netbeans
+
+### NetBeans ###
+**/nbproject/private/
+**/nbproject/Makefile-*.mk
+**/nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+nbactions.xml
+
+# End of https://www.gitignore.io/api/netbeans
