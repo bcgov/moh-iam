@@ -23,7 +23,7 @@ Steps:
 
 Keycloak provides [LDAP Mappers](https://www.keycloak.org/docs/latest/server_admin/#_ldap_mappers) out-of-the-box, but unfortunately these could be not be used because the MoH LDAP schema stores roles in an unconventional way. A conventional LDAP schema stores roles in a group, and membership is specified with a `member` attribute on the role. The MoH LDAP does not store roles, instead each user specifies their role as a text attribute.
 
-For example, a conventional schema specifies roles like this (taken from an [Keycloak example LDIF](https://github.com/keycloak/keycloak/blob/master/examples/ldap/ldap-example-users.ldif)):
+For example, a conventional schema specifies roles like this (taken from a [Keycloak example LDIF](https://github.com/keycloak/keycloak/blob/master/examples/ldap/ldap-example-users.ldif)):
 ```
 dn: cn=ldap-user,ou=RealmRoles,dc=keycloak,dc=org
 objectclass: top
