@@ -4,42 +4,6 @@
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
-    
-    <security-constraint>
-        <display-name>Login</display-name>
-        <web-resource-collection>
-            <web-resource-name>AdminAccess</web-resource-name>
-            <url-pattern>/faces/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>ECOGen</role-name>
-            <role-name>ECOStaff</role-name>
-            <role-name>PSDSTAFF</role-name>
-            <role-name>PSDGEN</role-name>
-            <role-name>PSDADMIN</role-name>
-        </auth-constraint>
-    </security-constraint>
-    
-    <security-role>  
-        <description/>
-        <role-name>ECOGen</role-name>
-    </security-role>
-    <security-role>  
-        <description/>
-        <role-name>ECOStaff</role-name>
-    </security-role>
-    <security-role>  
-        <description/>
-        <role-name>PSDSTAFF</role-name>
-    </security-role>
-    <security-role>  
-        <description/>
-        <role-name>PSDGEN</role-name>
-    </security-role>
-    <security-role>  
-        <description/>
-        <role-name>PSDADMIN</role-name>
-    </security-role>
 
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
