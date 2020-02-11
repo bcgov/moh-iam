@@ -14,6 +14,7 @@ import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
         // clientId: See Clients for the clientId
         clientId = "KeycloakIntegrationExample",
         // clientSecret: See Clients > [Your Client] > Credentials tab
+        // In this example we use a Payara password alias.
         clientSecret = "${ALIAS=keycloak-client-secret}",
         // redirectUri: This must be an application page, but it must also be a
         // "valid redirect URI", see Clients > [Your Client] > Valid Redirect
