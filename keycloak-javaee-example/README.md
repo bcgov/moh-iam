@@ -13,7 +13,7 @@ This example shows how to add the Payara OpenID Connect adapter to an applicatio
 
 # How to deploy
 
-After the prequisites are met, simply run `mvn package` and deploy the resulting WAR file.
+After the prequisites are met, run `mvn package` and deploy the resulting WAR file to Payara.
 
 # Overview
 
