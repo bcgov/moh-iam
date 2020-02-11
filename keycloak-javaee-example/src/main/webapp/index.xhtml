@@ -3,10 +3,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html">
     <h:head>
-        <title>Facelet Title</title>
+        <title>Public Page</title>
     </h:head>
     <h:body>
-        Hello from Facelets
+        <p>
+            This is a public page.
+        </p>
+        <p>
+            <h:outputText rendered="#{!request.isUserInRole('ADMIN')}" value="You are not logged in as an ADMIN user."/>
+            <h:outputText rendered="#{request.isUserInRole('ADMIN')}" value="You are logged in as an ADMIN user."/>
+        </p>
+        <p>
+            <h:link outcome="secure.xhtml">Access a secure page.</h:link>
+        </p>
     </h:body>
 </html>
 

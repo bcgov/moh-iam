@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * This is an example <em>unsecured</em> HTTP resource to be used as a OpenID
+ * This is an example unsecured HTTP resource to be used as an OpenID
  * Connect redirect_uri, as configured on your OpenID Provider (e.g. Keycloak)
  * and in the adapter, in this case {@link KeycloakSecurityBean}.
  *
