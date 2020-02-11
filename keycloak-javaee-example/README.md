@@ -3,13 +3,7 @@ This example shows how to add the Payara OpenID Connect adapter to an applicatio
 # Prerequisites
 
 1. Keycloak needs to be installed and running somewhere.
-2. An application "Client" needs to be configured in Keycloak, as [described in the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Jakarta-EE-application-deployed-to-Payara-with-Keycloak). Note that the wiki configures a Client with FMDB-specific Client values, but this example expects different values, so if you actually intend to deploy this example you must change either Keycloak or the example to match each other:
-    * providerURI: http://localhost:8081/auth/realms/moh-users-realm/
-    * Client ID: `KeycloakIntegrationExample`
-    * clientSecret: Add a Payara password alias named `keycloak-client-secret`
-    * Valid Redirect URIs: https://localhost:8181/keycloak-javaee-example/callback
-    * callerGroupsClaim: `groups`
-    * Client role mapping: This example uses a role named `ADMIN`
+2. An application "Client" needs to be configured in Keycloak, as [described in the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Jakarta-EE-application-deployed-to-Payara-with-Keycloak).
 
 # How to deploy
 
