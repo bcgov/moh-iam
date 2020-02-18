@@ -65,7 +65,7 @@
             </div>
         </#if>
 		<script>
-			if (getParameterByName('idps_to_show').includes('keycloak-oidc')) { document.getElementById('zocial-keycloak-oidc').style.display = 'block' }
+			if (getParameterByName('idps_to_show').includes('moh-idp')) { document.getElementById('zocial-moh-idp').style.display = 'block' }
 		</script>
       </div>
     <#elseif section = "info" >
