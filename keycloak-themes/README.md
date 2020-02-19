@@ -23,7 +23,8 @@ In order to add the themes to a Keycloak installation:
 * copy the root directory of a theme to the themes directory in the keycloak installation.
 * restart Keycloak
 
-The theme will be available for selection under Realm Settings -> Themes -> Login Theme and/or Client -> Client Name -> Settings -> Login Theme
+The theme will be available for selection in the Keycloak Admin Console under:
+Realm Settings -> Themes -> Login Theme and/or Client -> Client Name -> Settings -> Login Theme
 
 # Tested on
 * Keycloak 8.0.1
