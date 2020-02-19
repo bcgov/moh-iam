@@ -8,7 +8,7 @@ The top level heading (Ministry of Health) is set by the Realm Display Name whic
 
 The second level heading (application name) is pulled from the Client ID
 
-The list of identity providers is dynamically configured by setting url query parameters. By default no IDP's will show in the list. In order to show an IDP the client application should include `idps_to_show=idp-alias` as a query parameter in the user browser redirect to Keycloak.
+The list of identity providers is dynamically configured by setting url query parameters. By default no IDP's will show in the list. In order to show an IDP the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated if idp-alias names as values. Alternatively the client application can include `idps_to_show=all` to show all IDPs (Note that this is not recommended as it may inadvertantly and without warning show new IDPs for the client application if a new provider is added to Keycloak).
 
 ## moh-idp
 This theme serves as a login page for the moh_idp realm.  
