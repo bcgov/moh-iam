@@ -56,16 +56,27 @@
         <#if realm.password && social.providers??>
             <div id="kc-social-providers" class="${properties.kcFormSocialAccountContentClass!} ${properties.kcFormSocialAccountClass!}">
                 <ul class="${properties.kcFormSocialAccountListClass!} <#if social.providers?size gt 4>${properties.kcFormSocialAccountDoubleListClass!}</#if>">
-                    <#list social.providers as p>			
-						
-							<li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: none" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
-
+                    <#list social.providers as p>	
+						<#-- by default all identity providers are hidden -->
+						<li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: none" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
                     </#list>
                 </ul>
             </div>
         </#if>
+		<#-- this script checks the 'idps_to_show' query parameter and shows all idps if 'all' is found
+			 or else shows any idps whose aliases are listed -->
 		<script>
-			if (getParameterByName('idps_to_show').includes('moh-idp')) { document.getElementById('zocial-moh-idp').style.display = 'block' }
+			var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
+			var idp;
+			if (getParameterByName('idps_to_show').toLowerCase().includes('all')) {
+				for (idp of idProviders) {
+					document.getElementById('zocial-' + idp).style.display = 'block';
+				}
+			} else {
+				for (idp of idProviders) {
+					if (getParameterByName('idps_to_show').toLowerCase().includes(idp.toLowerCase())) { document.getElementById('zocial-' + idp).style.display = 'block' }
+				}			
+			}
 		</script>
       </div>
     <#elseif section = "info" >
