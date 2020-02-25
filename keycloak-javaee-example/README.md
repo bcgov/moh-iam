@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bcgov/moh-iam.svg?branch=master)](https://travis-ci.org/bcgov/moh-iam)
+
 This example shows how to add the Payara OpenID Connect adapter to an application. This example is a part of the guide [How to secure a Jakarta EE application deployed to Payara with Keycloak](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Jakarta-EE-application-deployed-to-Payara-with-Keycloak).
 
 # Prerequisites
