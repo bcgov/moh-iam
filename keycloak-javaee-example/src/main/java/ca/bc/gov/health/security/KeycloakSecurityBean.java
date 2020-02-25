@@ -10,7 +10,7 @@ import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
         // All configuration properties can be found on the Keycloak Admin Console        
         // providerUri: See Clients > [Your Client] > Installation > [Any Format] 
         // to get the base auth-server-url, then append /realms/[your-realm]/
-        providerURI = "http://localhost:8081/auth/realms/moh-users-realm/",
+        providerURI = "https://localhost:8543/auth/realms/moh-users-realm/",
         // clientId: See Clients for the clientId
         clientId = "KeycloakIntegrationExample",
         // clientSecret: See Clients > [Your Client] > Credentials tab
@@ -24,7 +24,14 @@ import fish.payara.security.annotations.OpenIdAuthenticationDefinition;
         scope = {"openid"},
         // Value must match the "User Client Role" mapper specified in Clients >
         // [Your Client] > Mappers > [the User Client Role mapper].
-        claimsDefinition = @ClaimsDefinition(callerGroupsClaim = "groups")
+        claimsDefinition = @ClaimsDefinition(callerGroupsClaim = "groups"),
+        //Extra parameters added to the request url in the user browser
+        //Examples:
+        //Keycloak specific: kc_idp_hint - directs users to a specific idp login
+        //MoH Keycloak specific: idps_to_show - defines the list of idps to show on the common logon page
+        extraParameters = {
+            "idps_to_show=all"
+        }
 )
 public class KeycloakSecurityBean {
     /*
