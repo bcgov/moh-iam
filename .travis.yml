@@ -1,0 +1,2 @@
+language: java
+script: cd keycloak-javaee-example && mvn test -B
