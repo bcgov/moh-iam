@@ -1,0 +1,16 @@
+{
+  "name": "drupal/mohkeycloak",
+  "description": "Extends the Keycloak module to provide role mapping.",
+  "type": "drupal-module",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/keycloak",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/keycloak",
+    "source": "http://cgit.drupalcode.org/keycloak"
+  },
+  "require": {
+      "drupal/openid_connect": "^1.0"
+  }
+}

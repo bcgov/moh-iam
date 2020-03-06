@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Keycloak module.
+ */
+
+function mohkeycloak_openid_connect_post_authorize(array $tokens, $account, array $userinfo, $plugin_id) {
+  $logger = \Drupal::logger('mohkeycloak');
+
+  $logger->error('sssssssssssssssssssssssssssss');
+  $logger->error('userinf2 ' . print_r($userinfo, true));
+
+  $keycloak_roles = $userinfo['groups'];
+
+  $logger->error('roles from Keycloak ' . print_r($keycloak_roles, true));
+
+  $user_roles = $account->getRoles();
+  $logger->error('current roles: ' . print_r($user_roles, true));
+  $all_roles = \Drupal\user\Entity\Role::loadMultiple();
+  $logger->error('all roles: ' . print_r($all_roles, true));
+
+//  foreach ($user_roles as $user_role) {
+//    if ($user_role->isAdmin()) {
+//      $logger->error('This role is ADMIN:' . $user_role);
+//    } else {
+//      $logger->error('This role is not ADMIN:' . $user_role);
+//    }
+//  }
+
+  foreach ($keycloak_roles as $keycloak_role) {
+    $matchFound = false;
+    foreach ($all_roles as $role) {
+      if ($keycloak_role == $role->label()) {
+        $logger->error('Keycloak roles matches Drupal role: ' . $keycloak_role);
+        $matchFound = true;
+
+        if (!in_array($role->id(), $user_roles)) {
+          $account->addRole($role->id());
+          $account->save();
+          $logger->error('Added role to user: ' . $keycloak_role);
+        }
+      }
+    }
+    if (!$matchFound) {
+      $logger->error('No match for Keycloak role: ' . $keycloak_role);
+    }
+  }
+}

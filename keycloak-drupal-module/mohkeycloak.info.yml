@@ -1,0 +1,8 @@
+name: MoH Keycloak Integration
+description: Enables OpenID Connect Keycloak sign on and user data syncronization.
+type: module
+package: Other
+core: '8.x'
+
+dependencies:
+  - openid_connect

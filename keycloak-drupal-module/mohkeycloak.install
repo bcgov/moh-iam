@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall and update hooks of the keycloak module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function mohkeycloak_uninstall() {
+  // Remove configuration.
+  Drupal::configFactory()->getEditable('openid_connect.settings.mohkeycloak')->delete();
+}

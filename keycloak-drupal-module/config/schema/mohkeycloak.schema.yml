@@ -1,0 +1,71 @@
+# Schema for the configuration files of the OpenID Connect module.
+
+# David Sharpe notes:
+#
+# I'm not sure exactly what this file does. I thought it might be required to store
+# configuration in the database, but even with an empty file the configuration is
+# properly stored.
+#
+# According to the Drupal documentation, it serves a number of purposes (including
+# specifying config types: string, boolean...), but I don't want to investigate it
+# further right now.
+#
+# If we do want to include this file, I suspect we could just copy the Keycloak one
+# ("keycloak.schema.yml") and add any additional attributes (e.g. "role_mapping").
+
+# Schema for the configuration files of the OpenID Connect module.
+mohkeycloak.settings.mohkeycloak:
+  type: config_object
+  label: 'OpenID Connect Keycloak settings'
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enable client'
+    settings:
+      type: mapping
+      mapping:
+        client_id:
+          type: string
+          label: 'Client ID'
+        client_secret:
+          type: string
+          label: 'Client secret'
+        keycloak_base:
+          type: string
+          label: 'Keycloak base URL'
+        keycloak_realm:
+          type: string
+          label: 'Keycloak realm'
+        authorization_endpoint_kc:
+          type: string
+          label: 'Authorization endpoint'
+        token_endpoint_kc:
+          type: string
+          label: 'Token endpoint'
+        userinfo_endpoint_kc:
+          type: string
+          label: 'Userinfo endpoint'
+        sign_out_endpoint_kc:
+          type: 'string'
+          label: 'End session endpoint'
+        check_session_iframe_kc:
+          type: 'string'
+          label: 'Check session IFRAME target'
+        keycloak_i18n:
+          type: boolean
+          label: 'Enable multilanguage support'
+        keycloak_i18n_mapping:
+          type: sequence
+          label: 'Language mapping'
+          sequence:
+            type: mapping
+            mapping:
+              langcode:
+                type: string
+                label: 'Drupal language code'
+              target:
+                type: string
+                label: 'Keycloak language code'
+        role_mapping:
+          type: string
+          label: 'Role mapping'
