@@ -7,8 +7,14 @@
     </h:head>
     <h:body>
         <p>
-        This is a secure page.
+            This is a secure page.
         </p>
+        <h:form>
+            <h:commandLink action="#{LogoutBean.logout()}"
+                           title="Sign Out" onclick="return confirm('Do you really want to exit this service?')">
+                Sign out
+            </h:commandLink>
+        </h:form>
     </h:body>
 </html>
 
