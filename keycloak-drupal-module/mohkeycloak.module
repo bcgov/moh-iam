@@ -1,49 +1,68 @@
 <?php
 
+use Drupal\user\Entity\Role;
+use Drupal\user\UserInterface;
+
 /**
  * @file
  * Keycloak module.
  */
 
-function mohkeycloak_openid_connect_post_authorize(array $tokens, $account, array $userinfo, $plugin_id) {
+function mohkeycloak_openid_connect_post_authorize(array $tokens, UserInterface $account, array $userinfo, $plugin_id)
+{
+  $logger = \Drupal::logger('mohkeycloak');
+  $logger->debug('mohkeycloak_openid_connect_post_authorize');
+  $logger->debug('userinfo ' . print_r($userinfo, true));
+
+  removeExistingRoles($account);
+
+  addRoles($account, $userinfo);
+}
+
+/**
+ * Remove all existing roles from the given user, except for the
+ * administrator role.
+ *
+ * @param UserInterface $account
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function removeExistingRoles(UserInterface $account)
+{
+  $user_roles = $account->getRoles();
+  foreach ($user_roles as $user_role) {
+    if (!Role::load($user_role)->isAdmin()) {
+      $account->removeRole($user_role);
+    }
+  }
+  $account->save();
+}
+
+/**
+ * Add all roles in $userinfo to the given user.
+ *
+ * @param UserInterface $account
+ * @param array $userinfo contains user roles.
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function addRoles(UserInterface $account, array $userinfo)
+{
   $logger = \Drupal::logger('mohkeycloak');
 
-  $logger->error('sssssssssssssssssssssssssssss');
-  $logger->error('userinf2 ' . print_r($userinfo, true));
+  $role_attribute = \Drupal::config("openid_connect.settings.mohkeycloak")->get('settings.role_mapping');
 
-  $keycloak_roles = $userinfo['groups'];
-
-  $logger->error('roles from Keycloak ' . print_r($keycloak_roles, true));
-
-  $user_roles = $account->getRoles();
-  $logger->error('current roles: ' . print_r($user_roles, true));
-  $all_roles = \Drupal\user\Entity\Role::loadMultiple();
-  $logger->error('all roles: ' . print_r($all_roles, true));
-
-//  foreach ($user_roles as $user_role) {
-//    if ($user_role->isAdmin()) {
-//      $logger->error('This role is ADMIN:' . $user_role);
-//    } else {
-//      $logger->error('This role is not ADMIN:' . $user_role);
-//    }
-//  }
-
-  foreach ($keycloak_roles as $keycloak_role) {
-    $matchFound = false;
-    foreach ($all_roles as $role) {
-      if ($keycloak_role == $role->label()) {
-        $logger->error('Keycloak roles matches Drupal role: ' . $keycloak_role);
-        $matchFound = true;
-
-        if (!in_array($role->id(), $user_roles)) {
+  if (array_key_exists($role_attribute, $userinfo)) {
+    $keycloak_roles = $userinfo[$role_attribute];
+    $all_roles = Role::loadMultiple();
+    foreach ($keycloak_roles as $keycloak_role) {
+      foreach ($all_roles as $role) {
+        if ($keycloak_role == $role->label()) {
           $account->addRole($role->id());
-          $account->save();
-          $logger->error('Added role to user: ' . $keycloak_role);
+          $logger->debug('Added role to user: ' . $keycloak_role);
         }
       }
     }
-    if (!$matchFound) {
-      $logger->error('No match for Keycloak role: ' . $keycloak_role);
-    }
+    $account->save();
+  } else {
+    $logger->debug('userinfo did not contain the expected roles attribute:' . $role_attribute);
   }
 }

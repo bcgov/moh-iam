@@ -145,8 +145,8 @@ class MohKeycloak extends OpenIDConnectClientBase {
     ];
 
     $form['role_mapping'] = [
-      '#title' => $this->t('Role mapping attribute'),
-      '#description' => $this->t('Defines the name of the role claim and maps the role supplied by Keycloak to the user\'s role in Drupal.'),
+      '#title' => $this->t('Role attribute name'),
+      '#description' => $this->t('Token claim name for the User Client Role.'),
       '#type' => 'textfield',
       '#default_value' => $this->configuration['role_mapping'],
     ];
