@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bcgov/moh-iam.svg?branch=master)](https://travis-ci.org/bcgov/moh-iam)
+
 # LDAP to Keycloak ETL Tool
 
 This command line Java application is designed to work with the MoH LDAP and a Keycloak realm that has been synced with the LDAP. It takes all of the existing user roles for a single application in LDAP (defined by objectClass) and creates them for that same application (defined by client) in KeyCloak. It will then also add the role to same users that had the role in LDAP. User matching is done by matching LDAP uid to Keycloak username. 
