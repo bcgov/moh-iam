@@ -1,14 +1,14 @@
 enabled: false
 settings:
-  client_id: 'KeycloakIntegrationExample'
-  client_secret: 'b09d7655-6315-44ae-b739-d32289de5b96'
-  keycloak_base: 'http://localhost:8081/auth'
-  keycloak_realm: 'moh-users-realm'
-  authorization_endpoint_kc: 'http://host.docker.internal:8081/auth/realms/moh-users-realm/protocol/openid-connect/auth'
-  token_endpoint_kc: 'http://host.docker.internal:8081/auth/realms/moh-users-realm/protocol/openid-connect/token'
-  userinfo_endpoint_kc: 'http://host.docker.internal:8081/auth/realms/moh-users-realm/protocol/openid-connect/userinfo'
-  sign_out_endpoint_kc: 'http://host.docker.internal:8081/auth/realms/moh-users-realm/protocol/openid-connect/logout'
-  check_session_iframe_kc: 'http://host.docker.internal:8081/auth/realms/moh-users-realm/protocol/openid-connect/login-status-iframe.html'
+  client_id: 'IAMDRUPAL'
+  client_secret: 'PUT_SECRET_HERE'
+  keycloak_base: 'https://common-logon-dev.hlth.gov.bc.ca/auth/'
+  keycloak_realm: 'moh_applications'
+  authorization_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/auth?idps_to_show=all'
+  token_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/token'
+  userinfo_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/userinfo'
+  sign_out_endpoint_kc: ''
+  check_session_iframe_kc: ''
   keycloak_i18n: FALSE
   keycloak_i18n_mapping:
     -
@@ -17,4 +17,4 @@ settings:
     -
       langcode: zh-hant
       target: zh-HK
-  role_mapping: 'role_mapping'
+  role_mapping: 'groups'
