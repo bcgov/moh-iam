@@ -5,6 +5,21 @@ Drupal module (version `8.x-1.3`). Adds role mapping.
 
 Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
 
+# Roles
+
+Enabling role mapping allows roles to be managed in Keycloak instead of Drupal. To use role mapping, you just need to
+specify the role attribute name in the OpenID configuration. Then, when a user logs in, the MoH Keycloak module will
+ get the user's claims (from OIDC UserInfo) and assign all roles it finds there to the Drupal user.
+
+Role mapping has some behaviours you should be aware of:
+* All of the user's current roles in Drupal are _replaced_ by the Keycloak roles. This means that the user's existing
+roles are removed.
+* An exception to the above is the Administrator role. If the user has the Administrator role, it will be not be
+removed.
+* Roles will be updated every time the user logs in.
+* Roles must already exist in Drupal. If the Keycloak user has roles that Drupal doesn't recognize, the role will not
+be created or assigned.
+
 # Test environment
 
 - Windows 10
@@ -16,7 +31,7 @@ Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-app
 
 Keycloak and Docker/Drupal were run locally on the same host. A client was configured in Keycloak.
 
-# History
+# Justification
 
 The base Keycloak module does not support role mapping. Using the base module, you can authenticate with Keycloak, but
 Keycloak roles are not used. The MoH Keycloak module as role mapping.
@@ -48,6 +63,8 @@ the API.
 
 - Log out is not working. If a user logs out in Drupal, they are not logged out in Keycloak. This means that when they
 click the Log In button again, they will be automatically authenticated without reentering their credentials.
+- The module does not support custom claim mapping. You can make the default OpenID claims to Drupal user attributes,
+but the configuration form does not support custom mappings.
 
 # Suggestions
 
