@@ -79,3 +79,19 @@ Both of the above suggestions would gain us many features and bug fixes. I think
 
 - [The base Keycloak module on Drupal.org](https://www.drupal.org/project/keycloak) with links to the OpenID module
 dependency, source code, documentation, and issues.
+
+# How to set-up a development environment
+
+These instructions aren't complete, but here's what I remember:
+
+- I used [ddev](https://www.ddev.com/) to set-up a local development environment.
+    - It's Docker based, so you need to install Docker.
+    - I installed ddev using the Chocolatey package manager on Windows, as recommended.
+    - [ddev instructions are here](https://www.ddev.com/get-started/).
+    - Frequently used `ddev start`, `ddev ssh` (then `drush cr`), `ddev restart`, and `ddev describe`.
+- To to keep the project in our moh-iam Github, I sym-linked "C:\Dev\moh-iam\keycloak-drupal-module" to
+"C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak".
+- To get Drupal/Guzzle to trust Keycloak's self-signed cert, I made a change in
+`OpenIDConnectClientBase.php`: in the `__contruct` method, I added
+`$this->httpClient = new Client(['verify' => false]);` to override the HTTP client.
+- I used the [devel](https://www.drupal.org/project/devel) module to quickly run cache rebuild and reinstall modules.
