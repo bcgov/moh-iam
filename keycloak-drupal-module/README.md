@@ -1,11 +1,6 @@
 A customized copy of the [Keycloak OpenID Connect](https://www.drupal.org/project/keycloak)
 Drupal module (version `8.x-1.3`). Adds role mapping.
 
-# Prerequisites
-
-1. Keycloak needs to be installed and running somewhere.
-2. An application "Client" needs to be configured in Keycloak, as [described in the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Jakarta-EE-application-deployed-to-Payara-with-Keycloak).
-
 # Configuration
 
 Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
