@@ -1,2 +1,8 @@
 language: java
-script: cd keycloak-javaee-example && mvn test -B
+jobs:
+  include:
+    - name: keycloak-javaee-example
+      env: DIR=keycloak-javaee-example
+    - name: ldap-keycloak-etl
+      env: DIR=ldap-keycloak-etl
+script: cd $DIR && mvn test -B
