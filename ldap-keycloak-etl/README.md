@@ -11,7 +11,7 @@ The application requires a configuration file. The path to this file can be prov
 Prerequisites:
 
 * Apache Maven 3.6.1.
-* Java 11.
+* Java 11 (use use the new Java 11 HttpClient).
 * A [configuration file](https://github.com/bcgov/moh-iam/blob/master/ldap-keycloak-etl/src/main/resources/configuration.properties).
 
 Steps:
