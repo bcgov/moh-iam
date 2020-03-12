@@ -69,12 +69,12 @@
 			var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
 			var idp;
 			if (getParameterByName('idps_to_show').toLowerCase().includes('all')) {
-				for (idp of idProviders) {
-					document.getElementById('zocial-' + idp).style.display = 'block';
+				for (var i=0; i < idProviders.length; i++) {
+					document.getElementById('zocial-' + idProviders[i]).style.display = 'block';
 				}
 			} else {
-				for (idp of idProviders) {
-					if (getParameterByName('idps_to_show').toLowerCase().includes(idp.toLowerCase())) { document.getElementById('zocial-' + idp).style.display = 'block' }
+				for (var i=0; i < idProviders.length; i++) {
+					if (getParameterByName('idps_to_show').toLowerCase().includes(idProviders[i].toLowerCase())) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
 				}			
 			}
 		</script>
