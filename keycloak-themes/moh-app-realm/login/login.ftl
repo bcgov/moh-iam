@@ -68,13 +68,13 @@
 		<script>
 			var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
 			var idp;
-			if (getParameterByName('idps_to_show').toLowerCase().includes('all')) {
+			if (getParameterByName('idps_to_show').toLowerCase().indexOf('all') > -1) {
 				for (var i=0; i < idProviders.length; i++) {
 					document.getElementById('zocial-' + idProviders[i]).style.display = 'block';
 				}
 			} else {
 				for (var i=0; i < idProviders.length; i++) {
-					if (getParameterByName('idps_to_show').toLowerCase().includes(idProviders[i].toLowerCase())) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
+					if (getParameterByName('idps_to_show').toLowerCase().indexOf(idProviders[i].toLowerCase()) > -1) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
 				}			
 			}
 		</script>
