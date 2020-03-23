@@ -5,6 +5,11 @@ Drupal module (version `8.x-1.3`). Adds role mapping.
 
 Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
 
+# Packaging and installation
+
+1. Package the entire project inside a targz with file structure gz > tar > `mohkeycloak` folder.
+2. Use the Drupal Admin UI to install the package. (Supposedly the Admin UI also supports zip files, but I had an error when I attempted to use zip packaging).
+
 # Roles
 
 Enabling role mapping allows roles to be managed in Keycloak instead of Drupal. To use role mapping, you just need to
