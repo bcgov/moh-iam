@@ -7,7 +7,7 @@ Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-app
 
 # Packaging and installation
 
-1. Package the entire project inside a targz with file structure gz > tar > `mohkeycloak` folder.
+1. Package the entire project inside a tar.gz with file structure gz > tar > `mohkeycloak` folder. (I used 7-zip for this. Create the tar first, then gz it.)
 2. Use the Drupal Admin UI to install the package. (Supposedly the Admin UI also supports zip files, but I had an error when I attempted to use zip packaging).
 
 # Roles
