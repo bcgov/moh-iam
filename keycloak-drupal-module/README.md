@@ -1,14 +1,16 @@
 A customized copy of the [Keycloak OpenID Connect](https://www.drupal.org/project/keycloak)
 Drupal module (version `8.x-1.3`). Adds role mapping.
 
-# Configuration
-
-Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
-
 # Packaging and installation
 
 1. Package the entire project inside a tar.gz with file structure gz > tar > `mohkeycloak` folder. (I used 7-zip for this. Create the tar first, then gz it.)
-2. Use the Drupal Admin UI to install the package. (Supposedly the Admin UI also supports zip files, but I had an error when I attempted to use zip packaging).
+2. Use the Drupal Admin UI to install the module. (Supposedly the Admin UI also supports zip files, but I had an error when I attempted to use zip packaging).
+
+The module depends on the [OpenID Connect Drupal module](https://www.drupal.org/project/openid_connect), version 8.x-1.0-beta5.
+
+# Configuration
+
+Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
 
 # Roles
 
