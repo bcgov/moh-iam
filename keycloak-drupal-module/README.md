@@ -101,10 +101,11 @@ These instructions aren't complete, but here's what I remember:
 "C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak".
 - To get Drupal/Guzzle to trust Keycloak's self-signed cert, I made a change in
 `OpenIDConnectClientBase.php`: in the `__contruct` method, I added
-`$this->httpClient = new Client(['verify' => false]);` to override the HTTP client. See below if that's not clear.
+`$this->httpClient = new Client(['verify' => false]);` to override the HTTP client. See below if that's not clear. [1]
 - I used the [devel](https://www.drupal.org/project/devel) module to quickly run cache rebuild and reinstall modules.
+- I had trouble installing the dev version of the OpenID module using composer (error "fatal: failed to read object c2d54a2...: Operation not permitted"), so I used downloaded the tar.gz from Drupal.org and installed it using the Admin GUI.
 
-Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
+[1] Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
 ```php
   public function __construct(
       array $configuration,
