@@ -107,6 +107,10 @@ These instructions aren't complete, but here's what I remember:
 
 [1] Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
 ```php
+  use GuzzleHttp\Client;
+  
+  // ...
+
   public function __construct(
       array $configuration,
       $plugin_id,
