@@ -94,7 +94,8 @@ These instructions aren't complete, but here's what I remember:
 - I used [ddev](https://www.ddev.com/) to set-up a local development environment.
     - It's Docker based, so you need to install Docker.
     - I installed ddev using the Chocolatey package manager on Windows, as recommended.
-    - [ddev instructions are here](https://www.ddev.com/get-started/).
+    - [ddev instructions start here](https://www.ddev.com/get-started/), and these instructions describe how to [create a Drupal project](https://ddev.readthedocs.io/en/latest/users/cli-usage/#drupal-8-quickstart).
+        - After following these instructions I encountered an error when attempting to view the site: "The website encountered an unexpected error. Please try again later." I resolved the error by running `ddev ssh`, then `drush cron` (more errors), then `drush cr`. Debugging this is outside the scope of this project.
     - Frequently used `ddev start`, `ddev ssh` (then `drush cr`), `ddev restart`, and `ddev describe`.
 - To to keep the project in our moh-iam Github, I sym-linked "C:\Dev\moh-iam\keycloak-drupal-module" to
 "C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak".
