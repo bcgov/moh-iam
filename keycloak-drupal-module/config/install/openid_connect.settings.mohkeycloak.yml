@@ -7,7 +7,7 @@ settings:
   authorization_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/auth?idps_to_show=all'
   token_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/token'
   userinfo_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/userinfo'
-  sign_out_endpoint_kc: ''
+  sign_out_endpoint_kc: 'https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/logout'
   check_session_iframe_kc: ''
   keycloak_i18n: FALSE
   keycloak_i18n_mapping:

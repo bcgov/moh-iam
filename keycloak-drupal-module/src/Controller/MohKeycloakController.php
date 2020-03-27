@@ -23,11 +23,19 @@ class MohKeycloakController extends ControllerBase {
    * @return TrustedRedirectResponse
    */
   public function logout() {
+
     // Logout from Drupal.
     user_logout();
-    // Logout from Keycloak and redirect back to the Drupal front page.
+
+    // Get the URL of the Keycloak logout endpoint from config.
+    $sign_out_endpoint = \Drupal::config("openid_connect.settings.mohkeycloak")->get('settings.sign_out_endpoint_kc');
+
+    // Create a link to the Drupal front page.
+    // Keycloak takes a redirect_uri query parameter to know where to redirect the browser to after logging out of Keycloak.
     $logout_redirect = Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(true)->getGeneratedUrl();
-    return new TrustedRedirectResponse('https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/openid-connect/logout?redirect_uri=' . $logout_redirect, 302);
+
+    // Logout from Keycloak and redirect back to the Drupal front page.
+    return new TrustedRedirectResponse($sign_out_endpoint . '?redirect_uri=' . $logout_redirect, 302);
   }
 
 }
