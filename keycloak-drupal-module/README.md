@@ -98,12 +98,12 @@ These instructions aren't complete, but here's what I remember:
         - After following these instructions I encountered an error when attempting to view the site: "The website encountered an unexpected error. Please try again later." I resolved the error by running `ddev ssh`, then `drush cron` (more errors), then `drush cr`. Debugging this is outside the scope of this project.
     - Frequently used `ddev start`, `ddev ssh` (then `drush cr`), `ddev restart`, and `ddev describe`.
 - To to keep the project in our moh-iam Github, I sym-linked "C:\Dev\moh-iam\keycloak-drupal-module" to
-"C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak".
+"C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak":`mklink /J keycloak-drupal-module/ /c/Users/david.a.sharpe/my-drupal8-site/web/modules/custom/mohkeycloak/`.
 - To get Drupal/Guzzle to trust Keycloak's self-signed cert, I made a change in
 `OpenIDConnectClientBase.php`: in the `__contruct` method, I added
 `$this->httpClient = new Client(['verify' => false]);` to override the HTTP client. See below if that's not clear. [1]
 - I used the [devel](https://www.drupal.org/project/devel) module to quickly run cache rebuild and reinstall modules.
-- I had trouble installing the dev version of the OpenID module using composer (error "fatal: failed to read object c2d54a2...: Operation not permitted"), so I used downloaded the tar.gz from Drupal.org and installed it using the Admin GUI.
+- I had trouble installing the dev version of the OpenID module using composer (error "fatal: failed to read object c2d54a2...: Operation not permitted"), so I used downloaded the tar.gz from Drupal.org and extracted into the `web/modules/contrib` directory.
 
 [1] Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
 ```php
