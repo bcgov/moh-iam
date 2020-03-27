@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
-use Drupal\keycloak\Plugin\OpenIDConnectClient\Keycloak;
 use Drupal\openid_connect\Plugin\OpenIDConnectClientBase;
 use Drupal\openid_connect\StateToken;
 

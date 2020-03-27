@@ -1,0 +1,5 @@
+services:
+  mohkeycloak.route_subscriber:
+    class: Drupal\mohkeycloak\Routing\MohKeycloakRouteSubscriber
+    tags:
+      - { name: event_subscriber }
