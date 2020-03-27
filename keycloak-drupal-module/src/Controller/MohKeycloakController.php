@@ -8,11 +8,9 @@ use Drupal\Core\Url;
 use Drupal\openid_connect\OpenIDConnectClaims;
 
 /**
- * Keycloak controller.
+ * Implements Keycloak and Drupal logout.
  *
- * Provides controller actions for custom user login and logout.
- *
- * @see \Drupal\keycloak\Routing\RouteSubscriber
+ * @package Drupal\mohkeycloak\Controller
  */
 class MohKeycloakController extends ControllerBase {
 

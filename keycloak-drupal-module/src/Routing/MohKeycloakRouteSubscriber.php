@@ -7,20 +7,11 @@ use Drupal\Core\Routing\RoutingEvents;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * Listens to dynamic route events.
+ * Alters the Drupal user logout route to delegate logout to the MohKeycloakController.
  */
 class MohKeycloakRouteSubscriber extends RouteSubscriberBase {
 
-  public function __construct() {
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function alterRoutes(RouteCollection $collection) {
-    $logger = \Drupal::logger('mohkeycloak');
-    $logger->debug('alterRoutes');
-
     if ($route = $collection->get('user.logout')) {
       $route
         ->setDefaults([
@@ -30,18 +21,14 @@ class MohKeycloakRouteSubscriber extends RouteSubscriberBase {
           '_access' => 'TRUE',
         ])
         ->setOptions([
-//          'no_cache' => TRUE,
+          'no_cache' => TRUE,
         ]);
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public static function getSubscribedEvents() {
     // Come after field_ui.
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', -200];
-
     return $events;
   }
 
