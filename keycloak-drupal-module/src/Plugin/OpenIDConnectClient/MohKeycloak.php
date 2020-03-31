@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
-use Drupal\keycloak\Plugin\OpenIDConnectClient\Keycloak;
 use Drupal\openid_connect\Plugin\OpenIDConnectClientBase;
 use Drupal\openid_connect\StateToken;
 
@@ -117,6 +116,7 @@ class MohKeycloak extends OpenIDConnectClientBase {
       '#title' => $this->t('Authorization endpoint'),
       '#type' => 'textfield',
       '#default_value' => $this->configuration['authorization_endpoint_kc'],
+      '#description' => $this->t('Use the ?idps_to_show=all query parameter to specify which login buttons to show.'),
     ];
     $form['authorization_endpoint_kc'] = [
       '#title' => $this->t('Authorization endpoint'),
@@ -132,6 +132,11 @@ class MohKeycloak extends OpenIDConnectClientBase {
       '#title' => $this->t('UserInfo endpoint'),
       '#type' => 'textfield',
       '#default_value' => $this->configuration['userinfo_endpoint_kc'],
+    ];
+    $form['sign_out_endpoint_kc'] = [
+      '#title' => $this->t('Sign out endpoint'),
+      '#type' => 'textfield',
+      '#default_value' => $this->configuration['sign_out_endpoint_kc'],
     ];
 
     // Synchronize email addresses with Keycloak. This is safe as long as
@@ -257,7 +262,7 @@ class MohKeycloak extends OpenIDConnectClientBase {
 
         // Check whether there is an e-mail address conflict.
         if (
-        $user = user_load_by_mail($userinfo['email']) &&
+        ($user = user_load_by_mail($userinfo['email'])) &&
           $account->id() != $user->id()
         ) {
           drupal_set_message(

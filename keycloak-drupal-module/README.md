@@ -1,6 +1,13 @@
 A customized copy of the [Keycloak OpenID Connect](https://www.drupal.org/project/keycloak)
 Drupal module (version `8.x-1.3`). Adds role mapping.
 
+# Packaging and installation
+
+1. Package the entire project inside a tar.gz with file structure gz > tar > `mohkeycloak` folder. (I used 7-zip for this. Create the tar first, then gz it.)
+2. Use the Drupal Admin UI to install the module. (Supposedly the Admin UI also supports zip files, but I had an error when I attempted to use zip packaging).
+
+The module depends on the [OpenID Connect Drupal module](https://www.drupal.org/project/openid_connect), version 8.x-1.0-beta5.
+
 # Configuration
 
 Read [the wiki](https://github.com/bcgov/moh-iam/wiki/How-to-secure-a-Drupal-application-with-Keycloak).
@@ -38,14 +45,16 @@ Keycloak roles are not used. The MoH Keycloak module as role mapping.
 
 # Implementation notes
 
-I made two changes to the base module source code:
+I made several changes to the base Keycloak module source code:
 
-1. I added the "Role Mapping" attribute to the OpenID configuration from in `MoHKeycloak.php`, and to the configuration
+1. Added the "Role Mapping" attribute to the OpenID configuration from in `MohKeycloak.php`, and to the configuration
 and schema files.
-2. I implemented the `mohkeycloak_openid_connect_post_authorize` hook in `mohkeycloak.module`.
+2. Implemented the `mohkeycloak_openid_connect_post_authorize` hook in `mohkeycloak.module` for role mapping.
+3. Added MohKeycloakRouteSubscriber to delegate logout to our own controller.
+4. Added `sign_out_endpoint_kc` form field to OpenID Connect configuration in `MohKeycloak.php`.
 
-I wasn't happy duplicating the Keycloak module source code, so initially I tried to extend it, but this did not work
-well. Here are some reasons why:
+I wasn't happy duplicating the Keycloak module source code, so initially I tried to extend it, but this did not work. Here are 
+some reasons why:
 
 - The configuration properties file must be duplicated in its entirety as there is no mechanism to "extend" a
 configuration file.
@@ -61,24 +70,18 @@ the API.
 
 # Issues
 
-- Log out is not working. If a user logs out in Drupal, they are not logged out in Keycloak. This means that when they
-click the Log In button again, they will be automatically authenticated without reentering their credentials.
 - The module does not support custom claim mapping. You can make the default OpenID claims to Drupal user attributes,
 but the configuration form does not support custom mappings.
+- [OpenID Connect issue catalog on Drupal.org](https://www.drupal.org/project/issues/openid_connect?categories=All)
+- [Keycloak issue catalog on Drupal.org](https://www.drupal.org/project/issues/keycloak?status=All&categories=All)
 
-# Suggestions
+# Software versions used in development environment
 
-- Try to update the Keycloak module source code to the latest version. I tried myself, but I had a dependency
-conflict with the OpenID module and ran out of time to figure it out.
-- Also try to update the OpenID module to the latest version. (I suspect using an old version caused the dependency conflict
-mentioned above.)
-
-Both of the above suggestions would gain us many features and bug fixes. I think it would fix the log out bug.
-
-# Links
-
-- [The base Keycloak module on Drupal.org](https://www.drupal.org/project/keycloak) with links to the OpenID module
-dependency, source code, documentation, and issues.
+- Windows 10
+- Docker Desktop - Community, version 2.1.0.5
+- Drupal 8 using ddev version v1.13.0
+- [OpenID Connect Drupal module](https://www.drupal.org/project/openid_connect), version 8.x-1.0-beta5
+- Keycloak 8.0.1 on OpenJDK 11
 
 # How to set-up a development environment
 
@@ -87,17 +90,23 @@ These instructions aren't complete, but here's what I remember:
 - I used [ddev](https://www.ddev.com/) to set-up a local development environment.
     - It's Docker based, so you need to install Docker.
     - I installed ddev using the Chocolatey package manager on Windows, as recommended.
-    - [ddev instructions are here](https://www.ddev.com/get-started/).
+    - [ddev instructions start here](https://www.ddev.com/get-started/), and these instructions describe how to [create a Drupal project](https://ddev.readthedocs.io/en/latest/users/cli-usage/#drupal-8-quickstart).
+        - After following these instructions I encountered an error when attempting to view the site: "The website encountered an unexpected error. Please try again later." I resolved the error by running `ddev ssh`, then `drush cron` (more errors), then `drush cr`. Debugging this is outside the scope of this project.
     - Frequently used `ddev start`, `ddev ssh` (then `drush cr`), `ddev restart`, and `ddev describe`.
 - To to keep the project in our moh-iam Github, I sym-linked "C:\Dev\moh-iam\keycloak-drupal-module" to
-"C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak".
+"C:\Users\david.a.sharpe\my-drupal8-site\web\modules\custom\mohkeycloak":`mklink /J keycloak-drupal-module/ /c/Users/david.a.sharpe/my-drupal8-site/web/modules/custom/mohkeycloak/`.
 - To get Drupal/Guzzle to trust Keycloak's self-signed cert, I made a change in
 `OpenIDConnectClientBase.php`: in the `__contruct` method, I added
-`$this->httpClient = new Client(['verify' => false]);` to override the HTTP client. See below if that's not clear.
+`$this->httpClient = new Client(['verify' => false]);` to override the HTTP client. See below if that's not clear. [1]
 - I used the [devel](https://www.drupal.org/project/devel) module to quickly run cache rebuild and reinstall modules.
+- I had trouble installing the dev version of the OpenID module using composer (error "fatal: failed to read object c2d54a2...: Operation not permitted"), so I used downloaded the tar.gz from Drupal.org and extracted into the `web/modules/contrib` directory.
 
-Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
+[1] Disable SSL certificate verification in `OpenIDConnectClientBase.php`:
 ```php
+  use GuzzleHttp\Client;
+  
+  // ...
+
   public function __construct(
       array $configuration,
       $plugin_id,
