@@ -45,14 +45,16 @@ Keycloak roles are not used. The MoH Keycloak module as role mapping.
 
 # Implementation notes
 
-I made two changes to the base module source code:
+I made several changes to the base Keycloak module source code:
 
-1. I added the "Role Mapping" attribute to the OpenID configuration from in `MoHKeycloak.php`, and to the configuration
+1. Added the "Role Mapping" attribute to the OpenID configuration from in `MohKeycloak.php`, and to the configuration
 and schema files.
-2. I implemented the `mohkeycloak_openid_connect_post_authorize` hook in `mohkeycloak.module`.
+2. Implemented the `mohkeycloak_openid_connect_post_authorize` hook in `mohkeycloak.module` for role mapping.
+3. Added MohKeycloakRouteSubscriber to delegate logout to our own controller.
+4. Added `sign_out_endpoint_kc` form field to OpenID Connect configuration in `MohKeycloak.php`.
 
-I wasn't happy duplicating the Keycloak module source code, so initially I tried to extend it, but this did not work
-well. Here are some reasons why:
+I wasn't happy duplicating the Keycloak module source code, so initially I tried to extend it, but this did not work. Here are 
+some reasons why:
 
 - The configuration properties file must be duplicated in its entirety as there is no mechanism to "extend" a
 configuration file.
@@ -68,24 +70,18 @@ the API.
 
 # Issues
 
-- Log out is not working. If a user logs out in Drupal, they are not logged out in Keycloak. This means that when they
-click the Log In button again, they will be automatically authenticated without reentering their credentials.
 - The module does not support custom claim mapping. You can make the default OpenID claims to Drupal user attributes,
 but the configuration form does not support custom mappings.
+- [OpenID Connect issue catalog on Drupal.org](https://www.drupal.org/project/issues/openid_connect?categories=All)
+- [Keycloak issue catalog on Drupal.org](https://www.drupal.org/project/issues/keycloak?status=All&categories=All)
 
-# Suggestions
+# Software versions used in development environment
 
-- Try to update the Keycloak module source code to the latest version. I tried myself, but I had a dependency
-conflict with the OpenID module and ran out of time to figure it out.
-- Also try to update the OpenID module to the latest version. (I suspect using an old version caused the dependency conflict
-mentioned above.)
-
-Both of the above suggestions would gain us many features and bug fixes. I think it would fix the log out bug.
-
-# Links
-
-- [The base Keycloak module on Drupal.org](https://www.drupal.org/project/keycloak) with links to the OpenID module
-dependency, source code, documentation, and issues.
+- Windows 10
+- Docker Desktop - Community, version 2.1.0.5
+- Drupal 8 using ddev version v1.13.0
+- [OpenID Connect Drupal module](https://www.drupal.org/project/openid_connect), version 8.x-1.0-beta5
+- Keycloak 8.0.1 on OpenJDK 11
 
 # How to set-up a development environment
 
