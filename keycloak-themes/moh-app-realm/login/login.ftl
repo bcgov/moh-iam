@@ -66,17 +66,19 @@
 		<#-- this script checks the 'idps_to_show' query parameter and shows all idps if 'all' is found
 			 or else shows any idps whose aliases are listed -->
 		<script>
-			var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
-			var idp;
-			if (getParameterByName('idps_to_show').toLowerCase().indexOf('all') > -1) {
-				for (var i=0; i < idProviders.length; i++) {
-					document.getElementById('zocial-' + idProviders[i]).style.display = 'block';
+		   <#if social.providers??>
+				var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
+				var idp;
+				if (getParameterByName('idps_to_show').toLowerCase().indexOf('all') > -1) {
+						for (var i=0; i < idProviders.length; i++) {
+								document.getElementById('zocial-' + idProviders[i]).style.display = 'block';
+						}
+				} else {
+						for (var i=0; i < idProviders.length; i++) {
+								if (getParameterByName('idps_to_show').toLowerCase().indexOf(idProviders[i].toLowerCase()) > -1) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
+						}
 				}
-			} else {
-				for (var i=0; i < idProviders.length; i++) {
-					if (getParameterByName('idps_to_show').toLowerCase().indexOf(idProviders[i].toLowerCase()) > -1) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
-				}			
-			}
+		   </#if>
 		</script>
       </div>
     <#elseif section = "info" >
