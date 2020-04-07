@@ -1,14 +1,16 @@
 # Overview
-This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9 and may need to be updated for use with different versions of Keycloak. For further instructions regarding creating or updating themes see the reference link.
+This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak. For further instructions regarding creating or updating themes see the reference link.
 
 ## moh-app-realm
 This theme has been designed to only show a list of identity providers. 
 
-The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in Keycloak's Admin console.
+The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in the Keycloak Admin console.
 
-The second level heading (application name) is pulled from the Client ID.
+The second level heading (application name) is pulled from the Client Name which can be configured in the Keycloak Admin Console.
 
-The identity providers shown are dynamically configured by setting url query parameters. By default no IDPs will show in the list. In order to show an IDP, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. Alternatively the client application can include `idps_to_show=all` to show all IDPs (Note that this is not recommended as it may inadvertantly and without warning show new IDPs for the client application if a new provider is added to Keycloak).
+The identity providers shown are dynamically configured by setting url query parameters. By default all IDPs will show in the list. In order to only show sepcific IDP's, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. (e.g. `idps_to_show=moh_idp,moh_collector_idir` will only show LDAP and IDIR)
+
+When this parameter is set any idp-alias' not in the list will be hidden.
 
 ## moh-idp
 This theme serves as a login page for the moh_idp realm.  
@@ -28,7 +30,7 @@ The theme will be available for selection in the Keycloak Admin Console under:
 Realm Settings -> Themes -> Login Theme and/or Client -> Client Name -> Settings -> Login Theme.
 
 # Tested on
-* Keycloak 8.0.1
+* Keycloak 9.0.2
 
 # References
 * Keycloak Documentation: [Creating, Updating, and Configuring Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
