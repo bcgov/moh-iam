@@ -1,10 +1,10 @@
 <#import "template.ftl" as layout>
 <@layout.registrationLayout displayInfo=social.displayInfo displayWide=(realm.password && social.providers??); section>
     <#if section = "header">
-        Welcome to ${client.getClientId()}${msg("doLogIn")}
+        Welcome to ${client.getName()}
     <#elseif section = "form">
     <div id="kc-form" <#if realm.password && social.providers??>class="${properties.kcContentWrapperClass!}"</#if>>
-		<#if !socialProviders?? && usernameEditDisabled??>
+	  <#if !socialProviders?? && usernameEditDisabled??>
       <div id="kc-form-wrapper" <#if realm.password && social.providers??>class="${properties.kcFormSocialAccountContentClass!} ${properties.kcFormSocialAccountClass!}"</#if>>
         <#if realm.password>
             <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
@@ -51,36 +51,49 @@
                   </div>
             </form>
         </#if>
-        </div>
-		</#if>
+      </div>
+	  </#if>
         <#if realm.password && social.providers??>
             <div id="kc-social-providers" class="${properties.kcFormSocialAccountContentClass!} ${properties.kcFormSocialAccountClass!}">
                 <ul class="${properties.kcFormSocialAccountListClass!} <#if social.providers?size gt 4>${properties.kcFormSocialAccountDoubleListClass!}</#if>">
                     <#list social.providers as p>	
-						<#-- by default all identity providers are hidden -->
-						<li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: none" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
+						<#-- by default all identity providers are shown -->
+						<li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: block" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
                     </#list>
                 </ul>
             </div>
         </#if>
-		<#-- this script checks the 'idps_to_show' query parameter and shows all idps if 'all' is found
-			 or else shows any idps whose aliases are listed -->
+		
+		<#-- this script checks the 'idps_to_hide' query parameter and hides all listed IDP's-->
 		<script>
 		   <#if social.providers??>
 				var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
-				var idp;
-				if (getParameterByName('idps_to_show').toLowerCase().indexOf('all') > -1) {
-						for (var i=0; i < idProviders.length; i++) {
-								document.getElementById('zocial-' + idProviders[i]).style.display = 'block';
-						}
-				} else {
-						for (var i=0; i < idProviders.length; i++) {
-								if (getParameterByName('idps_to_show').toLowerCase().indexOf(idProviders[i].toLowerCase()) > -1) { document.getElementById('zocial-' + idProviders[i]).style.display = 'block' }
-						}
-				}
+				hideIdProviders(idProviders);
 		   </#if>
 		</script>
-      </div>
+    </div>
+	
+	<#if client.clientId != "account">
+		<div class="link-account-info centered">
+		  <a id="show-link-instructions" href="#" onclick="showInstructionsModal();return false;" >Click for instructions to link a new Identity Provider to your account.</a>
+		</div>
+	</#if>
+	  
+	<div id="instructions-modal" class="modal">
+	  <div class="modal-content" >
+		<span class="close" onclick="hideInstructionsModal();return false;">&times;</span>
+		Follow these steps to link a new Identity Provider to your account:
+		<ol>
+		  <li><a id="account-management-link" target="_blank" >Go to the MoH Account Management Site.</a></li>
+		  <li>Login with an Identity Provider currently linked to your account.</li>
+		  <li>Navigate to the <strong>Federated Identity</strong> tab.</li>
+		  <li>Click the <strong>Add</strong> button next to the Identity you wish to link.</li>
+		  <li>Login with your credentials for that Identity Provider.</li>
+		</ol>
+		You will now be able to use these credentials for signing in to your applications. 
+	  </div>
+	</div>
+
     <#elseif section = "info" >
         <#if realm.password && realm.registrationAllowed && !usernameEditDisabled??>
             <div id="kc-registration">
