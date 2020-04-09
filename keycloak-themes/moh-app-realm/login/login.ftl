@@ -75,7 +75,7 @@
 	
 	<#if client.clientId != "account">
 		<div class="link-account-info centered">
-		  <a id="show-link-instructions" href="#" onclick="showInstructionsModal();return false;" >Click for instructions to link a new Identity Provider to your account.</a>
+		  <a id="show-link-instructions" href="#" onclick="showInstructionsModal();return false;" >Click for instructions to link a new ID type to your account.</a>
 		</div>
 	</#if>
 	  
@@ -84,11 +84,12 @@
 		<span class="close" onclick="hideInstructionsModal();return false;">&times;</span>
 		Follow these steps to link a new Identity Provider to your account:
 		<ol>
-		  <li><a id="account-management-link" target="_blank" >Go to the MoH Account Management Site.</a></li>
-		  <li>Login with an Identity Provider currently linked to your account.</li>
-		  <li>Navigate to the <strong>Federated Identity</strong> tab.</li>
-		  <li>Click the <strong>Add</strong> button next to the Identity you wish to link.</li>
-		  <li>Login with your credentials for that Identity Provider.</li>
+		  <li><a id="account-management-link" target="_blank" >Go to the Ministry of Health Account Management page.</a></li>
+		  <li>Login with the ID currently linked to your account.</li>
+		  <li>Navigate to the <strong>ID Types</strong> tab.</li>
+		  <li>Click the <strong>Add</strong> button next to the ID Type you wish to link.</li>
+		  <li>Login with your credentials for that identity type.</li>
+		  <li>Click <strong>Sign Out</strong> to end your session.</li>
 		</ol>
 		You will now be able to use these credentials for signing in to your applications. 
 	  </div>
