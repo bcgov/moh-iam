@@ -40,7 +40,10 @@
             <button onclick="output(keycloak.createLogoutUrl())">Show Logout URL</button>
             <button onclick="output(keycloak.createRegisterUrl())">Show Register URL</button>
             <button onclick="output(keycloak.createAccountUrl())">Show Account URL</button>
-            <button onclick="output(loadData())">Load Data</button>
+            <button onclick="output(loadData())">Search Users</button>
+            <label>Username
+            <input type="text" id="user-name" value="" />
+            </label>
         </div>
 
         <h2>Result</h2>
@@ -52,7 +55,9 @@
         <script>
             var loadUserDetails = function () {
 //                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/events?first=0&max=5';
-                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users/5b960d37-c7d7-4315-92b9-8fc927abbe55';
+//                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users/5b960d37-c7d7-4315-92b9-8fc927abbe55';
+//                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users/' + document.getElementById('user-id').value;
+                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users?briefRepresentation=true&first=0&max=20&search=' + document.getElementById('user-name').value;
 
                 var req = new XMLHttpRequest();
                 req.open('GET', url, true);
