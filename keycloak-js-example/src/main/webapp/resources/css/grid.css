@@ -1,0 +1,25 @@
+.col1, .col2, .col3, .col4 {
+    float: left;
+    margin-right: 3.33333%;
+}
+.col1 {
+    width: 22.5%;
+}
+.col2 {
+    width: 48.33333%;
+}
+.col3 {
+    width: 74.166666%;
+}
+.col4 {
+    width: 100%;
+    margin-right: 0;
+}
+.center {
+    margin: 0 auto;
+    float: none;
+}
+.spacer {
+    clear: both;
+    width: 100%;
+}
