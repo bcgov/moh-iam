@@ -17,40 +17,93 @@
 
 <html>
     <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta charset="utf-8" />
+        <title>MoH User Management</title>
+        <link rel="shortcut icon" href="resources/images/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="http://localhost:8081/auth/js/keycloak.js"></script>
+        <link rel="stylesheet" type="text/css" href="resources/css/fonts.css">
+        <link rel="stylesheet" type="text/css" href="resources/css/reset.css">
+        <link rel="stylesheet" type="text/css" href="resources/css/grid.css">
+        <link rel="stylesheet" type="text/css" href="resources/css/typography.css">
+        <link rel="stylesheet" type="text/css" href="resources/css/main.css">
     </head>
     <body>
+        <header>
+            <form id="header">
+                <section class="container">
+                    <section class="identity">
+                        <img src="resources/images/logo.png" width="154" class="logo" alt="BC Government Logo"/>
+                        <div class="sitename">MoH User Management</div>
+                    </section>
+                    <section class="options user-select-off">
+                        <a id="logoutLink" class="sign-out" onclick="keycloak.logout()">Sign Out</a>
+                    </section>
+                </section>
+            </form>
+        </header>
+        <nav role="navigation">
+            <div class="container user-select-off">
+                <ul>
+                    <li class="active">
+                        <a id="homeLink">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>        
+        <main>
+            <div>
+                <button onclick="keycloak.login()">Login</button>
+                <button onclick="keycloak.logout()">Logout</button>
+                <button onclick="keycloak.register()">Register</button>
+                <button onclick="keycloak.accountManagement()">Account</button>
+                <button onclick="refreshToken(9999)">Refresh Token</button>
+                <button onclick="refreshToken(30)">Refresh Token (if <30s validity)</button>
+                <button onclick="loadProfile()">Get Profile</button>
+                <button onclick="updateProfile()">Update profile</button>
+                <button onclick="loadUserInfo()">Get User Info</button>
+                <button onclick="output(keycloak.tokenParsed)">Show Token</button>
+                <button onclick="output(keycloak.refreshTokenParsed)">Show Refresh Token</button>
+                <button onclick="output(keycloak.idTokenParsed)">Show ID Token</button>
+                <button onclick="showExpires()">Show Expires</button>
+                <button onclick="output(keycloak)">Show Details</button>
+                <button onclick="output(keycloak.createLoginUrl())">Show Login URL</button>
+                <button onclick="output(keycloak.createLogoutUrl())">Show Logout URL</button>
+                <button onclick="output(keycloak.createRegisterUrl())">Show Register URL</button>
+                <button onclick="output(keycloak.createAccountUrl())">Show Account URL</button>
+                <button onclick="output(loadData())">Search Users</button>
+                <label>Username
+                    <input type="text" id="user-name" value="" />
+                </label>
+            </div>
 
-        <div>
-            <button onclick="keycloak.login()">Login</button>
-            <button onclick="keycloak.logout()">Logout</button>
-            <button onclick="keycloak.register()">Register</button>
-            <button onclick="keycloak.accountManagement()">Account</button>
-            <button onclick="refreshToken(9999)">Refresh Token</button>
-            <button onclick="refreshToken(30)">Refresh Token (if <30s validity)</button>
-            <button onclick="loadProfile()">Get Profile</button>
-            <button onclick="updateProfile()">Update profile</button>
-            <button onclick="loadUserInfo()">Get User Info</button>
-            <button onclick="output(keycloak.tokenParsed)">Show Token</button>
-            <button onclick="output(keycloak.refreshTokenParsed)">Show Refresh Token</button>
-            <button onclick="output(keycloak.idTokenParsed)">Show ID Token</button>
-            <button onclick="showExpires()">Show Expires</button>
-            <button onclick="output(keycloak)">Show Details</button>
-            <button onclick="output(keycloak.createLoginUrl())">Show Login URL</button>
-            <button onclick="output(keycloak.createLogoutUrl())">Show Logout URL</button>
-            <button onclick="output(keycloak.createRegisterUrl())">Show Register URL</button>
-            <button onclick="output(keycloak.createAccountUrl())">Show Account URL</button>
-            <button onclick="output(loadData())">Search Users</button>
-            <label>Username
-            <input type="text" id="user-name" value="" />
-            </label>
-        </div>
+            <h2>Result</h2>
+            <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="output"></pre>
 
-        <h2>Result</h2>
-        <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="output"></pre>
+            <h2>Events</h2>
+            <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="events"></pre>            
 
-        <h2>Events</h2>
-        <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="events"></pre>
+        </main>
+
+        <footer >
+            <div class="container">
+                <div class="col1">
+                    <ul>
+                        <li><a>Help</a></li>
+                        <li><a>Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col1">
+                    <ul>
+                        <li><a href="http://www2.gov.bc.ca/gov/content/home/disclaimer">Disclaimer</a></li>
+                        <li><a href="http://www2.gov.bc.ca/gov/content/home/privacy">Privacy</a></li>
+                        <li><a href="http://www2.gov.bc.ca/gov/content/home/accessibility">Accessibility</a></li>
+                        <li><a href="http://www2.gov.bc.ca/gov/content/home/copyright">Copyright</a></li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
 
         <script>
             var loadUserDetails = function () {

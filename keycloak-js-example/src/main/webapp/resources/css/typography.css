@@ -1,0 +1,40 @@
+html {
+    font-size: 62.5%;
+}
+body {
+    font-family: 'BCSans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: normal;
+    color: #003366;
+}
+h1 {
+    font-size: 3.7rem;
+    line-height: 5.9rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+h2 {
+    font-weight: bold;
+}
+h2, p {
+    font-size: 1.6rem;
+    line-height: 2.6rem;
+    margin-bottom: 20px;
+}
+.small {
+    font-size: 1.3rem;
+    line-height: 2rem;
+}
+.user-select-off {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+a {
+    color: #1A5A96;
+}
+pre {
+    font-size: 1.6rem;
+}
