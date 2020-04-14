@@ -109,6 +109,7 @@ var app = (function () {
 
     keycloak.onAuthSuccess = function () {
         event('Auth Success');
+        document.getElementsByTagName("body")[0].style.cssText += 'display: block';
     };
 
     keycloak.onAuthError = function (errorData) {
