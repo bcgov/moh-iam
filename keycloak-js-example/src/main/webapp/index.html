@@ -22,7 +22,8 @@
         <title>MoH User Management</title>
         <link rel="shortcut icon" href="resources/images/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="http://localhost:8081/auth/js/keycloak.js"></script>
+        <script src="http://localhost:8081/auth/js/keycloak.js" defer></script>
+        <script src="resources/js/app.js" defer></script>
         <link rel="stylesheet" type="text/css" href="resources/css/fonts.css">
         <link rel="stylesheet" type="text/css" href="resources/css/reset.css">
         <link rel="stylesheet" type="text/css" href="resources/css/grid.css">
@@ -38,7 +39,7 @@
                         <div class="sitename">MoH User Management</div>
                     </section>
                     <section class="options user-select-off">
-                        <a id="logoutLink" class="sign-out" onclick="keycloak.logout()">Sign Out</a>
+                        <a id="logoutLink" class="sign-out" onclick="app.keycloak.logout()">Sign Out</a>
                     </section>
                 </section>
             </form>
@@ -54,25 +55,25 @@
         </nav>        
         <main>
             <div>
-                <button onclick="keycloak.login()">Login</button>
-                <button onclick="keycloak.logout()">Logout</button>
-                <button onclick="keycloak.register()">Register</button>
-                <button onclick="keycloak.accountManagement()">Account</button>
-                <button onclick="refreshToken(9999)">Refresh Token</button>
-                <button onclick="refreshToken(30)">Refresh Token (if <30s validity)</button>
-                <button onclick="loadProfile()">Get Profile</button>
-                <button onclick="updateProfile()">Update profile</button>
-                <button onclick="loadUserInfo()">Get User Info</button>
-                <button onclick="output(keycloak.tokenParsed)">Show Token</button>
-                <button onclick="output(keycloak.refreshTokenParsed)">Show Refresh Token</button>
-                <button onclick="output(keycloak.idTokenParsed)">Show ID Token</button>
-                <button onclick="showExpires()">Show Expires</button>
-                <button onclick="output(keycloak)">Show Details</button>
-                <button onclick="output(keycloak.createLoginUrl())">Show Login URL</button>
-                <button onclick="output(keycloak.createLogoutUrl())">Show Logout URL</button>
-                <button onclick="output(keycloak.createRegisterUrl())">Show Register URL</button>
-                <button onclick="output(keycloak.createAccountUrl())">Show Account URL</button>
-                <button onclick="output(loadData())">Search Users</button>
+                <button onclick="app.keycloak.login()">Login</button>
+                <button onclick="app.keycloak.logout()">Logout</button>
+                <button onclick="app.keycloak.register()">Register</button>
+                <button onclick="app.keycloak.accountManagement()">Account</button>
+                <button onclick="app.refreshToken(9999)">Refresh Token</button>
+                <button onclick="app.refreshToken(30)">Refresh Token (if &lt;30s validity)</button>
+                <button onclick="app.loadProfile()">Get Profile</button>
+                <button onclick="app.updateProfile()">Update profile</button>
+                <button onclick="app.loadUserInfo()">Get User Info</button>
+                <button onclick="app.output(app.keycloak.tokenParsed)">Show Token</button>
+                <button onclick="app.output(app.keycloak.refreshTokenParsed)">Show Refresh Token</button>
+                <button onclick="app.output(app.keycloak.idTokenParsed)">Show ID Token</button>
+                <button onclick="app.showExpires()">Show Expires</button>
+                <button onclick="app.output(app.keycloak)">Show Details</button>
+                <button onclick="app.output(app.keycloak.createLoginUrl())">Show Login URL</button>
+                <button onclick="app.output(app.keycloak.createLogoutUrl())">Show Logout URL</button>
+                <button onclick="app.output(app.keycloak.createRegisterUrl())">Show Register URL</button>
+                <button onclick="app.output(app.keycloak.createAccountUrl())">Show Account URL</button>
+                <button onclick="app.output(app.loadData())">Search Users</button>
                 <label>Username
                     <input type="text" id="user-name" value="" />
                 </label>
@@ -104,155 +105,5 @@
                 </div>
             </div>
         </footer>
-
-        <script>
-            var loadUserDetails = function () {
-//                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/events?first=0&max=5';
-//                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users/5b960d37-c7d7-4315-92b9-8fc927abbe55';
-//                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users/' + document.getElementById('user-id').value;
-                var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users?briefRepresentation=true&first=0&max=20&search=' + document.getElementById('user-name').value;
-
-                var req = new XMLHttpRequest();
-                req.open('GET', url, true);
-                req.setRequestHeader('Accept', 'application/json');
-                req.setRequestHeader('Authorization', 'Bearer ' + keycloak.token);
-
-                req.onreadystatechange = function () {
-                    if (req.readyState == 4) {
-                        if (req.status == 200) {
-                            output(this.responseText);
-                        } else if (req.status == 403) {
-                            output('Forbidden');
-                        } else {
-                            output('Failed');
-                        }
-                    }
-                }
-
-                req.send();
-            }
-
-            function loadData() {
-                keycloak.updateToken().success(loadUserDetails);
-            }
-
-
-            function loadProfile() {
-                keycloak.loadUserProfile().success(function (profile) {
-                    output(profile);
-                }).error(function () {
-                    output('Failed to load profile');
-                });
-            }
-
-            function updateProfile() {
-                var url = keycloak.createAccountUrl().split('?')[0];
-                var req = new XMLHttpRequest();
-                req.open('POST', url, true);
-                req.setRequestHeader('Accept', 'application/json');
-                req.setRequestHeader('Content-Type', 'application/json');
-                req.setRequestHeader('Authorization', 'bearer ' + keycloak.token);
-
-                req.onreadystatechange = function () {
-                    if (req.readyState == 4) {
-                        if (req.status == 200) {
-                            output('Success');
-                        } else {
-                            output('Failed');
-                        }
-                    }
-                }
-
-                req.send('{"email":"myemail@foo.bar","firstName":"test","lastName":"bar"}');
-            }
-
-            function loadUserInfo() {
-                keycloak.loadUserInfo().success(function (userInfo) {
-                    output(userInfo);
-                }).error(function () {
-                    output('Failed to load user info');
-                });
-            }
-
-            function refreshToken(minValidity) {
-                keycloak.updateToken(minValidity).success(function (refreshed) {
-                    if (refreshed) {
-                        output(keycloak.tokenParsed);
-                    } else {
-                        output('Token not refreshed, valid for ' + Math.round(keycloak.tokenParsed.exp + keycloak.timeSkew - new Date().getTime() / 1000) + ' seconds');
-                    }
-                }).error(function () {
-                    output('Failed to refresh token');
-                });
-            }
-
-            function showExpires() {
-                if (!keycloak.tokenParsed) {
-                    output("Not authenticated");
-                    return;
-                }
-
-                var o = 'Token Expires:\t\t' + new Date((keycloak.tokenParsed.exp + keycloak.timeSkew) * 1000).toLocaleString() + '\n';
-                o += 'Token Expires in:\t' + Math.round(keycloak.tokenParsed.exp + keycloak.timeSkew - new Date().getTime() / 1000) + ' seconds\n';
-
-                if (keycloak.refreshTokenParsed) {
-                    o += 'Refresh Token Expires:\t' + new Date((keycloak.refreshTokenParsed.exp + keycloak.timeSkew) * 1000).toLocaleString() + '\n';
-                    o += 'Refresh Expires in:\t' + Math.round(keycloak.refreshTokenParsed.exp + keycloak.timeSkew - new Date().getTime() / 1000) + ' seconds';
-                }
-
-                output(o);
-            }
-
-            function output(data) {
-                if (typeof data === 'object') {
-                    data = JSON.stringify(data, null, '  ');
-                }
-                document.getElementById('output').innerHTML = data;
-            }
-
-            function event(event) {
-                var e = document.getElementById('events').innerHTML;
-                document.getElementById('events').innerHTML = new Date().toLocaleString() + "\t" + event + "\n" + e;
-            }
-
-            var keycloak = Keycloak();
-
-            keycloak.onAuthSuccess = function () {
-                event('Auth Success');
-            };
-
-            keycloak.onAuthError = function (errorData) {
-                event("Auth Error: " + JSON.stringify(errorData));
-            };
-
-            keycloak.onAuthRefreshSuccess = function () {
-                event('Auth Refresh Success');
-            };
-
-            keycloak.onAuthRefreshError = function () {
-                event('Auth Refresh Error');
-            };
-
-            keycloak.onAuthLogout = function () {
-                event('Auth Logout');
-            };
-
-            keycloak.onTokenExpired = function () {
-                event('Access token expired.');
-            };
-
-            // Flow can be changed to 'implicit' or 'hybrid', but then client must enable implicit flow in admin console too 
-            var initOptions = {
-                responseMode: 'fragment',
-                flow: 'standard'
-            };
-
-            keycloak.init(initOptions).success(function (authenticated) {
-                output('Init Success (' + (authenticated ? 'Authenticated' : 'Not Authenticated') + ')');
-            }).error(function () {
-                output('Init Error');
-            });
-
-        </script>
     </body>
 </html>
