@@ -35,6 +35,7 @@ h2, p {
 a {
     color: #1A5A96;
 }
-pre {
+pre,
+label{
     font-size: 1.6rem;
 }

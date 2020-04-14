@@ -55,36 +55,40 @@
         </nav>        
         <main>
             <div>
-                <button onclick="app.keycloak.login()">Login</button>
-                <button onclick="app.keycloak.logout()">Logout</button>
-                <button onclick="app.keycloak.register()">Register</button>
-                <button onclick="app.keycloak.accountManagement()">Account</button>
-                <button onclick="app.refreshToken(9999)">Refresh Token</button>
-                <button onclick="app.refreshToken(30)">Refresh Token (if &lt;30s validity)</button>
-                <button onclick="app.loadProfile()">Get Profile</button>
-                <button onclick="app.updateProfile()">Update profile</button>
-                <button onclick="app.loadUserInfo()">Get User Info</button>
-                <button onclick="app.output(app.keycloak.tokenParsed)">Show Token</button>
-                <button onclick="app.output(app.keycloak.refreshTokenParsed)">Show Refresh Token</button>
-                <button onclick="app.output(app.keycloak.idTokenParsed)">Show ID Token</button>
-                <button onclick="app.showExpires()">Show Expires</button>
-                <button onclick="app.output(app.keycloak)">Show Details</button>
-                <button onclick="app.output(app.keycloak.createLoginUrl())">Show Login URL</button>
-                <button onclick="app.output(app.keycloak.createLogoutUrl())">Show Logout URL</button>
-                <button onclick="app.output(app.keycloak.createRegisterUrl())">Show Register URL</button>
-                <button onclick="app.output(app.keycloak.createAccountUrl())">Show Account URL</button>
-                <button onclick="app.output(app.loadData())">Search Users</button>
-                <label>Username
-                    <input type="text" id="user-name" value="" />
-                </label>
-            </div>
+            <section class="content">
+                <div class="col1">    
+                    <h2>User Account</h2>
+                    <button onclick="app.keycloak.accountManagement()">Account</button>
+                    <button onclick="app.loadProfile()">Get Profile</button>
+                    <button onclick="app.updateProfile()">Update profile</button>                
+                </div>              
 
-            <h2>Result</h2>
-            <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="output"></pre>
+                <div class="col1">
+                    <h2>Token Information</h2>
+                    <button onclick="app.refreshToken(9999)">Refresh Token</button>
+                    <button onclick="app.refreshToken(30)">Refresh Token (if &lt;30s validity)</button>
+                    <button onclick="app.loadUserInfo()">Get User Info</button>
+                    <button onclick="app.output(app.keycloak.tokenParsed)">Show Token</button>
+                    <button onclick="app.output(app.keycloak.refreshTokenParsed)">Show Refresh Token</button>
+                    <button onclick="app.output(app.keycloak.idTokenParsed)">Show ID Token</button>
+                    <button onclick="app.showExpires()">Show Expires</button>
+                    <button onclick="app.output(app.keycloak)">Show Details</button>                
+                </div>
+                <div class="col1">
+                     <h2>User Search</h2>
+                     <label for="user-name">Username</label>
+                     <input type="text" id="user-name" value="" />
+                     <button onclick="app.output(app.loadData())">Search Users</button>
+                </div>
 
-            <h2>Events</h2>
-            <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="events"></pre>            
-
+                <div class="col4">
+                    <label>Result</label>
+                    <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap; margin-bottom: 20px" id="output"></pre>
+                    
+                    <label style="margin-top: 20px">Events</label>
+                    <pre style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap;" id="events"></pre>                  
+                </div>
+            </section>
         </main>
 
         <footer >

@@ -188,3 +188,15 @@ footer li a {
 footer li a:hover, footer li a:focus {
     text-decoration: underline;
 }
+
+/* Components */ 
+input {
+    display: block;
+}
+input[type="text"], input[type="text"]:hover, input[type="password"], input[type="password"]:hover {
+    border: #036 solid 2px;
+    color: #036;
+    height: 40px;
+    padding: 10px 10px;
+    border-radius: 4px;
+}
