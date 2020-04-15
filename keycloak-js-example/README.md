@@ -17,7 +17,7 @@ It's based off of Keycloak’s [Basic JavaScript Example]( https://github.com/ke
 
 **TODO** 
 
-If you really want to deploy this version, you also need to change these URLs to point to your Keycloak server. We will parameterize this ourselves in a later commit.
+If you really want to deploy this version, you also need to change these URLs to point to your Keycloak server. We will parameterize this in a later commit.
 
 * `<script src="http://localhost:8081/auth/js/keycloak.js" defer></script>` is hardcoded in `index.html`.
 * `http://localhost:8081/auth...` is harcoded in app.js.
