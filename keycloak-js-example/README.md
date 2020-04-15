@@ -9,13 +9,25 @@ It's based off of Keycloak’s [Basic JavaScript Example]( https://github.com/ke
 * We added a “Search Users” field to demonstrate how to call the Keycloak REST APIs This could be expanded into complete user management.
 * We applied basic Ministry of Health page styling.
 
+# How to deploy
+
+* The application is a static site and can be deployed to any web server.
+* You need a Keycloak server , and you need to configure a "Client" in Keycloak which is explained below.
+* Edit `keycloak.json` to point at your Keycloak server.
+
+**TODO** 
+
+If you really want to deploy this version, you also need to change these URLs to point to your Keycloak server. We will parameterize this ourselves in a later commit.
+
+* `<script src="http://localhost:8081/auth/js/keycloak.js" defer></script>` is hardcoded in `index.html`.
+* `http://localhost:8081/auth...` is harcoded in app.js.
+
 # Client configuration
 
 * The client should be `public` because there is no way to secure a "secret" on the client side.
 * You need to configure Valid Redirect URIs and Web Origins. Setting them to `*` could suffice in a development environment, but that's insecure.
 * We reused Keycloak's default `security-admin-console` for this example. That's the same client used by Keycloak's Admin Console.
 
-_Example_
 ![image](https://user-images.githubusercontent.com/1767127/79283978-448fd280-7e6e-11ea-834e-27782e13fe47.png)
 
 ## New client configuration
