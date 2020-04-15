@@ -1,6 +1,10 @@
 var app = (function () {
     var loadUserDetails = function () {
-        var url = 'http://localhost:8081/auth/admin/realms/moh-users-realm/users?briefRepresentation=true&first=0&max=20&search=' + document.getElementById('user-name').value;
+        var url = keycloak.authServerUrl
+                + "admin/realms/"
+                + keycloak.realm
+                + "/users?briefRepresentation=true&first=0&max=20&search="
+                + document.getElementById('user-name').value;
 
         var req = new XMLHttpRequest();
         req.open('GET', url, true);
@@ -25,7 +29,6 @@ var app = (function () {
     function loadData() {
         keycloak.updateToken().success(loadUserDetails);
     }
-
 
     function loadProfile() {
         keycloak.loadUserProfile().success(function (profile) {
@@ -109,6 +112,7 @@ var app = (function () {
 
     keycloak.onAuthSuccess = function () {
         event('Auth Success');
+        // Page content is hidden by "display: none" until user is authenticated.
         document.getElementsByTagName("body")[0].style.cssText += 'display: block';
     };
 

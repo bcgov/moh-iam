@@ -1,0 +1,8 @@
+{
+    "realm": "moh-users-realm",
+    "auth-server-url": "http://localhost:8081/auth/",
+    "ssl-required": "none",
+    "resource": "security-admin-console",
+    "public-client": true,
+    "confidential-port": 0
+}
