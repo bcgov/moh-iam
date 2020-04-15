@@ -14,13 +14,7 @@ It's based off of Keycloak’s [Basic JavaScript Example]( https://github.com/ke
 * The application is a static site and can be deployed to any web server.
 * You need a Keycloak server , and you need to configure a "Client" in Keycloak which is explained below.
 * Edit `keycloak.json` to point at your Keycloak server.
-
-**TODO** 
-
-If you really want to deploy this version, you also need to change these URLs to point to your Keycloak server. We will parameterize this in a later commit.
-
-* `<script src="http://localhost:8081/auth/js/keycloak.js" defer></script>` is hardcoded in `index.html`.
-* `http://localhost:8081/auth...` is harcoded in app.js.
+* Edit `<script src="http://localhost:8081/auth/js/keycloak.js" defer></script>` in `index.html` to point at your Keycloak server.
 
 # Client configuration
 
