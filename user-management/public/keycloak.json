@@ -4,8 +4,5 @@
     "ssl-required": "none",
     "resource": "user-management",
     "public-client": true,
-    "confidential-port": 0,
-    "responseMode": "fragment",
-    "flow": "standard",
-    "onLoad": "login-required"
+    "confidential-port": 0
 }

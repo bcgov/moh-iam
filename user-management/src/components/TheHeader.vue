@@ -7,7 +7,7 @@
           <div class="sitename">MoH User Management</div>
         </section>
         <section class="options user-select-off">
-          <a id="logoutLink" class="sign-out" onclick="kcMethods.keycloak.logout()">Sign Out</a>
+          <a id="logoutLink" class="sign-out" v-on:click="logout">Sign Out</a>
         </section>
       </section>
     </div>
@@ -16,7 +16,12 @@
 
 <script>
 export default {
-    name: "TheHeader"
+    name: "TheHeader",
+    methods: {
+    logout: function () {
+      this.$keycloak.logout();
+    }
+  }
 }
 </script>
 
