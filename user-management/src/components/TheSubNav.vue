@@ -1,0 +1,47 @@
+<template>
+  <div class="nav-tabs" style="width: 100%">
+      <a class="active-tab">Users</a>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'TheSubNav'
+}
+</script>
+
+<style>
+.nav-tabs {
+    border-bottom: 4px solid #003366;
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+.nav-tabs a {
+  display: inline-block;
+  padding: 0 20px;
+  height: 36px;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 40px;
+}
+.active-tab,
+.active-tab:hover{
+    background: #003366;
+    color: #ffffff; 
+    margin-right:10px; 
+    text-decoration: none;
+    border-radius: 8px 8px 0 0;
+}
+.inactive-tab {
+    background: #999999; 
+    color: #ffffff; 
+    margin-right:10px;
+    text-decoration: none;
+    border-radius: 8px 8px 0 0;
+}
+.inactive-tab:hover {
+    background: #666666;
+    color: #ffffff; 
+    text-decoration: none;
+}
+</style>

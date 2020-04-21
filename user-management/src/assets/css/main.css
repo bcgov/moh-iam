@@ -1,0 +1,79 @@
+/* Body */
+body {
+    background-color: #F1F1F1;
+}
+body.login {
+    background-color: #EEEEEE;
+}
+
+
+/* Main */
+main {
+    max-width: 1320px;
+    min-width: 1100px;
+    min-height: calc(100vh - 280px);
+    margin: 0 auto;
+    padding: 20px 60px 60px 60px;
+    background-color: #FFFFFF;
+}
+main .secondary-nav ul {
+    border-bottom: 4px solid #003366;
+}
+main .secondary-nav ul li {
+    display: inline-block;
+    margin-right: 10px;
+    height: 36px;
+    font-size: 1.6rem;
+    line-height: 4rem;
+    vertical-align: top;
+    font-weight: bold;
+}
+main .secondary-nav ul li.active {
+    padding: 0 20px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background-color: #003366;
+    color: #FFFFFF;
+    cursor: auto;
+}
+main .secondary-nav ul li.active:hover {
+    background-color: #003366;
+}
+main .secondary-nav ul li a {
+    display: block;
+    height: 36px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 0 20px;
+    background-color: #999999;
+    text-decoration: none;
+    color: #FFFFFF;
+}
+main .secondary-nav ul li a:hover {
+    background-color: #666666;
+}
+main .secondary-nav ul li a:focus {
+    background-color: #666666;
+}
+main .content {
+    padding: 0;
+    font-size: 1.6rem;
+}
+main .content:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+
+/* Input */ 
+input {
+    display: block;
+}
+input[type="text"], input[type="text"]:hover, input[type="password"], input[type="password"]:hover {
+    border: #036 solid 2px;
+    color: #036;
+    height: 40px;
+    padding: 10px 10px;
+    border-radius: 4px;
+}
