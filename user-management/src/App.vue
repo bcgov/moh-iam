@@ -34,6 +34,12 @@
             style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap; margin-bottom: 20px"
             id="output"
           >{{ result }}</pre>
+          <label>Search Results</label>
+          <ul id="example-1">
+            <li v-for="item in searchResults" v-bind:key="item.username">
+             {{ item.username }}
+            </li>
+          </ul>
         </div>
       </section>
     </main>
@@ -48,6 +54,8 @@ import TheFooter from "./components/TheFooter.vue";
 import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
 
+import axios from 'axios';
+
 export default {
   name: "App",
   components: {
@@ -59,10 +67,12 @@ export default {
   data() {
     return {
       result: "",
-      userSearchInput: ""
+      userSearchInput: "",
+      searchResults: []
     };
   },
   methods: {
+      
     loadUserInfo: function() {
       var vm = this;
       this.$keycloak
@@ -94,25 +104,15 @@ export default {
           vm.$keycloak.realm +
           "/users?briefRepresentation=true&first=0&max=20&search=" +
           vm.userSearchInput;
-
-        var req = new XMLHttpRequest();
-        req.open("GET", url, true);
-        req.setRequestHeader("Accept", "application/json");
-        req.setRequestHeader("Authorization", "Bearer " + vm.$keycloak.token);
-
-        req.onreadystatechange = function() {
-          if (req.readyState === 4) {
-            if (req.status === 200) {
-              vm.result = this.responseText;
-            } else if (req.status === 403) {
-              vm.result = "Forbidden";
-            } else {
-              vm.result = "Failed";
-            }
-          }
-        };
-
-        req.send();
+  
+        axios.get(url, {headers: {Authorization: 'Bearer ' + vm.$keycloak.token}})
+            .then(response => {
+                vm.result = response.data;
+                vm.searchResults = response.data;
+            })
+            .catch(e => {
+                vm.result = e;
+            });
       });
     },
     showToken: function() {
