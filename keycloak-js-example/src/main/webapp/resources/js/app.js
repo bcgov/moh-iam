@@ -1,5 +1,5 @@
 var app = (function () {
-    var loadUserDetails = function () {
+    var searchForUsers = function () {
         var url = keycloak.authServerUrl
                 + "admin/realms/"
                 + keycloak.realm
@@ -15,6 +15,7 @@ var app = (function () {
             if (req.readyState === 4) {
                 if (req.status === 200) {
                     output(this.responseText);
+                    showSearchResults(this.responseText);
                 } else if (req.status === 403) {
                     output('Forbidden');
                 } else {
@@ -26,8 +27,36 @@ var app = (function () {
         req.send();
     };
 
+    function loadClients() {
+        keycloak.updateToken().success(function () {
+            var url = keycloak.authServerUrl
+                    + "admin/realms/"
+                    + keycloak.realm
+                    + "/clients?first=0&max=20&search=true";
+            
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.setRequestHeader('Accept', 'application/json');
+            req.setRequestHeader('Authorization', 'Bearer ' + keycloak.token);
+
+            req.onreadystatechange = function () {
+                if (req.readyState === 4) {
+                    if (req.status === 200) {
+                        output(this.responseText);
+                    } else if (req.status === 403) {
+                        output('Forbidden');
+                    } else {
+                        output('Failed');
+                    }
+                }
+            };
+
+            req.send();
+        });
+    }
+
     function loadData() {
-        keycloak.updateToken().success(loadUserDetails);
+        keycloak.updateToken().success(searchForUsers);
     }
 
     function loadProfile() {
@@ -103,6 +132,50 @@ var app = (function () {
         document.getElementById('output').innerHTML = data;
     }
 
+    function showSearchResults(data) {
+        data = JSON.parse(data);
+        var searchResults = document.getElementById('searchResults');
+        var mylist = document.createElement('ul');
+        searchResults.innerHTML = null;
+        searchResults.appendChild(mylist);
+        for (var i = 0; i < data.length; i++) {
+            var item = document.createElement('li');
+            item.innerHTML = data[i].username;
+            item.onclick = showUserDetails(data[i]);
+            mylist.appendChild(item);
+        }
+    }
+
+    function showUserDetails(user) {
+        return function () {
+            var url = keycloak.authServerUrl
+                    + "admin/realms/"
+                    + keycloak.realm
+                    + "/users/"
+                    + user.id;
+
+            var req = new XMLHttpRequest();
+            req.open('GET', url, true);
+            req.setRequestHeader('Accept', 'application/json');
+            req.setRequestHeader('Authorization', 'Bearer ' + keycloak.token);
+
+            req.onreadystatechange = function () {
+                if (req.readyState === 4) {
+                    if (req.status === 200) {
+                        console.log(this.responseText);
+                        document.getElementById('userDetails').innerHTML = this.responseText;
+                    } else if (req.status === 403) {
+                        console.log('Forbidden');
+                    } else {
+                        console.log('Failed');
+                    }
+                }
+            };
+
+            req.send();
+        };
+    }
+
     function event(event) {
         var e = document.getElementById('events').innerHTML;
         document.getElementById('events').innerHTML = new Date().toLocaleString() + "\t" + event + "\n" + e;
@@ -151,6 +224,7 @@ var app = (function () {
 
     return {
         loadData: loadData,
+        loadClients: loadClients,
         loadProfile: loadProfile,
         updateProfile: updateProfile,
         loadUserInfo: loadUserInfo,
