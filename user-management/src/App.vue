@@ -26,19 +26,23 @@
           <label for="user-name">Username</label>
           <input type="text" v-model="userSearchInput" id="user-name" />
           <button v-on:click="searchUser">Search Users</button>
+          <button v-on:click="loadClients">load clients</button>
         </div>
 
         <div class="col4">
-          <label>Result</label>
+          <label style="font-weight:600">Result</label>
           <pre
             style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap; margin-bottom: 20px"
             id="output"
           >{{ result }}</pre>
-          <label>Search Results</label>
+          <label style="font-weight:600">Search Results</label>
           <ul id="example-1">
-            <li v-for="item in searchResults" v-bind:key="item.username">
-             {{ item.username }}
-            </li>
+            <li v-for="item in searchResults" v-bind:key="item.username">{{ item.username }}</li>
+          </ul>
+
+          <label  style="font-weight:600">Clients</label>
+          <ul id="client-list">
+            <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
           </ul>
         </div>
       </section>
@@ -53,8 +57,9 @@ import TheHeader from "./components/TheHeader.vue";
 import TheFooter from "./components/TheFooter.vue";
 import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
+import kcApis from "./api/keycloakApis.js";
 
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   name: "App",
@@ -68,11 +73,17 @@ export default {
     return {
       result: "",
       userSearchInput: "",
-      searchResults: []
+      searchResults: [],
+      clients: []
     };
   },
   methods: {
-      
+    loadClients: function() {
+      var vm = this;
+      kcApis.getClients(this.$keycloak, function(results) {
+        vm.clients = results;
+      });
+    },
     loadUserInfo: function() {
       var vm = this;
       this.$keycloak
@@ -104,15 +115,18 @@ export default {
           vm.$keycloak.realm +
           "/users?briefRepresentation=true&first=0&max=20&search=" +
           vm.userSearchInput;
-  
-        axios.get(url, {headers: {Authorization: 'Bearer ' + vm.$keycloak.token}})
-            .then(response => {
-                vm.result = response.data;
-                vm.searchResults = response.data;
-            })
-            .catch(e => {
-                vm.result = e;
-            });
+
+        axios
+          .get(url, {
+            headers: { Authorization: "Bearer " + vm.$keycloak.token }
+          })
+          .then(response => {
+            vm.result = response.data;
+            vm.searchResults = response.data;
+          })
+          .catch(e => {
+            vm.result = e;
+          });
       });
     },
     showToken: function() {
