@@ -40,7 +40,7 @@
             <li v-for="item in searchResults" v-bind:key="item.username">{{ item.username }}</li>
           </ul>
 
-          <label  style="font-weight:600">Clients</label>
+          <label style="font-weight:600">Clients</label>
           <ul id="client-list">
             <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
           </ul>
@@ -57,7 +57,9 @@ import TheHeader from "./components/TheHeader.vue";
 import TheFooter from "./components/TheFooter.vue";
 import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
-import kcApis from "./api/keycloakApis.js";
+
+import { RepositoryFactory } from "./api/RepositoryFactory";
+const ClientsRepository = RepositoryFactory.get("clients");
 
 import axios from "axios";
 
@@ -80,9 +82,13 @@ export default {
   methods: {
     loadClients: function() {
       var vm = this;
-      kcApis.getClients(this.$keycloak, function(results) {
-        vm.clients = results;
-      });
+      ClientsRepository.get()
+        .then(response => {
+          vm.clients = response.data;
+        })
+        .catch(e => {
+          vm.clients = e;
+        });
     },
     loadUserInfo: function() {
       var vm = this;

@@ -4,8 +4,8 @@ import Keycloak from 'keycloak-js';
 
 Vue.config.productionTip = false
 
-let keycloak = Keycloak();
-Vue.prototype.$keycloak = keycloak;
+var keycloak = Keycloak();
+Vue.prototype.$keycloak = keycloak; //maybe be able to remove this and use the export
 
 var initOptions = {
   responseMode: 'fragment',
@@ -21,10 +21,9 @@ keycloak.init(initOptions).success((auth) => {
     console.log("Authenticated");
   }
 
-  var vm = new Vue({
+  new Vue({
     render: h => h(App)
   }).$mount('#app');
-  console.log(vm.$children[0].message);
 
   setInterval(() => {
     keycloak.updateToken(70).success((refreshed) => {
@@ -44,5 +43,5 @@ keycloak.init(initOptions).success((auth) => {
   console.log("Authenticated Failed");
 });
 
-
+export { keycloak }
 
