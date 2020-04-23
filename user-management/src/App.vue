@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <v-app>
     <the-header></the-header>
     <the-nav-bar></the-nav-bar>
     <main>
@@ -40,6 +40,12 @@
             <ul id="example-1">
               <li v-for="item in searchResults" v-bind:key="item.username">{{ item.username }}</li>
             </ul>
+            <v-data-table
+              :headers="headers"
+              :items="searchResults"
+              :items-per-page="5"
+              class="elevation-1"
+            ></v-data-table>
 
             <label>Clients</label>
             <ul id="client-list">
@@ -53,7 +59,7 @@
     </main>
 
     <the-footer></the-footer>
-  </div>
+  </v-app>
 </template>
 
 <script>
@@ -79,6 +85,15 @@ export default {
   },
   data() {
     return {
+      headers: [
+        {
+          text: "ID",
+          align: "start",
+          sortable: false,
+          value: "id"
+        },
+        { text: "Username", value: "username" }
+      ],
       result: "",
       userSearchInput: "",
       searchResults: [],

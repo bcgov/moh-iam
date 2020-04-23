@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import Keycloak from 'keycloak-js';
+import vuetify from './plugins/vuetify';
 
 Vue.config.productionTip = false
 
@@ -22,6 +23,7 @@ keycloak.init(initOptions).success((auth) => {
   }
 
   new Vue({
+    vuetify,
     render: h => h(App)
   }).$mount('#app');
 
