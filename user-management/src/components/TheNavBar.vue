@@ -28,6 +28,9 @@ nav .container {
     margin: 0 auto;
     padding: 0 60px;
 }
+nav .container ul {
+  padding: 0;
+}
 nav .container ul li {
     color: #FFFFFF;
     display: inline-block;
@@ -48,8 +51,8 @@ nav .container ul li:hover {
 }
 nav .container ul li a {
     display: block;
-    font-size: 1.6rem;
-    line-height: 4rem;
+    font-size: 1rem;
+    line-height: 40px;
     color: #FFFFFF;
     text-decoration: none;
     height: 40px;

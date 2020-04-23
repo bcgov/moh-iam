@@ -1,5 +1,5 @@
 <template>
-  <footer>
+  <footer class="primary">
     <div class="container">
       <div class="col1">
         <ul>
@@ -46,13 +46,13 @@ footer .container {
     max-width: 1320px;
     min-width: 1100px;
     margin: 0 auto;
-    padding: 20px 60px 60px 60px;
+    padding: 20px 60px 0px 60px;
 }
 footer li {
     margin-bottom: 10px;
 }
 footer li, .v-application footer li a {
-    font-size: 1.3rem;
+    font-size: 0.8125rem;
     color: #FFFFFF;
 }
 footer li a {

@@ -1,9 +1,15 @@
 $body-font-family: 'BCSans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-$font-size-root: 10px;
+$font-size-root: 16px;
 $material-light: (
     'background': #F1F1F1
 );
 $btn-font-sizes: (
-    'small': 1.6rem
+    'small': 1rem
 );
-$btn-letter-spacing: .07em;
+$btn-font-weight: 600;
+$btn-letter-spacing: .04em;
+$btn-text-transform: none;
+
+$text-field-padding: 10px;
+
+$text-field-outlined-fieldset-border: 2px solid primary;

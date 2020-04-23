@@ -1,13 +1,10 @@
-html {
-    font-size: 62.5%;
-}
 body {
     font-family: 'BCSans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: normal;
 }
 h1 {
-    font-size: 3.3rem;
-    line-height: 3.9rem;
+    font-size: 2rem;
+    line-height: 2rem;
     font-weight: bold;
     margin-bottom: 20px;
 }
@@ -15,13 +12,13 @@ h2 {
     font-weight: bold;
 }
 h2, p {
-    font-size: 1.6rem;
-    line-height: 2.6rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
     margin-bottom: 20px;
 }
 .small {
-    font-size: 1.3rem;
-    line-height: 2rem;
+    font-size: 0.815rem;
+    line-height: 1.25rem;
 }
 .user-select-off {
     -webkit-touch-callout: none;

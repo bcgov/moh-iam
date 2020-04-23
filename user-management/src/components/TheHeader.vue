@@ -50,8 +50,8 @@ header .container .identity .sitename {
     vertical-align: top;
     height: 60px;
     margin: 0;
-    font-size: 2.2rem;
-    line-height: 6rem;
+    font-size: 1.375rem;
+    line-height: 59px;
     font-weight: bold;
     color: #FFFFFF;
 }
@@ -67,8 +67,8 @@ header .container .options .sign-out {
     border: 2px solid #FFFFFF;
     border-radius: 4px;
     text-decoration: none;
-    font-size: 1.6rem;
-    line-height: 3.6rem;
+    font-size: 1rem;
+    line-height: 2.25rem;
     font-weight: bold;
     color: #FFFFFF;
     cursor: pointer;

@@ -7,7 +7,7 @@
         <the-sub-nav></the-sub-nav>
 
         <div class="col1">
-          <v-text-field v-model="userSearchInput" placeholder="Search for user" />
+          <v-text-field outlined dense v-model="userSearchInput" placeholder="Search for user" />
           <v-btn small v-on:click="searchUser">Search Users</v-btn>
         </div>
         <v-data-table

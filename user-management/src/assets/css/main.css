@@ -1,6 +1,7 @@
 /* Body */
 body {
     background-color: #F1F1F1;
+    padding-bottom: 20px;
 }
 
 
@@ -69,12 +70,7 @@ input {
     display: block;
     width: 100%;
 }
-input[type="text"], input[type="text"]:hover, input[type="password"], input[type="password"]:hover {
-    border: #036 solid 2px;
-    height: 40px;
-    padding: 10px 10px;
-    border-radius: 4px;
-}
+
 
 select[disabled], select[disabled]:hover, input[disabled], input[disabled]:hover {
     border: #777 solid 2px;
