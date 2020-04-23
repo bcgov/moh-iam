@@ -6,24 +6,19 @@
       <section class="content">
         <the-sub-nav></the-sub-nav>
 
-        <div class="col1">
-          <v-text-field outlined dense v-model="userSearchInput" placeholder="Search for user" />
-          <v-btn small v-on:click="searchUser">Search Users</v-btn>
+        <UserSearch />
+
+        <div class="col4">
+          <v-btn class="secondary" small v-on:click="loadClients">Load Clients</v-btn>
+          <ul id="client-list">
+            <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
+          </ul>
         </div>
-        <v-data-table
-          :headers="headers"
-          :items="searchResults"
-          :items-per-page="5"
-          class="elevation-1"
-        ></v-data-table>
 
-        <v-btn class="secondary" small v-on:click="loadClients">Load Clients</v-btn>
-        <ul id="client-list">
-          <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
-        </ul>
-
-        <v-checkbox v-model="checkbox1" :label="`Keycloak Dev Tools`"></v-checkbox>
-        <KeycloakDevTools v-show="checkbox1" />
+        <div class="col4">
+          <v-checkbox v-model="checkbox1" :label="`Keycloak Dev Tools`"></v-checkbox>
+          <KeycloakDevTools v-show="checkbox1" />
+        </div>
       </section>
     </main>
 
@@ -38,14 +33,15 @@ import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
 
 import { RepositoryFactory } from "./api/RepositoryFactory";
-import axios from "axios";
 import KeycloakDevTools from "./KeycloakDevTools";
+import UserSearch from "./components/UserSearch";
 
 const ClientsRepository = RepositoryFactory.get("clients");
 
 export default {
   name: "App",
   components: {
+    UserSearch,
     KeycloakDevTools,
     TheHeader,
     TheNavBar,
@@ -54,18 +50,6 @@ export default {
   },
   data() {
     return {
-      headers: [
-        {
-          text: "ID",
-          align: "start",
-          sortable: false,
-          value: "id"
-        },
-        { text: "Username", value: "username" }
-      ],
-      result: "",
-      userSearchInput: "",
-      searchResults: [],
       clients: [],
       checkbox1: false
     };
@@ -80,30 +64,6 @@ export default {
         .catch(e => {
           vm.clients = e;
         });
-    },
-
-    searchUser: function() {
-      var vm = this;
-      this.$keycloak.updateToken().success(function() {
-        var url =
-          vm.$keycloak.authServerUrl +
-          "admin/realms/" +
-          vm.$keycloak.realm +
-          "/users?briefRepresentation=true&first=0&max=20&search=" +
-          vm.userSearchInput;
-
-        axios
-          .get(url, {
-            headers: { Authorization: "Bearer " + vm.$keycloak.token }
-          })
-          .then(response => {
-            vm.result = response.data;
-            vm.searchResults = response.data;
-          })
-          .catch(e => {
-            vm.result = e;
-          });
-      });
     }
   }
 };
