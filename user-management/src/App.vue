@@ -109,3 +109,8 @@
     };
 </script>
 
+<style src=./assets/css/fonts.css></style>
+<style src=./assets/css/grid.css></style>
+<style src=./assets/css/main.css></style>
+<style src=./assets/css/reset.css></style>
+<style src=./assets/css/typography.css></style>
