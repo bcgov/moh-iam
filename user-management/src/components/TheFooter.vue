@@ -51,7 +51,7 @@ footer .container {
 footer li {
     margin-bottom: 10px;
 }
-footer li, footer li a {
+footer li, .v-application footer li a {
     font-size: 1.3rem;
     color: #FFFFFF;
 }

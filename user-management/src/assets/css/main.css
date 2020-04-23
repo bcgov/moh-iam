@@ -2,15 +2,13 @@
 body {
     background-color: #F1F1F1;
 }
-body.login {
-    background-color: #EEEEEE;
-}
 
 
 /* Main */
 main {
     max-width: 1320px;
     min-width: 1100px;
+    width: 100%;
     min-height: calc(100vh - 280px);
     margin: 0 auto;
     padding: 20px 60px 60px 60px;
@@ -73,8 +71,13 @@ input {
 }
 input[type="text"], input[type="text"]:hover, input[type="password"], input[type="password"]:hover {
     border: #036 solid 2px;
-    color: #036;
     height: 40px;
     padding: 10px 10px;
     border-radius: 4px;
+}
+
+select[disabled], select[disabled]:hover, input[disabled], input[disabled]:hover {
+    border: #777 solid 2px;
+    background-color: #e3e3e3;
+    opacity: .75;
 }

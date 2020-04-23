@@ -4,7 +4,6 @@ html {
 body {
     font-family: 'BCSans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: normal;
-    color: #003366;
 }
 h1 {
     font-size: 3.3rem;
@@ -39,4 +38,8 @@ pre,
 label{
     font-size: 1.6rem;
     font-weight: 600;
+}
+label.disabled {
+    color: #777;
+    opacity: 0.75;
 }

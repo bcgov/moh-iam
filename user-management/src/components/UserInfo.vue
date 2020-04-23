@@ -3,15 +3,15 @@
     <h1>Update - {{ username }}</h1>
 
     <div class="col2">
-      <label>User Name</label>
-      <input type="text" disabled="true" id="first-name" v-model="username"/>
+      <label class="disabled" for="user-name">User Name</label>
+      <input type="text" disabled="true" id="user-name" v-model="username"/>
     </div>
     <div class="col2">
-      <label>First Name</label>
+      <label for="first-name">First Name</label>
       <input type="text" id="first-name" />
     </div>
     <div class="col2">
-      <label>Last Name</label>
+      <label for="last-name">Last Name</label>
       <input type="text" id="last-name" />
     </div>
   </div>

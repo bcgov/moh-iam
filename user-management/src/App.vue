@@ -98,7 +98,7 @@ export default {
       userSearchInput: "",
       searchResults: [],
       clients: [],
-      userSelected: true
+      userSelected: false
     };
   },
   methods: {

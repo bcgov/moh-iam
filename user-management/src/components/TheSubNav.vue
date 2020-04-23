@@ -16,6 +16,11 @@ export default {
     margin-bottom: 20px;
     font-size: 15px;
 }
+.nav-tabs,
+.v-application .nav-tabs a {
+  color: #ffffff; 
+}
+
 .nav-tabs a {
   display: inline-block;
   padding: 0 20px;
@@ -27,21 +32,18 @@ export default {
 .active-tab,
 .active-tab:hover{
     background: #003366;
-    color: #ffffff; 
     margin-right:10px; 
     text-decoration: none;
     border-radius: 8px 8px 0 0;
 }
 .inactive-tab {
     background: #999999; 
-    color: #ffffff; 
     margin-right:10px;
     text-decoration: none;
     border-radius: 8px 8px 0 0;
 }
 .inactive-tab:hover {
     background: #666666;
-    color: #ffffff; 
     text-decoration: none;
 }
 </style>
