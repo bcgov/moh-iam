@@ -6,45 +6,49 @@
       <section class="content">
         <the-sub-nav></the-sub-nav>
 
-        <div class="col1">
-          <h2>User Account</h2>
-          <button v-on:click="loadProfile">Get Profile</button>
-          <button v-on:click="updateProfile">Update profile</button>
+        <div id="testPage" v-if="!userSelected">
+          <div class="col1">
+            <h2>User Account</h2>
+            <button v-on:click="loadProfile">Get Profile</button>
+            <button v-on:click="updateProfile">Update profile</button>
+          </div>
+
+          <div class="col1">
+            <h2>Token Information</h2>
+            <button v-on:click="loadUserInfo">Get User Info</button>
+            <button v-on:click="showToken">Show Token</button>
+            <button v-on:click="showRefreshToken">Show Refresh Token</button>
+            <button v-on:click="showIdToken">Show ID Token</button>
+            <button v-on:click="showExpires">Show Expires</button>
+            <button v-on:click="showDetails">Show Details</button>
+          </div>
+          <div class="col1">
+            <h2>User Search</h2>
+            <label for="user-name">Username</label>
+            <input type="text" v-model="userSearchInput" id="user-name" />
+            <button v-on:click="searchUser">Search Users</button>
+            <button v-on:click="loadClients">load clients</button>
+          </div>
+
+          <div class="col4">
+            <label>Result</label>
+            <pre
+              style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap; margin-bottom: 20px"
+              id="output"
+            >{{ result }}</pre>
+            <label>Search Results</label>
+            <ul id="example-1">
+              <li v-for="item in searchResults" v-bind:key="item.username">{{ item.username }}</li>
+            </ul>
+
+            <label>Clients</label>
+            <ul id="client-list">
+              <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="col1">
-          <h2>Token Information</h2>
-          <button v-on:click="loadUserInfo">Get User Info</button>
-          <button v-on:click="showToken">Show Token</button>
-          <button v-on:click="showRefreshToken">Show Refresh Token</button>
-          <button v-on:click="showIdToken">Show ID Token</button>
-          <button v-on:click="showExpires">Show Expires</button>
-          <button v-on:click="showDetails">Show Details</button>
-        </div>
-        <div class="col1">
-          <h2>User Search</h2>
-          <label for="user-name">Username</label>
-          <input type="text" v-model="userSearchInput" id="user-name" />
-          <button v-on:click="searchUser">Search Users</button>
-          <button v-on:click="loadClients">load clients</button>
-        </div>
-
-        <div class="col4">
-          <label style="font-weight:600">Result</label>
-          <pre
-            style="background-color: #ddd; border: 1px solid #ccc; padding: 10px; word-wrap: break-word; white-space: pre-wrap; margin-bottom: 20px"
-            id="output"
-          >{{ result }}</pre>
-          <label style="font-weight:600">Search Results</label>
-          <ul id="example-1">
-            <li v-for="item in searchResults" v-bind:key="item.username">{{ item.username }}</li>
-          </ul>
-
-          <label style="font-weight:600">Clients</label>
-          <ul id="client-list">
-            <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
-          </ul>
-        </div>
+        <user-info v-if="userSelected"></user-info>
       </section>
     </main>
 
@@ -57,6 +61,7 @@ import TheHeader from "./components/TheHeader.vue";
 import TheFooter from "./components/TheFooter.vue";
 import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
+import UserInfo from "./components/UserInfo";
 
 import { RepositoryFactory } from "./api/RepositoryFactory";
 const ClientsRepository = RepositoryFactory.get("clients");
@@ -69,14 +74,16 @@ export default {
     TheHeader,
     TheNavBar,
     TheFooter,
-    TheSubNav
+    TheSubNav,
+    UserInfo
   },
   data() {
     return {
       result: "",
       userSearchInput: "",
       searchResults: [],
-      clients: []
+      clients: [],
+      userSelected: true
     };
   },
   methods: {

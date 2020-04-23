@@ -13,7 +13,7 @@ export default {
 <style>
 .nav-tabs {
     border-bottom: 4px solid #003366;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     font-size: 15px;
 }
 .nav-tabs a {

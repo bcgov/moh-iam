@@ -7,8 +7,8 @@ body {
     color: #003366;
 }
 h1 {
-    font-size: 3.7rem;
-    line-height: 5.9rem;
+    font-size: 3.3rem;
+    line-height: 3.9rem;
     font-weight: bold;
     margin-bottom: 20px;
 }
@@ -38,4 +38,5 @@ a {
 pre,
 label{
     font-size: 1.6rem;
+    font-weight: 600;
 }

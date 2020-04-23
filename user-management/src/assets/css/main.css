@@ -69,6 +69,7 @@ main .content:after {
 /* Input */ 
 input {
     display: block;
+    width: 100%;
 }
 input[type="text"], input[type="text"]:hover, input[type="password"], input[type="password"]:hover {
     border: #036 solid 2px;
