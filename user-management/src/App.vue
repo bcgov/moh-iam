@@ -44,7 +44,7 @@ export default {
   data() {
     return {
       checkbox1: false,
-      isUserSelected: true
+      isUserSelected: false
     };
   }
 };
