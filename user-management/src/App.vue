@@ -6,14 +6,8 @@
       <section class="content">
         <the-sub-nav></the-sub-nav>
 
-        <UserSearch />
-
-        <div class="col4">
-          <v-btn class="secondary" small v-on:click="loadClients">Load Clients</v-btn>
-          <ul id="client-list">
-            <li v-for="client in clients" v-bind:key="client.clientId">{{ client.clientId }}</li>
-          </ul>
-        </div>
+        <UserSearch v-show="!isUserSelected" />
+        <UserInfo v-show="isUserSelected" />
 
         <div class="col4">
           <v-checkbox v-model="checkbox1" :label="`Keycloak Dev Tools`"></v-checkbox>
@@ -32,17 +26,16 @@ import TheFooter from "./components/TheFooter.vue";
 import TheNavBar from "./components/TheNavBar.vue";
 import TheSubNav from "./components/TheSubNav.vue";
 
-import { RepositoryFactory } from "./api/RepositoryFactory";
 import KeycloakDevTools from "./KeycloakDevTools";
 import UserSearch from "./components/UserSearch";
-
-const ClientsRepository = RepositoryFactory.get("clients");
+import UserInfo from "./components/UserInfo";
 
 export default {
   name: "App",
   components: {
     UserSearch,
     KeycloakDevTools,
+    UserInfo,
     TheHeader,
     TheNavBar,
     TheFooter,
@@ -50,21 +43,9 @@ export default {
   },
   data() {
     return {
-      clients: [],
-      checkbox1: false
+      checkbox1: false,
+      isUserSelected: true
     };
-  },
-  methods: {
-    loadClients: function() {
-      var vm = this;
-      ClientsRepository.get()
-        .then(response => {
-          vm.clients = response.data;
-        })
-        .catch(e => {
-          vm.clients = e;
-        });
-    }
   }
 };
 </script>

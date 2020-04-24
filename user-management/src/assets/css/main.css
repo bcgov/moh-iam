@@ -56,7 +56,7 @@ main .secondary-nav ul li a:focus {
 }
 main .content {
     padding: 0;
-    font-size: 1.6rem;
+    font-size: 1rem;
 }
 main .content:after {
     content: "";
@@ -72,7 +72,7 @@ input {
 }
 
 
-select[disabled], select[disabled]:hover, input[disabled], input[disabled]:hover {
+select[disabled], select[disabled]:hover {
     border: #777 solid 2px;
     background-color: #e3e3e3;
     opacity: .75;
