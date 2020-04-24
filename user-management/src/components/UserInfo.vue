@@ -29,23 +29,25 @@
             item-value="id"
             placeholder="Select an Application"
             v-model="selectedClientId"
-            v-on:change="getClientRoles"
+            v-on:change="getUserClientRoles();"
           ></v-autocomplete>
         </v-col>
         <v-col class="col-7">
           <label v-show="selectedClientId">Roles</label>
-          <div class="checkbox-group">
+          <div class="checkbox-group" v-if="selectedClientId">
             <v-checkbox
               hide-details="auto"
-              v-for="role in rolesOfSelectedClient"
+              v-for="role in rolesOfSelectedClient" 
               v-model="selectedRoles"
-              :value="role.name"
+              :value="role"
               :label="role.name"
               v-bind:key="role.name"
             ></v-checkbox>
           </div>
-
-          {{ selectedRoles }}
+          <div class="my-6">
+            <v-btn class="secondary" medium v-on:click="postUserClientRoles">Save User Role</v-btn>
+            {{ selectedRoles }}
+          </div>
         </v-col>
       </v-row>
     </v-card>
@@ -55,14 +57,16 @@
 <script>
 import { RepositoryFactory } from "./../api/RepositoryFactory";
 const ClientsRepository = RepositoryFactory.get("clients");
+const UsersRepository = RepositoryFactory.get("users");
 
 export default {
   name: "UserInfo",
   data() {
     return {
+      userId: "eea8d978-02e0-4883-828f-42316626ade9",
       clients: [],
       selectedClientId: null,
-      rolesOfSelectedClient: null,
+      rolesOfSelectedClient: [],
       selectedRoles: [],
       userName: "123-tschiavo",
       firstName: "trevor",
@@ -70,15 +74,38 @@ export default {
     };
   },
   methods: {
-    getClientRoles: function() {
-      ClientsRepository.getRoles(this.selectedClientId)
+    getUserClientRoles: function() {
+      this.rolesOfSelectedClient = [],
+      this.selectedRoles = [],
+      this.getUserEffectiveClientRoles(this.getUserAvailableClientRoles);
+    },
+    getUserAvailableClientRoles: function() {
+      UsersRepository.getUserAvailableClientRoles(
+        this.userId,
+        this.selectedClientId
+      )
         .then(response => {
-          this.rolesOfSelectedClient = response.data;
+          this.rolesOfSelectedClient.push(...response.data);
         })
         .catch(e => {
           console.log(e);
         });
-    }
+    },
+    getUserEffectiveClientRoles: function(callback) {
+      UsersRepository.getUserEffectiveClientRoles(
+        this.userId,
+        this.selectedClientId
+      )
+        .then(response => {
+          this.rolesOfSelectedClient.push(...response.data);
+          this.selectedRoles.push(...response.data);
+          callback()
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },
+    postUserClientRoles: function() {}
   },
   mounted() {
     ClientsRepository.get()
@@ -88,7 +115,6 @@ export default {
       .catch(e => {
         console.log(e);
       });
-    /* Todo - get all of the users roles */
   }
 };
 </script>
