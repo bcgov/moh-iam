@@ -6,12 +6,12 @@
       <section class="content">
         <the-sub-nav></the-sub-nav>
         <v-alert v-model="alert" :type="alertType" dismissible>{{ alertMessage }}</v-alert>
-        <UserSearch v-show="!isUserSelected" />
+        <UserSearch v-show="!isUserSelected" v-on:userSelected="userSelected" />
         <UserInfo v-show="isUserSelected" />
 
         <div class="col4">
-          <v-checkbox v-model="checkbox1" :label="`Keycloak Dev Tools`"></v-checkbox>
-          <KeycloakDevTools v-show="checkbox1" />
+          <v-checkbox v-model="showKeycloakTools" :label="`Keycloak Dev Tools`"></v-checkbox>
+          <KeycloakDevTools v-show="showKeycloakTools" />
         </div>
       </section>
     </main>
@@ -41,13 +41,19 @@ export default {
     TheFooter,
     TheSubNav
   },
+    methods: {
+        userSelected: function(user) {
+            console.log("userSelected");
+            console.log(user);
+        }
+    },
   data() {
     return {
       alert: false,
       alertType: "success",
       alertMessage: "",
-      checkbox1: false,
-      isUserSelected: true
+      showKeycloakTools: false,
+      isUserSelected: false
     };
   }
 };

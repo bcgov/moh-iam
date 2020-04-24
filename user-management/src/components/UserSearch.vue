@@ -11,6 +11,7 @@
                     :headers="headers"
                     :items="searchResults"
                     :items-per-page="5"
+                    v-on:click:row="selectUser"
                     class="elevation-1"
             ></v-data-table>
         </div>
@@ -40,6 +41,10 @@
             };
         },
         methods: {
+            selectUser(user) {
+                console.log("select user");
+                this.$emit('userSelected', user);
+            },
             searchUser: function () {
                 var vm = this;
                 this.$keycloak.updateToken().success(function () {
