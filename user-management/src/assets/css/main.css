@@ -64,6 +64,19 @@ main .content:after {
     clear: both;
 }
 
+/* Sub groups */
+.subgroup {
+    padding: 20px; margin:0px -20px 20px -20px; max-width: none
+}
+.subgroup h2 {
+    font-weight: 100;
+    color: #999;
+    font-size: 24px;
+    line-height: 30px;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
 
 /* Input */ 
 input {
@@ -71,9 +84,6 @@ input {
     width: 100%;
 }
 
-
-select[disabled], select[disabled]:hover {
-    border: #777 solid 2px;
-    background-color: #e3e3e3;
-    opacity: .75;
+.checkbox-group .v-input--selection-controls {
+    margin-top: 8px;
 }

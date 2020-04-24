@@ -5,7 +5,7 @@
     <main>
       <section class="content">
         <the-sub-nav></the-sub-nav>
-
+        <v-alert v-model="alert" :type="alertType" dismissible>{{ alertMessage }}</v-alert>
         <UserSearch v-show="!isUserSelected" />
         <UserInfo v-show="isUserSelected" />
 
@@ -43,8 +43,11 @@ export default {
   },
   data() {
     return {
+      alert: false,
+      alertType: "success",
+      alertMessage: "",
       checkbox1: false,
-      isUserSelected: false
+      isUserSelected: true
     };
   }
 };
