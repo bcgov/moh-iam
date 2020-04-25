@@ -4,13 +4,13 @@
     <v-row no-gutters>
       <v-col class="col-7">
         <label for="user-name" class="disabled">User Name</label>
-        <v-text-field dense outlined disabled id="user-name" v-model="userName" />
+        <v-text-field dense outlined disabled id="user-name" v-model="user.username" />
 
         <label for="first-name">First Name</label>
-        <v-text-field dense outlined id="first-name" v-model="firstName" />
+        <v-text-field dense outlined id="first-name" v-model="user.firstName" />
 
         <label for="last-name">Last Name</label>
-        <v-text-field dense outlined id="last-name" v-model="lastName" />
+        <v-text-field dense outlined id="last-name" v-model="user.lastName" />
       </v-col>
     </v-row>
 
@@ -61,6 +61,7 @@ const UsersRepository = RepositoryFactory.get("users");
 
 export default {
   name: "UserInfo",
+  props: ['user'],
   data() {
     return {
       userId: "eea8d978-02e0-4883-828f-42316626ade9",

@@ -4,7 +4,7 @@
             <v-text-field outlined dense label="Search" v-model="userSearchInput"
                           placeholder="Username, email, name, or ID"
                           @keyup.native.enter="searchUser"/>
-            <v-btn class="secondary" small v-on:click="searchUser">Search Users</v-btn>
+            <v-btn class="secondary" medium v-on:click="searchUser">Search Users</v-btn>
         </div>
         <div class="col4">
             <v-data-table
