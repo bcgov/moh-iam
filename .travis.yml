@@ -1,3 +1,4 @@
+language: generic
 jobs:
   include:
     - language: java
@@ -9,5 +10,7 @@ jobs:
       env: DIR=ldap-keycloak-etl
       script: cd $DIR && mvn test -B
     - language: node_js
+      node_js: node
+      name: user-management
       env: DIR=user-management
       script: cd $DIR && npm run build
