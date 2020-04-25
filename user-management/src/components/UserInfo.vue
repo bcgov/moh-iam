@@ -82,7 +82,7 @@ export default {
     },
     getUserAvailableClientRoles: function() {
       UsersRepository.getUserAvailableClientRoles(
-        this.userId,
+        this.user.id,
         this.selectedClientId
       )
         .then(response => {
@@ -94,7 +94,7 @@ export default {
     },
     getUserEffectiveClientRoles: function(callback) {
       UsersRepository.getUserEffectiveClientRoles(
-        this.userId,
+        this.user.id,
         this.selectedClientId
       )
         .then(response => {
