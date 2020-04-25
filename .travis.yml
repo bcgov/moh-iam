@@ -13,4 +13,4 @@ jobs:
       node_js: node
       name: user-management
       env: DIR=user-management
-      script: cd $DIR && npm run build
+      script: cd $DIR && npm ci && npm run build
