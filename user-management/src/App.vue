@@ -11,7 +11,7 @@
 
         <div class="col4">
           <v-checkbox v-model="showKeycloakTools" :label="`Keycloak Dev Tools`"></v-checkbox>
-          <KeycloakDevTools v-show="showKeycloakTools"
+          <KeycloakDevTools v-show="showKeycloakTools" />
         </div>
       </section>
     </main>
