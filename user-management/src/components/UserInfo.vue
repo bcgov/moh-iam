@@ -1,5 +1,8 @@
 <template>
   <div id="user-info">
+    <v-alert v-model="alertSuccess" type="success" dismissible>{{ successMessage }}</v-alert>
+    <v-alert v-model="alertError" type="error" dismissible>{{ errorMessage }}</v-alert>
+
     <h1>Update - {{ userName }}</h1>
     <v-row no-gutters>
       <v-col class="col-7">
@@ -37,7 +40,15 @@
           <div class="checkbox-group" v-if="selectedClientId">
             <v-checkbox
               hide-details="auto"
-              v-for="role in rolesOfSelectedClient" 
+              v-for="role in effectiveClientRoles"
+              v-model="selectedRoles"
+              :value="role"
+              :label="role.name"
+              v-bind:key="role.name"
+            ></v-checkbox>
+            <v-checkbox
+              hide-details="auto"
+              v-for="role in availableClientRoles"
               v-model="selectedRoles"
               :value="role"
               :label="role.name"
@@ -45,8 +56,7 @@
             ></v-checkbox>
           </div>
           <div class="my-6">
-            <v-btn class="secondary" medium v-on:click="postUserClientRoles">Save User Role</v-btn>
-            {{ selectedRoles }}
+            <v-btn class="secondary" medium v-on:click="updateUserClientRoles()">Save User Role</v-btn>
           </div>
         </v-col>
       </v-row>
@@ -61,24 +71,28 @@ const UsersRepository = RepositoryFactory.get("users");
 
 export default {
   name: "UserInfo",
-  props: ['user'],
+  props: ["user"],
   data() {
     return {
+      alertSuccess: false,
+      alertError: false,
+      successMessage: "",
+      errorMessage: "",
       userId: "eea8d978-02e0-4883-828f-42316626ade9",
       clients: [],
       selectedClientId: null,
-      rolesOfSelectedClient: [],
-      selectedRoles: [],
-      userName: "123-tschiavo",
-      firstName: "trevor",
-      lastName: "Schiavone"
+      effectiveClientRoles: [],
+      availableClientRoles: [],
+      selectedRoles: []
     };
   },
   methods: {
     getUserClientRoles: function() {
-      this.rolesOfSelectedClient = [],
-      this.selectedRoles = [],
-      this.getUserEffectiveClientRoles(this.getUserAvailableClientRoles);
+      this.effectiveClientRoles = [];
+      this.availableClientRoles = [];
+      this.selectedRoles = [];
+      this.getUserEffectiveClientRoles();
+      this.getUserAvailableClientRoles();
     },
     getUserAvailableClientRoles: function() {
       UsersRepository.getUserAvailableClientRoles(
@@ -86,27 +100,82 @@ export default {
         this.selectedClientId
       )
         .then(response => {
-          this.rolesOfSelectedClient.push(...response.data);
+          this.availableClientRoles.push(...response.data);
         })
         .catch(e => {
           console.log(e);
         });
     },
-    getUserEffectiveClientRoles: function(callback) {
+    getUserEffectiveClientRoles: function() {
       UsersRepository.getUserEffectiveClientRoles(
         this.user.id,
         this.selectedClientId
       )
         .then(response => {
-          this.rolesOfSelectedClient.push(...response.data);
+          this.effectiveClientRoles.push(...response.data);
           this.selectedRoles.push(...response.data);
-          callback()
         })
         .catch(e => {
           console.log(e);
         });
     },
-    postUserClientRoles: function() {}
+    updateUserClientRoles: function() {
+      //If in effective but not selected DELETE
+      var rolesToDelete = this.effectiveClientRoles.filter(
+        value => !this.selectedRoles.includes(value)
+      );
+
+      //If in available and selected ADD
+      var rolesToAdd = this.availableClientRoles.filter(value =>
+        this.selectedRoles.includes(value)
+      );
+
+      this.successMessage = "";
+      this.errorMessage = "";
+
+      if (rolesToDelete.length > 0) {
+        this.deleteUserClientRoles(rolesToDelete);
+      }
+      if (rolesToAdd.length > 0) {
+        this.addUserClientRoles(rolesToAdd);
+      }    
+    },
+    deleteUserClientRoles: function(rolesToDelete) {
+      UsersRepository.deleteUserClientRoles(
+        this.user.id,
+        this.selectedClientId,
+        rolesToDelete
+      )
+        .then(response => {
+          this.alertSuccess = true;
+          this.successMessage =
+            this.successMessage + "Roles Added Successfully ";
+            console.log(response);
+        })
+        .catch(error => {
+          this.alertError = true;
+          this.errorMessage = this.errorMessage + "Error Adding Roles";
+          console.log(error);
+        });
+    },
+    addUserClientRoles: function(rolesToAdd) {
+      UsersRepository.addUserClientRoles(
+        this.user.id,
+        this.selectedClientId,
+        rolesToAdd
+      )
+        .then(response => {
+          this.alertSuccess = true;
+          this.successMessage =
+            this.successMessage + "Roles Removed Successfully ";
+          console.log(response);
+        })
+        .catch(error => {
+          this.alertError = true;
+          this.errorMessage = this.errorMessage + "Error Removing Roles";
+          console.log(error);
+        });
+    }
   },
   mounted() {
     ClientsRepository.get()

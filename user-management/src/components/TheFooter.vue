@@ -61,4 +61,7 @@ footer li a {
 footer li a:hover, footer li a:focus {
     text-decoration: underline;
 }
+.v-application footer ul {
+  padding: 0px;
+}
 </style>

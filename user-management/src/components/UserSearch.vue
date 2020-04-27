@@ -1,11 +1,25 @@
 <template>
     <div>
-        <div class="col1">
-            <v-text-field outlined dense label="Search" v-model="userSearchInput"
-                          placeholder="Username, email, name, or ID"
-                          @keyup.native.enter="searchUser"/>
-            <v-btn class="secondary" medium v-on:click="searchUser">Search Users</v-btn>
-        </div>
+        <v-row no-gutters>
+            <v-col class="col-6">
+                <label for="user-search">Search
+                    <v-tooltip right>
+                        <template v-slot:activator="{ on }">
+                            <v-icon v-on="on" small>mdi-help-circle</v-icon>
+                        </template>
+                        <span>Search by Username, email, name, or ID</span>
+                    </v-tooltip>
+                </label>
+                
+                
+                <v-text-field id="user-search" outlined dense v-model="userSearchInput"
+                            placeholder="Username, email, name, or ID"
+                            @keyup.native.enter="searchUser"/>
+            </v-col>
+            <v-col class="col-1">
+                <v-btn id="search-button" class="secondary" medium v-on:click="searchUser">Search Users</v-btn>
+            </v-col>
+        </v-row>
         <div class="col4">
             <v-data-table
                     :headers="headers"
@@ -42,7 +56,6 @@
         },
         methods: {
             selectUser(user) {
-                console.log("select user");
                 this.$emit('userSelected', user);
             },
             searchUser: function () {
@@ -73,4 +86,8 @@
 </script>
 
 <style scoped>
+#search-button {
+    margin-top: 25px;
+    margin-left: 20px;
+}
 </style>

@@ -9,10 +9,9 @@
         <the-sub-nav
                 v-on:searchTabClicked="showSearch = true"
                 v-on:usersTabClicked="showSearch = false"
-                ></the-sub-nav>
-        <v-alert v-model="alert" :type="alertType" dismissible>{{ alertMessage }}</v-alert>
+                ></the-sub-nav>       
         <UserSearch v-show="showSearch" v-on:userSelected="setSelectedUser" />
-        <UserInfo v-bind:user="selectedUser" v-show="!showSearch" />
+        <UserInfo v-bind:user="selectedUser" v-if="!showSearch" />
       </section>
       <v-checkbox v-model="showKeycloakTools" :label="`Keycloak Dev Tools`"></v-checkbox>
       <KeycloakDevTools v-show="showKeycloakTools" />
@@ -47,14 +46,10 @@ export default {
     setSelectedUser: function(user) {
       this.selectedUser = user;
       this.showSearch = false;
-      console.log(this.selectedUser);
     }
   },
   data() {
     return {
-      alert: false,
-      alertType: "success",
-      alertMessage: "",
       showKeycloakTools: false,
       selectedUser: null,
       showSearch: true

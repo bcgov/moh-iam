@@ -87,3 +87,8 @@ input {
 .checkbox-group .v-input--selection-controls {
     margin-top: 8px;
 }
+
+/* icons */
+.v-icon.v-icon {
+    vertical-align: baseline;
+}

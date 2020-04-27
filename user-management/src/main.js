@@ -19,8 +19,6 @@ if (localStorage.token != null) {
   initOptions.refreshToken = localStorage.refreshToken;
 }
 
-console.log(initOptions);
-
 keycloak.init(initOptions).success((auth) => {
 
   if (!auth) {
