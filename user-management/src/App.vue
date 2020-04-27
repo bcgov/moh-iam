@@ -1,19 +1,21 @@
 <template>
   <v-app>
     <the-header></the-header>
-    <the-nav-bar></the-nav-bar>
+    <the-nav-bar
+            v-on:homeTabClicked="showSearch = true"
+    ></the-nav-bar>
     <main>
       <section class="content">
-        <the-sub-nav></the-sub-nav>
+        <the-sub-nav
+                v-on:searchTabClicked="showSearch = true"
+                v-on:usersTabClicked="showSearch = false"
+                ></the-sub-nav>
         <v-alert v-model="alert" :type="alertType" dismissible>{{ alertMessage }}</v-alert>
-        <UserSearch v-show="!selectedUser" v-on:userSelected="setSelectedUser" />
-        <UserInfo v-bind:user="selectedUser" v-if="selectedUser" />
-
-        <div class="col4">
-          <v-checkbox v-model="showKeycloakTools" :label="`Keycloak Dev Tools`"></v-checkbox>
-          <KeycloakDevTools v-show="showKeycloakTools" />
-        </div>
+        <UserSearch v-show="showSearch" v-on:userSelected="setSelectedUser" />
+        <UserInfo v-bind:user="selectedUser" v-show="!showSearch" />
       </section>
+      <v-checkbox v-model="showKeycloakTools" :label="`Keycloak Dev Tools`"></v-checkbox>
+      <KeycloakDevTools v-show="showKeycloakTools" />
     </main>
 
     <the-footer></the-footer>
@@ -44,6 +46,7 @@ export default {
   methods: {
     setSelectedUser: function(user) {
       this.selectedUser = user;
+      this.showSearch = false;
       console.log(this.selectedUser);
     }
   },
@@ -53,7 +56,8 @@ export default {
       alertType: "success",
       alertMessage: "",
       showKeycloakTools: false,
-      selectedUser: null
+      selectedUser: null,
+      showSearch: true
     };
   }
 };

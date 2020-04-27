@@ -14,6 +14,13 @@ var initOptions = {
   onLoad: 'login-required'
 };
 
+if (localStorage.token != null) {
+  initOptions.token = localStorage.token;
+  initOptions.refreshToken = localStorage.refreshToken;
+}
+
+console.log(initOptions);
+
 keycloak.init(initOptions).success((auth) => {
 
   if (!auth) {
@@ -30,7 +37,9 @@ keycloak.init(initOptions).success((auth) => {
   setInterval(() => {
     keycloak.updateToken(70).success((refreshed) => {
       if (refreshed) {
-        console.log('Token refreshed' + refreshed);
+        console.log('Token refreshed');
+        localStorage.token = keycloak.token;
+        localStorage.refreshToken = keycloak.refreshToken;
       } else {
         console.log('Token not refreshed, valid for '
           + Math.round(keycloak.tokenParsed.exp + keycloak.timeSkew - new Date().getTime() / 1000) + ' seconds');

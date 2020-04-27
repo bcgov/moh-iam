@@ -3,7 +3,7 @@
     <div class="container user-select-off">
       <ul>
         <li class="active">
-          <a id="homeLink">Home</a>
+          <a id="homeLink" v-on:click="$emit('homeTabClicked')">Home</a>
         </li>
       </ul>
     </div>
