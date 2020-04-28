@@ -3,7 +3,7 @@
     <v-alert v-model="alertSuccess" type="success" dismissible>{{ successMessage }}</v-alert>
     <v-alert v-model="alertError" type="error" dismissible>{{ errorMessage }}</v-alert>
 
-    <h1>Update - {{ userName }}</h1>
+    <h1>Update - {{ user.username }}</h1>
     <v-row no-gutters>
       <v-col class="col-7">
         <label for="user-name" class="disabled">User Name</label>
@@ -55,7 +55,7 @@
               v-bind:key="role.name"
             ></v-checkbox>
           </div>
-          <div class="my-6">
+          <div class="my-6" v-if="selectedClientId">
             <v-btn class="secondary" medium v-on:click="updateUserClientRoles()">Save User Role</v-btn>
           </div>
         </v-col>

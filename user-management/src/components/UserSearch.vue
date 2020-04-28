@@ -24,9 +24,9 @@
             <v-data-table
                     :headers="headers"
                     :items="searchResults"
-                    :items-per-page="5"
+                    :items-per-page="3"
+                    :footer-props="footerProps"
                     v-on:click:row="selectUser"
-                    class="elevation-1"
             ></v-data-table>
         </div>
     </div>
@@ -41,13 +41,14 @@
         data() {
             return {
                 headers: [
-                    {text: "Username", value: "username"},
-                    {text: "First name", value: "firstName"},
-                    {text: "Last name", value: "lastName"},
-                    {text: "Email", value: "email"},
-                    {text: "Enabled", value: "enabled"},
-                    {text: "ID", value: "id"}
+                    {text: "Username", value: "username", class: "table-header"},
+                    {text: "First name", value: "firstName", class: "table-header" },
+                    {text: "Last name", value: "lastName", class: "table-header"},
+                    {text: "Email", value: "email", class: "table-header"},
+                    {text: "Enabled", value: "enabled", class: "table-header"},
+                    {text: "ID", value: "id",  class: "table-header"}
                 ],
+                footerProps: { 'items-per-page-options': [20] },
                 result: "",
                 userSearchInput: "",
                 searchResults: [],
@@ -85,7 +86,7 @@
     };
 </script>
 
-<style scoped>
+<style>
 #search-button {
     margin-top: 25px;
     margin-left: 20px;

@@ -1,7 +1,6 @@
 <template>
   <div class="nav-tabs" style="width: 100%">
-      <a v-on:click="$emit('searchTabClicked')" class="active-tab">Search</a>
-      <a v-on:click="$emit('usersTabClicked')" class="active-tab">Users</a>
+      <a v-on:click="$emit('searchTabClicked')" class="active-tab">Users</a>
   </div>
 </template>
 
