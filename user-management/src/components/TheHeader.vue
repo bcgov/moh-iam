@@ -30,6 +30,7 @@ export default {
 header {
     height: 80px;
     background-color: #003366;
+    border-bottom: 2px solid #fcba19;
 }
 header .container {
     max-width: 1320px;
