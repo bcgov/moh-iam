@@ -1,4 +1,6 @@
-# user-management
+[![Build Status](https://travis-ci.org/bcgov/moh-iam.svg?branch=master)](https://travis-ci.org/bcgov/moh-iam)
+
+#user-management
 
 ## Project setup
 ```
