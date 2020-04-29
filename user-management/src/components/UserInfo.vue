@@ -94,6 +94,7 @@ export default {
       this.getUserEffectiveClientRoles();
       this.getUserAvailableClientRoles();
     },
+
     getUserAvailableClientRoles: function() {
       UsersRepository.getUserAvailableClientRoles(
         this.user.id,
@@ -106,6 +107,7 @@ export default {
           console.log(e);
         });
     },
+
     getUserEffectiveClientRoles: function() {
       UsersRepository.getUserEffectiveClientRoles(
         this.user.id,
@@ -119,6 +121,7 @@ export default {
           console.log(e);
         });
     },
+
     updateUserClientRoles: function() {
       //If in effective but not selected DELETE
       var rolesToDelete = this.effectiveClientRoles.filter(
@@ -133,46 +136,33 @@ export default {
       this.successMessage = "";
       this.errorMessage = "";
 
-      if (rolesToDelete.length > 0) {
-        this.deleteUserClientRoles(rolesToDelete);
-      }
-      if (rolesToAdd.length > 0) {
-        this.addUserClientRoles(rolesToAdd);
-      }    
-    },
-    deleteUserClientRoles: function(rolesToDelete) {
+      //TODO refactor this
       UsersRepository.deleteUserClientRoles(
         this.user.id,
         this.selectedClientId,
         rolesToDelete
       )
         .then(response => {
-          this.alertSuccess = true;
-          this.successMessage =
-            this.successMessage + "Roles Added Successfully ";
-            console.log(response);
-        })
-        .catch(error => {
-          this.alertError = true;
-          this.errorMessage = this.errorMessage + "Error Adding Roles";
-          console.log(error);
-        });
-    },
-    addUserClientRoles: function(rolesToAdd) {
-      UsersRepository.addUserClientRoles(
-        this.user.id,
-        this.selectedClientId,
-        rolesToAdd
-      )
-        .then(response => {
-          this.alertSuccess = true;
-          this.successMessage =
-            this.successMessage + "Roles Removed Successfully ";
           console.log(response);
+
+          return UsersRepository.addUserClientRoles(
+            this.user.id,
+            this.selectedClientId,
+            rolesToAdd
+          );
         })
-        .catch(error => {
+        .then(response => {
+          console.log(response);
+
+          this.alertSuccess = true;
+          this.successMessage =
+            this.successMessage + "Roles Updated Successfully ";
+
+          this.getUserClientRoles();
+          console.log(response);
+        }).catch(error => {
           this.alertError = true;
-          this.errorMessage = this.errorMessage + "Error Removing Roles";
+          this.errorMessage = this.errorMessage + "Error Updating Roles";
           console.log(error);
         });
     }
