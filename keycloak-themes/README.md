@@ -11,9 +11,9 @@ The top level heading (Ministry of Health) is set by the Realm Display Name whic
 
 The second level heading (application name) is pulled from the Client Name which can be configured in the Keycloak Admin Console.
 
-The identity providers shown are dynamically configured by setting url query parameters. By default all IDPs will show in the list. In order to only show sepcific IDP's, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. (e.g. `idps_to_show=moh_idp,moh_collector_idir` will only show LDAP and IDIR)
+The identity providers shown are dynamically configured by setting url query parameters. By default all IDPs will show in the list. In order to only show specific IDPs, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. (e.g. `idps_to_show=moh_idp,moh_collector_idir` will only show LDAP and IDIR)
 
-When this parameter is set any idp-alias' not in the list will be hidden.
+When this parameter is set any idp-alias not in the list will be hidden.
 
 ### Account Theme Notes
 The top level header is set in the template.ftl template file. 
