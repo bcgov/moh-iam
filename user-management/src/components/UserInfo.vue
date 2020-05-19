@@ -71,14 +71,13 @@ const UsersRepository = RepositoryFactory.get("users");
 
 export default {
   name: "UserInfo",
-  props: ["user"],
   data() {
     return {
       alertSuccess: false,
       alertError: false,
       successMessage: "",
       errorMessage: "",
-      userId: "eea8d978-02e0-4883-828f-42316626ade9",
+      user: '',
       clients: [],
       selectedClientId: null,
       effectiveClientRoles: [],
@@ -86,7 +85,29 @@ export default {
       selectedRoles: []
     };
   },
+  created() {
+    this.getClients();
+    this.getUser();
+  },
   methods: {
+    getUser: function() {
+      UsersRepository.getUser(this.$route.params.userid)
+        .then(response => {
+          this.user = response.data;
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },
+    getClients: function() {
+      ClientsRepository.get()
+        .then(response => {
+          this.clients = response.data;
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    },
     getUserClientRoles: function() {
       this.effectiveClientRoles = [];
       this.availableClientRoles = [];
@@ -159,22 +180,13 @@ export default {
             this.successMessage + "Roles Updated Successfully ";
 
           this.getUserClientRoles();
-
-        }).catch(error => {
+        })
+        .catch(error => {
           this.alertError = true;
           this.errorMessage = this.errorMessage + "Error Updating Roles";
           console.log(error);
         });
     }
-  },
-  mounted() {
-    ClientsRepository.get()
-      .then(response => {
-        this.clients = response.data;
-      })
-      .catch(e => {
-        console.log(e);
-      });
   }
 };
 </script>

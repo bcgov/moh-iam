@@ -1,6 +1,6 @@
 <template>
   <div class="nav-tabs" style="width: 100%">
-      <a v-on:click="$emit('searchTabClicked')" class="active-tab">Users</a>
+     <!--  <a v-on:click="$emit('searchTabClicked')" class="active-tab">Users</a> -->
   </div>
 </template>
 
@@ -10,7 +10,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .nav-tabs {
     border-bottom: 4px solid #003366;
     margin-bottom: 20px;

@@ -8,7 +8,7 @@
             <template v-slot:activator="{ on }">
               <v-icon v-on="on" small>mdi-help-circle</v-icon>
             </template>
-            <span>Search by Username, email, name, or ID</span>
+            <span>Search by username, email, name, or ID</span>
           </v-tooltip>
         </label>
 
@@ -62,8 +62,8 @@ export default {
     };
   },
   methods: {
-    selectUser(user) {
-      this.$emit("userSelected", user);
+    selectUser: function(user) {
+      this.$router.push({ name: 'UserInfo', params: { userid: user.id } })
     },
     searchUser: function() {
       var vm = this;
@@ -84,7 +84,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 #search-button {
   margin-top: 25px;
   margin-left: 20px;

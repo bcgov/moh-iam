@@ -1,9 +1,12 @@
 <template>
   <nav role="navigation">
-    <div class="container user-select-off">
+    <div class="container">
       <ul>
-        <li class="active">
-          <a id="homeLink" v-on:click="$emit('homeTabClicked')">Home</a>
+        <li :class="$route.name == 'Users' ? 'active' : 'inactive'">
+            <router-link :to="{ name: 'UserSearch'}"> Users</router-link>   
+        </li>
+        <li :class="$route.name == 'EventLog' ? 'active' : 'inactive'">
+            <router-link :to="{ name: 'EventLog'}">Event Log</router-link>
         </li>
       </ul>
     </div>
@@ -16,7 +19,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 /* Main Navigation */
 nav {
     height: 40px;
