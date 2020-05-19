@@ -14,11 +14,6 @@ var initOptions = {
   onLoad: 'login-required'
 };
 
-if (localStorage.token != null) {
-  initOptions.token = localStorage.token;
-  initOptions.refreshToken = localStorage.refreshToken;
-}
-
 keycloak.init(initOptions).success((auth) => {
 
   if (!auth) {

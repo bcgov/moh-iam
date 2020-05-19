@@ -4,8 +4,13 @@ const resource = "/users";
 const clientRoleMappings = "role-mappings/clients";
 
 export default {
-    get() {
-        return kcRequest().get(`${resource}`);
+
+    get(queryParams) {
+        if (queryParams) {
+            return kcRequest().get(`${resource}${queryParams}`)
+        } else {
+            return kcRequest().get(`${resource}`);
+        } 
     },
 
     getUser(userId) {

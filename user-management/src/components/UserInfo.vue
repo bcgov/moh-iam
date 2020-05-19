@@ -159,7 +159,7 @@ export default {
             this.successMessage + "Roles Updated Successfully ";
 
           this.getUserClientRoles();
-          console.log(response);
+
         }).catch(error => {
           this.alertError = true;
           this.errorMessage = this.errorMessage + "Error Updating Roles";
