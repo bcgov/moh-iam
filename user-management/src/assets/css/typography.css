@@ -2,6 +2,7 @@ body {
     font-family: 'BCSans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: normal;
 }
+
 h1 {
     font-size: 2rem;
     line-height: 2rem;
@@ -15,6 +16,9 @@ h2, p {
     font-size: 1rem;
     line-height: 1.5rem;
     margin-bottom: 20px;
+}
+h1, h2, h3, h4, h5, p {
+    color: #494949;
 }
 .small {
     font-size: 0.815rem;

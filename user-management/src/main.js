@@ -1,3 +1,5 @@
+import '@bcgov/bc-sans/css/BCSans.css';
+
 import Vue from 'vue'
 import App from './App.vue'
 import Keycloak from 'keycloak-js';

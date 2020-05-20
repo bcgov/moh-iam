@@ -26,18 +26,20 @@
         <v-btn id="search-button" class="secondary" medium v-on:click="searchUser">Search Users</v-btn>
       </v-col>
     </v-row>
-    <div class="col4">
-      <v-data-table
-        id="users-table"
-        class="base-table select-table "
-        :headers="headers"
-        :items="searchResults"
-        :footer-props="footerProps"
-        :loading="userSearchLoadingStatus"
-        loading-text="Searching for users"
-        v-on:click:row="selectUser"
-      ></v-data-table>
-    </div>
+    <v-row no-gutters>
+      <v-col class="col-12">
+        <v-data-table
+          id="users-table"
+          class="base-table select-table"
+          :headers="headers"
+          :items="searchResults"
+          :footer-props="footerProps"
+          :loading="userSearchLoadingStatus"
+          loading-text="Searching for users"
+          v-on:click:row="selectUser"
+        ></v-data-table>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -64,21 +66,23 @@ export default {
       searchResults: [],
       clients: [],
       userSearchLoadingStatus: false,
-      errorMessage: '',
+      errorMessage: ""
     };
   },
   methods: {
     selectUser: function(user) {
-      this.$router.push({ name: 'UserInfo', params: { userid: user.id } })
+      this.$router.push({ name: "UserInfo", params: { userid: user.id } });
     },
     searchUser: function() {
       this.userSearchLoadingStatus = true;
-      this.$keycloak.updateToken()
+      this.$keycloak
+        .updateToken()
         .then(response => {
           console.log(response);
           return UsersRepository.get(
-            "?briefRepresentation=true&first=0&max=300&search=" + this.userSearchInput
-          )
+            "?briefRepresentation=true&first=0&max=300&search=" +
+              this.userSearchInput
+          );
         })
         .then(response => {
           this.result = response.data;
@@ -88,7 +92,7 @@ export default {
           console.log(e);
           this.errorMessage = "User Search Failed";
         })
-        .finally( () => (this.userSearchLoadingStatus = false) ); 
+        .finally(() => (this.userSearchLoadingStatus = false));
     }
   }
 };
