@@ -2,7 +2,7 @@
   <nav role="navigation">
     <div class="container">
       <ul>
-        <li :class="$route.name == 'Users' ? 'active' : 'inactive'">
+        <li :class="($route.name == 'UserSearch' || $route.name == 'UserInfo') ? 'active' : 'inactive'">
             <router-link :to="{ name: 'UserSearch'}"> Users</router-link>   
         </li>
         <li :class="$route.name == 'EventLog' ? 'active' : 'inactive'">

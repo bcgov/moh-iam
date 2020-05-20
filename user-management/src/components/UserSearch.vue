@@ -1,5 +1,6 @@
 <template>
   <div>
+    <v-alert :value="!!errorMessage" type="error" dismissible>{{ errorMessage }}</v-alert>
     <v-row no-gutters>
       <v-col class="col-6">
         <label for="user-search">
@@ -28,9 +29,12 @@
     <div class="col4">
       <v-data-table
         id="users-table"
+        class="base-table select-table "
         :headers="headers"
         :items="searchResults"
         :footer-props="footerProps"
+        :loading="userSearchLoadingStatus"
+        loading-text="Searching for users"
         v-on:click:row="selectUser"
       ></v-data-table>
     </div>
@@ -58,7 +62,9 @@ export default {
       result: "",
       userSearchInput: "",
       searchResults: [],
-      clients: []
+      clients: [],
+      userSearchLoadingStatus: false,
+      errorMessage: '',
     };
   },
   methods: {
@@ -66,19 +72,23 @@ export default {
       this.$router.push({ name: 'UserInfo', params: { userid: user.id } })
     },
     searchUser: function() {
-      var vm = this;
-      this.$keycloak.updateToken().success(function() {
-        UsersRepository.get(
-          "?briefRepresentation=true&first=0&max=300&search=" + vm.userSearchInput
-        )
-          .then(response => {
-            vm.result = response.data;
-            vm.searchResults = response.data;
-          })
-          .catch(e => {
-            vm.result = e;
-          });
-      });
+      this.userSearchLoadingStatus = true;
+      this.$keycloak.updateToken()
+        .then(response => {
+          console.log(response);
+          return UsersRepository.get(
+            "?briefRepresentation=true&first=0&max=300&search=" + this.userSearchInput
+          )
+        })
+        .then(response => {
+          this.result = response.data;
+          this.searchResults = response.data;
+        })
+        .catch(e => {
+          console.log(e);
+          this.errorMessage = "User Search Failed";
+        })
+        .finally( () => (this.userSearchLoadingStatus = false) ); 
     }
   }
 };
@@ -88,9 +98,5 @@ export default {
 #search-button {
   margin-top: 25px;
   margin-left: 20px;
-}
-#users-table tbody tr {
-  cursor: pointer;
-  height: 40px;
 }
 </style>

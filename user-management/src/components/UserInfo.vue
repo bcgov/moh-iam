@@ -1,19 +1,22 @@
 <template>
   <div id="user-info">
-    <v-alert v-model="alertSuccess" type="success" dismissible>{{ successMessage }}</v-alert>
-    <v-alert v-model="alertError" type="error" dismissible>{{ errorMessage }}</v-alert>
+    <v-alert :value="!!successMessage" type="success" dismissible>{{ successMessage }}</v-alert>
+    <v-alert :value="!!errorMessage" type="error" dismissible>{{ errorMessage }}</v-alert>
 
     <h1>Update - {{ user.username }}</h1>
     <v-row no-gutters>
       <v-col class="col-7">
-        <label for="user-name" class="disabled">User Name</label>
-        <v-text-field dense outlined disabled id="user-name" v-model="user.username" />
+        <label for="user-name" class="disabled required">User Name</label>
+        <v-text-field dense outlined disabled id="user-name" v-model="user.username"
+        required :rules="[v => !!v || 'Username is required']"/>
 
-        <label for="first-name">First Name</label>
-        <v-text-field dense outlined id="first-name" v-model="user.firstName" />
+        <label for="first-name" class="required">First Name</label>
+        <v-text-field dense outlined id="first-name" v-model="user.firstName" 
+        required :rules="[v => !!v || 'First Name is required']"/>
 
-        <label for="last-name">Last Name</label>
-        <v-text-field dense outlined id="last-name" v-model="user.lastName" />
+        <label for="last-name" class="required">Last Name</label>
+        <v-text-field dense outlined id="last-name" v-model="user.lastName"
+        required :rules="[v => !!v || 'Last Name is required']"/>
       </v-col>
     </v-row>
 
@@ -73,8 +76,6 @@ export default {
   name: "UserInfo",
   data() {
     return {
-      alertSuccess: false,
-      alertError: false,
       successMessage: "",
       errorMessage: "",
       user: '',
@@ -175,14 +176,12 @@ export default {
         .then(response => {
           console.log(response);
 
-          this.alertSuccess = true;
           this.successMessage =
             this.successMessage + "Roles Updated Successfully ";
 
           this.getUserClientRoles();
         })
         .catch(error => {
-          this.alertError = true;
           this.errorMessage = this.errorMessage + "Error Updating Roles";
           console.log(error);
         });
