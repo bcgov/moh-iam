@@ -1,9 +1,35 @@
 import { shallowMount } from '@vue/test-utils';
 import TheFooter from '@/components/template/TheFooter.vue';
 
-describe('BCGovFooter.vue', () => {
-  it('renders', () => {
-    const wrapper = shallowMount(TheFooter);
+const factory = (values = {}) => {
+  return shallowMount(TheFooter, {
+      data() {
+          return {
+              ...values
+          }
+      }
+  })
+}
+
+describe('TheFooter.vue', () => {
+  it('renders Contact Us', () => {
+    const wrapper = factory();
     expect(wrapper.text()).toMatch('Contact Us');
+  });
+  it('renders Disclaimer', () => {
+    const wrapper = factory();
+    expect(wrapper.text()).toMatch('Disclaimer');
+  });
+  it('renders Accessibility', () => {
+    const wrapper = factory();
+    expect(wrapper.text()).toMatch('Accessibility');
+  });
+  it('renders Privacy', () => {
+    const wrapper = factory();
+    expect(wrapper.text()).toMatch('Privacy');
+  });
+  it('renders Copyright', () => {
+    const wrapper = factory();
+    expect(wrapper.text()).toMatch('Copyright');
   });
 });

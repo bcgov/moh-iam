@@ -5,23 +5,23 @@
         <v-col class="col-3">
           <ul>
             <li>
-              <a href="https://www2.gov.bc.ca/gov/content/home/get-help-with-government-services">Contact Us</a>
+              <a href="https://www2.gov.bc.ca/gov/content/home/get-help-with-government-services" target="_blank">Contact Us</a>
             </li>
           </ul>
         </v-col>
         <v-col class="col-3">
           <ul>
             <li>
-              <a href="http://www2.gov.bc.ca/gov/content/home/disclaimer">Disclaimer</a>
+              <a href="http://www2.gov.bc.ca/gov/content/home/disclaimer" target="_blank">Disclaimer</a>
             </li>
             <li>
-              <a href="http://www2.gov.bc.ca/gov/content/home/privacy">Privacy</a>
+              <a href="http://www2.gov.bc.ca/gov/content/home/privacy" target="_blank">Privacy</a>
             </li>
             <li>
-              <a href="http://www2.gov.bc.ca/gov/content/home/accessibility">Accessibility</a>
+              <a href="http://www2.gov.bc.ca/gov/content/home/accessibility" target="_blank">Accessibility</a>
             </li>
             <li>
-              <a href="http://www2.gov.bc.ca/gov/content/home/copyright">Copyright</a>
+              <a href="http://www2.gov.bc.ca/gov/content/home/copyright" target="_blank">Copyright</a>
             </li>
           </ul>
         </v-col>
