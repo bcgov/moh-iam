@@ -3,7 +3,7 @@
     <div id="header">
       <section class="container">
         <section class="identity">
-          <img src="../assets/images/logo.png" width="154" class="logo" alt="BC Government Logo" />
+          <img src="../../assets/images/logo.png" width="154" class="logo" alt="BC Government Logo" />
           <div class="sitename">MoH User Management</div>
         </section>
         <section class="options user-select-off">
