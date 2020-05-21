@@ -14,9 +14,9 @@
 </template>
 
 <script>
-import TheHeader from "./components/TheHeader.vue";
-import TheNavBar from "./components/TheNavBar.vue";
-import TheFooter from "./components/TheFooter.vue";
+import TheHeader from "./components/template/TheHeader.vue";
+import TheNavBar from "./components/template/TheNavBar.vue";
+import TheFooter from "./components/template/TheFooter.vue";
 
 import KeycloakDevTools from "./KeycloakDevTools";
 

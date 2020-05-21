@@ -5,10 +5,7 @@
         <v-col class="col-3">
           <ul>
             <li>
-              <a>Help</a>
-            </li>
-            <li>
-              <a>Contact Us</a>
+              <a href="https://www2.gov.bc.ca/gov/content/home/get-help-with-government-services">Contact Us</a>
             </li>
           </ul>
         </v-col>
