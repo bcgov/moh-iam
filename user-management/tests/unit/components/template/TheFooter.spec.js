@@ -1,13 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
 import TheFooter from '@/components/template/TheFooter.vue';
 
-const factory = (values = {}) => {
+const factory = () => {
   return shallowMount(TheFooter, {
-      data() {
-          return {
-              ...values
-          }
-      }
   })
 }
 
