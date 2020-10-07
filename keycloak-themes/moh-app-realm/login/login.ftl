@@ -4,7 +4,7 @@
         Welcome to ${client.getName()}
     <#elseif section = "form">
     <div id="kc-form" <#if realm.password && social.providers??>class="${properties.kcContentWrapperClass!}"</#if>>
-	  <#if !socialProviders?? && usernameEditDisabled??>
+	  <#if !social.providers?? ||  social.providers?size == 0>
       <div id="kc-form-wrapper" <#if realm.password && social.providers??>class="${properties.kcFormSocialAccountContentClass!} ${properties.kcFormSocialAccountClass!}"</#if>>
         <#if realm.password>
             <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
@@ -64,7 +64,7 @@
             </div>
         </#if>
 		
-		<#-- this script checks the 'idps_to_hide' query parameter and hides all listed IDP's-->
+		<#-- this script checks the 'idps_to_show' query parameter and hides any IDP's that are not listed-->
 		<script>
 		   <#if social.providers??>
 				var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
