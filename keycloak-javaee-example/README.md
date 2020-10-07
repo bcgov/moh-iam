@@ -20,7 +20,7 @@ To secure a Jakarta EE application deployed to Payara with Keycloak you need two
 
 # Tested on
 
-* Payara 5.192
-* Oracle JDK 8, jdk1.8.0_181
+* Payara 5.192 with Oracle JDK 8, jdk1.8.0_181 
+* Payara 5.2020.4 with Adopt OpenJDK 11.0.5
 * Windows 10
 * Keycloak 8.0.1

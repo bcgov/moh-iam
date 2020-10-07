@@ -27,10 +27,14 @@
         <dependency>
             <groupId>fish.payara.api</groupId>
             <artifactId>payara-api</artifactId>
-            <version>5.193</version>
+            <version>5.2020.4</version>
             <scope>provided</scope>
         </dependency>
         
     </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+    </build>
     
 </project>
