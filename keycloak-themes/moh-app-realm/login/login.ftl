@@ -75,23 +75,34 @@
 	
 	<#if client.clientId != "account">
 		<div class="link-account-info centered">
-		  <a id="show-link-instructions" href="#" onclick="showInstructionsModal();return false;" >Click for instructions to link a new ID type to your account.</a>
+		  <a id="show-link-instructions" href="#" onclick="showInstructionsModal();return false;" >Need help? Contact us</a>
 		</div>
 	</#if>
 	  
 	<div id="instructions-modal" class="modal">
 	  <div class="modal-content" >
 		<span class="close" onclick="hideInstructionsModal();return false;">&times;</span>
-		Follow these steps to link a new Identity Provider to your account:
-		<ol>
-		  <li><a id="account-management-link" target="_blank" >Go to the Ministry of Health Account Management page.</a></li>
-		  <li>Login with the ID currently linked to your account.</li>
-		  <li>Navigate to the <strong>ID Types</strong> tab.</li>
-		  <li>Click the <strong>Add</strong> button next to the ID Type you wish to link.</li>
-		  <li>Login with your credentials for that identity type.</li>
-		  <li>Click <strong>Sign Out</strong> to end your session.</li>
-		</ol>
-		You will now be able to use these credentials for signing in to your applications. 
+        <p>
+            <b>Email</b>
+            <br>
+            <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca </a>
+            <br>
+            <b>Local</b>
+            <br>
+            (250) 952-1234
+            <br>
+            <b>Toll Free Canada Wide </b>
+            <br>
+            1 (888) 764-2323
+            <br>
+            <b>Hours</b>
+            <br>
+            Monday–Friday (excluding statutory holidays)
+            <br>
+            8:00AM–4:30PM (Pacific Time)
+            <br><br>
+            For account specific help (e.g. IDIR, Health Authority ID, BCeID, etc.), please consult the applicable help desk on the login page where you enter your account credentials.
+        </p>
 	  </div>
 	</div>
 
