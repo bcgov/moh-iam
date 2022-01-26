@@ -85,13 +85,13 @@
         <p>
             <b>Email</b>
             <br>
-            <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca </a>
+            <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca</a>
             <br>
             <b>Local</b>
             <br>
             (250) 952-1234
             <br>
-            <b>Toll Free Canada Wide </b>
+            <b>Toll Free Canada Wide</b>
             <br>
             1 (888) 764-2323
             <br>
