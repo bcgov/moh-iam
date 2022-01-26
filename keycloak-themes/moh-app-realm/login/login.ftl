@@ -85,7 +85,7 @@
         <p>
             <b>Email</b>
             <br>
-            hlth.helpdesk@gov.bc.ca
+            <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca </a>
             <br>
             <b>Local</b>
             <br>
