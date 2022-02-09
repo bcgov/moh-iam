@@ -1,0 +1,18 @@
+[
+  {
+    "username": "trevor1",
+    "password": "testtest123",
+    "applications": {
+      "clientTest": ["clientTestAdmin","clientTestEmployee"],
+      "clientTest2": ["clientTest2Admin","clientTest2Employee","clientTest2User"]
+    }
+  },
+  {
+    "username": "trevor2",
+    "password": "testtest456",
+    "applications": {
+      "clientTest": ["clientTestAdmin","clientTestEmployee"],
+      "clientTest2": ["clientTest2Admin","clientTest2User"]
+    }
+  }
+]
