@@ -60,6 +60,21 @@ public class User {
         userRepresentation.setEnabled(true);
         clientRoles = new HashMap<>();
     }
+    
+    /**
+     * Adds an attribute to the userRepresentation
+     * @param key - Attribute name
+     * @param value - Attribute value
+     */
+    public void addAttribute(String key, String value){
+        if (userRepresentation.getAttributes()==null){
+            userRepresentation.setAttributes(new HashMap<>());
+        }
+        if (!userRepresentation.getAttributes().containsKey(key)){
+            userRepresentation.getAttributes().put(key, new ArrayList<>());
+        }
+        userRepresentation.getAttributes().get(key).add(value);
+    }
 
     public UserRepresentation getUserRepresentation() {
         return userRepresentation;
