@@ -8,20 +8,23 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.*;
 import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 public class UserService {
 
     private String inputFile;
     private Keycloak keycloak;
+    private String roleRealmName;
+    private String passwordRealmName;
     private RealmResource realmResource;
     private UsersResource usersResource;
 
@@ -33,7 +36,7 @@ public class UserService {
     public UserService(String configPath) {
         try {
             setConfigurations(configPath);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -46,7 +49,7 @@ public class UserService {
      * @param configPath
      * @throws IOException
      */
-    public void setConfigurations(String configPath) throws IOException {
+    public void setConfigurations(String configPath) throws IOException, URISyntaxException {
         Properties configProperties = new Properties();
         File file = new File(configPath);
 
@@ -59,12 +62,15 @@ public class UserService {
         Objects.requireNonNull(inputStream, String.format("Configuration file not found at '%s'.", configPath));
         configProperties.load(inputStream);
 
-        inputFile = configProperties.getProperty("inputFile");
+        URL defaultLocation = Main.class.getClassLoader().getResource(configProperties.getProperty("inputFile"));
+        inputFile = new File(defaultLocation.toURI()).getAbsolutePath();
         checkMandatory(inputFile);
         String serverURL = configProperties.getProperty("serverURL");
         checkMandatory(serverURL);
-        String realm = configProperties.getProperty("realm");
-        checkMandatory(realm);
+        passwordRealmName = configProperties.getProperty("passwordRealm");
+        checkMandatory(passwordRealmName);
+        roleRealmName = configProperties.getProperty("roleRealm");
+        checkMandatory(roleRealmName);
         String clientID = configProperties.getProperty("clientID");
         checkMandatory(clientID);
         String clientSecret = configProperties.getProperty("clientSecret");
@@ -72,13 +78,13 @@ public class UserService {
 
         keycloak = KeycloakBuilder.builder() //
                 .serverUrl(serverURL) //
-                .realm(realm) //
+                .realm("master") //
                 .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
                 .clientId(clientID) //
                 .clientSecret(clientSecret) //
                 .build();
 
-        realmResource = keycloak.realm(realm);
+        realmResource = keycloak.realm(roleRealmName);
         usersResource = realmResource.users();
     }
 
@@ -93,7 +99,21 @@ public class UserService {
         }
     }
 
+    // getters/setters
+
+    /**
+     * sets the realmResource and its corresponding usersResource
+     *
+     * @param realmName
+     */
+    public void setRealmResource(String realmName) {
+        realmResource = keycloak.realm(realmName);
+        usersResource = realmResource.users();
+    }
+
+
     // JSON methods
+
     /**
      * Reads a list of User objects from the configured JSON file into a
      * UserList
@@ -176,6 +196,7 @@ public class UserService {
     }
 
     // keycloak methods
+
     /**
      * adds all the Users in UserList to keycloak
      */
@@ -197,19 +218,61 @@ public class UserService {
             System.out.println(response.getLocation());
             String userId = CreatedResponseUtil.getCreatedId(response);
             userRepresentation.setId(userId);
-            System.out.printf(userRepresentation.getUsername() + " created with userId: %s%n", userId);
+            System.out.printf(userRepresentation.getUsername() + " (" + realmResource.toRepresentation().getRealm() + ") created with userId: %s%n", userId);
         } catch (WebApplicationException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * deletes all users in UserList from keycloak
+     * Sets the passwords of all users in UserList. temporarily changes realmresource to the password's realm,
+     * creates users in that realm and sets the passwords in that realm
+     *
+     * @param userList
+     */
+    public void setUserPasswordsInKeycloak(UserList userList) {
+        setRealmResource(passwordRealmName);
+        for (User user : userList) {
+            createUserInKeycloak(user.getUserRepresentation());
+            setUserPasswordInKeycloak(user);
+        }
+        setRealmResource(roleRealmName);
+    }
+
+    /**
+     * Sets the password of a single user in Keycloak.
+     *
+     * @param user
+     */
+    public void setUserPasswordInKeycloak(User user) {
+        try {
+            String userID = getUserID(user);
+            UserResource userResource = usersResource.get(userID);
+
+            CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+            credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+            credentialRepresentation.setValue(user.getPassword());
+
+            userResource.resetPassword(credentialRepresentation);
+            System.out.println(user.getUserRepresentation().getUsername() + "'s password has been reset.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * deletes all users in UserList from keycloak, from both the roleReamn and password realm
      */
     public void deleteUsersFromKeycloak(UserList userList) {
         for (User user : userList) {
             deleteUserFromKeycloak(user);
         }
+
+        setRealmResource(passwordRealmName);
+        for (User user : userList) {
+            deleteUserFromKeycloak(user);
+        }
+        setRealmResource(roleRealmName);
     }
 
     /**
@@ -310,7 +373,7 @@ public class UserService {
      * converts a collection of role names to a collection of its
      * RoleRepresentations
      *
-     * @param roles a set of role names to add
+     * @param roles          a set of role names to add
      * @param clientResource Keycloak API's interface for the current client
      * @return a list of RoleRepresentations
      */
