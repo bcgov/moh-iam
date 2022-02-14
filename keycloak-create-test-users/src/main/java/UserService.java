@@ -71,18 +71,37 @@ public class UserService {
         checkMandatory(passwordRealmName);
         roleRealmName = configProperties.getProperty("roleRealm");
         checkMandatory(roleRealmName);
+        String username = configProperties.getProperty("userName");
+        //checkMandatory(username);
+        String password = configProperties.getProperty("password");
+        //checkMandatory(password);
         String clientID = configProperties.getProperty("clientID");
         checkMandatory(clientID);
         String clientSecret = configProperties.getProperty("clientSecret");
-        checkMandatory(clientSecret);
+        //checkMandatory(clientSecret);
 
-        keycloak = KeycloakBuilder.builder() //
-                .serverUrl(serverURL) //
-                .realm("master") //
-                .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
-                .clientId(clientID) //
-                .clientSecret(clientSecret) //
-                .build();
+        if (notEmpty(username) && notEmpty(password)) {
+            keycloak = KeycloakBuilder.builder() //
+                    .serverUrl(serverURL) //
+                    .realm("master") //
+                    .grantType(OAuth2Constants.PASSWORD)
+                    //.grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
+                    .clientId(clientID) //
+                    //.clientSecret(clientSecret) //
+                    .username(username)
+                    .password(password)
+                    .build();
+        } else if (notEmpty(clientSecret)){
+            keycloak = KeycloakBuilder.builder() //
+                    .serverUrl(serverURL) //
+                    .realm("master") //
+                    .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
+                    .clientId(clientID) //
+                    .clientSecret(clientSecret) //
+                    .build();
+        } else{
+            throw new RuntimeException("Invalid configuration - must provide either cilent secret or user/pass");
+        }
 
         realmResource = keycloak.realm(roleRealmName);
         usersResource = realmResource.users();
@@ -94,13 +113,21 @@ public class UserService {
      * @param value
      */
     private static void checkMandatory(String value) {
-        if (value == null || value.isBlank()) {
+        if (!notEmpty(value)) {
             throw new IllegalArgumentException(String.format("Value is mandatory but was '%s'.", value));
         }
     }
+    
+    /**
+     * Determines if a string is null or empty
+     * @param value String
+     * @return boolean
+     */
+    private static boolean notEmpty(String value){
+        return value!=null && !value.isBlank();
+    }
 
     // getters/setters
-
     /**
      * sets the realmResource and its corresponding usersResource
      *
@@ -111,9 +138,7 @@ public class UserService {
         usersResource = realmResource.users();
     }
 
-
     // JSON methods
-
     /**
      * Reads a list of User objects from the configured JSON file into a
      * UserList
@@ -196,7 +221,6 @@ public class UserService {
     }
 
     // keycloak methods
-
     /**
      * adds all the Users in UserList to keycloak
      */
@@ -225,8 +249,9 @@ public class UserService {
     }
 
     /**
-     * Sets the passwords of all users in UserList. temporarily changes realmresource to the password's realm,
-     * creates users in that realm and sets the passwords in that realm
+     * Sets the passwords of all users in UserList. temporarily changes
+     * realmresource to the password's realm, creates users in that realm and
+     * sets the passwords in that realm
      *
      * @param userList
      */
@@ -261,7 +286,8 @@ public class UserService {
     }
 
     /**
-     * deletes all users in UserList from keycloak, from both the roleReamn and password realm
+     * deletes all users in UserList from keycloak, from both the roleReamn and
+     * password realm
      */
     public void deleteUsersFromKeycloak(UserList userList) {
         for (User user : userList) {
@@ -373,7 +399,7 @@ public class UserService {
      * converts a collection of role names to a collection of its
      * RoleRepresentations
      *
-     * @param roles          a set of role names to add
+     * @param roles a set of role names to add
      * @param clientResource Keycloak API's interface for the current client
      * @return a list of RoleRepresentations
      */
