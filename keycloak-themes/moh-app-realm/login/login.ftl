@@ -87,21 +87,15 @@
             <br>
             <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca</a>
             <br>
-            <b>Local</b>
-            <br>
-            (250) 952-1234
-            <br>
-            <b>Toll Free Canada Wide</b>
-            <br>
-            1 (888) 764-2323
-            <br>
             <b>Hours</b>
             <br>
             Monday–Friday (excluding statutory holidays)
             <br>
             8:00AM–4:30PM (Pacific Time)
             <br><br>
-            For account specific help (e.g. IDIR, Health Authority ID, BCeID, etc.), please consult the applicable help desk on the login page where you enter your account credentials.
+            For Health Authority ID account help, please consult your local IT help desk.
+            <br><br>
+            For all other account specific help (e.g. IDIR, BCeID, etc.), please consult the applicable help desk on the login page where you enter your account credentials.
         </p>
 	  </div>
 	</div>
