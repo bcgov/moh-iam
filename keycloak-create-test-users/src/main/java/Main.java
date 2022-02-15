@@ -44,6 +44,9 @@ public class Main {
         
         //Add roles
         userService.addAllClientRolesInKeyCloak(userList);
+
+        //Set Password (in another Realm)
+        userService.setUserPasswordsInKeycloak(userList);
     }
 
     /**
