@@ -351,6 +351,16 @@ public class UserService {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Determines if a user already exists
+     * @param user User
+     * @return boolean
+     */
+    public boolean userExists(User user){
+        List<UserRepresentation> users = usersResource.search(user.getUserRepresentation().getUsername());
+        return !users.isEmpty();
+    }
 
     /**
      * gets the userID of the user
