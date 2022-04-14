@@ -12,7 +12,7 @@ function hideIdProviders(idProviders) {
     var idp;
     if (getParameterByName('idps_to_show') != null && getParameterByName('idps_to_show').toLowerCase().indexOf('all') === -1) {
         for (var i = 0; i < idProviders.length; i++) {
-            if (getParameterByName('idps_to_show').toLowerCase().indexOf(idProviders[i].toLowerCase()) === -1) {
+            if (getParameterByName('idps_to_show').toLowerCase().split(',').indexOf(idProviders[i].toLowerCase()) === -1) {
                 document.getElementById('zocial-' + idProviders[i]).style.display = 'none'
             }
         }
