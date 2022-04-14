@@ -11,7 +11,7 @@ The top level heading (Ministry of Health) is set by the Realm Display Name whic
 
 The second level heading (application name) is pulled from the Client Name which can be configured in the Keycloak Admin Console.
 
-The identity providers shown are dynamically configured by setting url query parameters. By default all IDPs will show in the list. In order to only show specific IDPs, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. (e.g. `idps_to_show=moh_idp,moh_collector_idir` will only show LDAP and IDIR)
+The identity providers shown are dynamically configured by setting url query parameters. By default all IDPs will show in the list. In order to only show specific IDPs, the user browser redirect from the client application should include `idps_to_show=` as a query parameter with a comma seperated of idp-alias names as values. (e.g. `idps_to_show=moh_idp,idir` will only show Keycloak and IDIR)
 
 When this parameter is set any idp-alias not in the list will be hidden.
 
@@ -25,7 +25,7 @@ The top level heading (Ministry of Health) is set by the Realm Display Name whic
 
 The second level heading is set in the messages.properties file in the theme.
 
-# How to deploy
+# How to Deploy
 
 In order to add the themes to a Keycloak installation: 
 
@@ -39,6 +39,17 @@ The settings to apply the account theme, or a login theme for the whole realm, a
 
 The settings to apply the the login theme only to a specific client are found at:
 `Client -> Client Name -> Settings -> Login Theme.`
+
+## Clearing Theme Cache
+During a deploy, some theme resource files such as scripts may remain cached after restarting Keycloak. This cache can be cleared with the following:
+
+As the `gfadmin` user, remove the cache folder for a specific theme found under `/data/gfadmin/software/keycloak/domain/servers/server-<one|two>/tmp/kc-gzip-cache/?????/` (where `?????` can be found from inspecting a theme resource file from your browser's **Developer Tools -> Network** tab).
+> **Note:** Dev `?????=lir42`, Test `?????=4nox8`, and Prod `?????=jo96m` but this could change in the future.
+
+e.g. To clear the cache for the moh-app-realm login theme in Keycloak Dev, run the following command as `gfadmin`:
+```
+rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cache/lir42/login/moh-app-realm/
+```
 
 # Tested on
 * Keycloak 9.0.2
