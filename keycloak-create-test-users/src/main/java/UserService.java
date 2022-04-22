@@ -408,15 +408,9 @@ public class UserService {
         RolesResource rolesResource = clientResource.roles();
         for (String roleName : roles) {
             try {
-                List<RoleRepresentation> roleRepresentationList = rolesResource.list(roleName, true);
-                if (roleRepresentationList.size() > 1) {
-                    throw new Exception("multiple roles with name " + roleName + " found");
-                }
-                if (roleRepresentationList.size() < 1) {
-                    throw new Exception(roleName + " not found");
-                }
-                result.addAll(roleRepresentationList);
-            } catch (Exception e) {
+                RoleResource roleResource = rolesResource.get(roleName);
+                result.add(roleResource.toRepresentation());
+            } catch (Exception e){
                 e.printStackTrace();
             }
         }
