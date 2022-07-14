@@ -1,4 +1,5 @@
-# Terraform create-role-imports
+# Writing terraform resource and imports
 
-### notes
-With a few changes, this can also write the import for the client. 
+### How to use this:
+1. Write the information in the `configuration.properties` file.
+2. run it
