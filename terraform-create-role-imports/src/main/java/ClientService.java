@@ -1,5 +1,5 @@
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.text.StringSubstitutor;
-import org.checkerframework.checker.regex.qual.Regex;
 import org.keycloak.admin.client.resource.*;
 import org.keycloak.representations.idm.*;
 
@@ -14,23 +14,13 @@ public class ClientService {
         PAYARA,
         DATA_SOURCE
     }
+
+    private InformationMapper im;
     private RealmResource realmResource;
-
-    // todo: variables and outputs depend on: type of client, clients that it requires.
-    // we get the required clients from writing mainFW
-
-
-    //todo: why is this not being used?
-//    private String environment;
-//    private String realmName;
     private String clientID;
     private String clientUUID;
     private ClientType  clientType;
 
-    //todo: fix the Maps
-    // note: since global is just a map of <String,String>, it's ok to make a shallow copy
-    // AS LONG AS YOU DON'T DO THIS: Map localMap = globals
-    private Map globals;
     private Set<String> requiredClients;
 
     private FileWriter mainFW;
@@ -38,25 +28,11 @@ public class ClientService {
     private FileWriter variablesFW;
     private FileWriter versionsFW;
 
-    //string constants
-    private String terraformImport;
-    private String clientResourceModule; //todo: this works for client resources only. fix it
-    //todo: add this into a map? make it include data types.
-
-
     /**
      * sets up keycloak. Also sets up the RealmResource
      //     * @throws IOException
      */
     public ClientService(RealmResource rr,String clientID,String envName,String clientType, String path) {
-        this.realmResource = rr;
-
-        this.clientID = clientID;
-        try{
-            this.clientUUID = getClientUUID(clientID,rr);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
         switch (clientType){
             case "payara" -> this.clientType = ClientType.PAYARA;
             case "basic" -> this.clientType = ClientType.BASIC;
@@ -64,33 +40,33 @@ public class ClientService {
             default -> throw new RuntimeException("invalid client type");
         }
         //todo: why are you doing this again?
+        String clientResourceModule = "";
         switch (this.clientType){
             case BASIC -> clientResourceModule = "keycloak_openid_client.CLIENT";
             case PAYARA -> clientResourceModule = "module.payara-client.CLIENT";
             case DATA_SOURCE -> clientResourceModule = "data.keycloak_openid_client.CLIENT";
         }
 
-        //todo: makes sense if you want to split this into another class
-        globals = new HashMap<>();
-        globals.put("environment", envName);
-        globals.put("realmName",rr.toRepresentation().getId());
-        globals.put("clientID", clientID);
-        globals.put("clientResourceModule", clientResourceModule);
-        globals.put("clientUUID",clientUUID);
+        im = new InformationMapper(rr,clientID,envName);
+        im.includeInGlobal("clientResourceModule", clientResourceModule);
+        im.includeInGlobal("terraformImport", "terraform import module." + envName + ".module."+rr.toRepresentation().getId() +".module." + clientID);
+
+        this.realmResource = rr;
+        this.clientID = clientID;
+        this.clientUUID = getClientUUID(clientID,rr);
 
         requiredClients = new HashSet<>();
 
-        this.terraformImport = "terraform import module." + envName + ".module."+rr.toRepresentation().getId() +".module." + clientID;
-
-
         configureFileWriters(path);
     }
-
-
     // initializes the file writers.
     private void configureFileWriters(String path) {
         String folderPath = path + clientID.toLowerCase(Locale.ROOT);
         System.out.println("\t" + folderPath);
+        if(clientType == ClientType.DATA_SOURCE) {
+            return;
+        }
+
         if(!(new File(folderPath).mkdir()) && !(new File(folderPath).exists())) {
             throw new RuntimeException("Folder can't be created and doesn't exists");
         }
@@ -103,31 +79,54 @@ public class ClientService {
              throw new RuntimeException();
          }
     }
-    // creates a single file writer. helper for configureFileWriters
-    private FileWriter createFileWriter(String path) throws IOException {
-        System.out.println("\t\t" + path);
-        if (!(new File(path).createNewFile()) && !(new File(path).exists())) {
-            throw new RuntimeException("File can't be created");
-        }
-        return new FileWriter(path);
-    }
 
+    // public methods
     public String createAllNonDependentResources() {
-        writeVersionsFile();
+        boolean hasRoles = true;
         if(clientType == ClientType.DATA_SOURCE) {
-            writeClientDataSource();
-            writeClientRolesDataSource();
-        }else {
-            if (clientType == ClientType.PAYARA) {
-                writePayaraModule();
-            } else if (clientType == ClientType.BASIC) {
-                writeClientResource();
-                writeAllRoles();
-            }
-            writeAllMapperResources();
+            return writeModuleInRealm();
         }
+        writeVersionsFile();
+        if (clientType == ClientType.PAYARA) {
+            writePayaraModule();
+        } else if (clientType == ClientType.BASIC) {
+            writeClientResource();
+            try {
+                writeAllRoles();
+            }catch (Exception e){
+                hasRoles = false;
+                System.out.println("no roles found");
+            }
+        }
+        writeAllMapperResources();
+
         writeVariables();
-        writeOutputs();
+        writeOutputs(hasRoles);
+        return writeModuleInRealm();
+    }
+    public String createResources(){
+        boolean hasRoles = true;
+        if(clientType == ClientType.DATA_SOURCE) {
+            return writeModuleInRealm();
+        }
+        writeVersionsFile();
+        if(clientType == ClientType.PAYARA) {
+            writePayaraModule();
+        }else if(clientType == ClientType.BASIC){
+            writeClientResource();
+            try {
+                writeAllRoles();
+            }catch (Exception e){
+                hasRoles = false;
+                System.out.println("no roles found");
+            }
+        }
+        writeAllMapperResources();
+        writeScopeMappingResources(); //todo: only this and writeServiceAccountRoles depend on other clients
+        writeServiceAccountRoles();
+
+        writeVariables();
+        writeOutputs(hasRoles);
         return writeModuleInRealm();
     }
 
@@ -146,7 +145,6 @@ public class ClientService {
 
         return result;
     }
-
     public String createAllDependentImports() {
         String result = "";
         if(clientType == ClientType.DATA_SOURCE) return result;
@@ -156,29 +154,6 @@ public class ClientService {
 
         return result;
     }
-
-    public String createResources(){
-        writeVersionsFile();
-
-        if(clientType == ClientType.DATA_SOURCE) {
-            writeClientDataSource();
-            writeClientRolesDataSource();
-        }else{
-            if(clientType == ClientType.PAYARA) {
-                writePayaraModule();
-            }else if(clientType == ClientType.BASIC){
-                writeClientResource();
-                writeAllRoles();
-            }
-            writeAllMapperResources();
-            writeScopeMappingResources(); //todo: only this and writeServiceAccountRoles depend on other clients
-            writeServiceAccountRoles();
-        }
-        writeVariables();
-        writeOutputs();
-        return writeModuleInRealm();
-    }
-
     public String createImports(){
         String result = "";
         if(clientType == ClientType.DATA_SOURCE) return result;
@@ -197,23 +172,17 @@ public class ClientService {
         return result;
     }
 
-
-
-
 // WRITE METHODS
-
     // "writes" the module "client_name" found on the realm tf file. it just prints it out in the console.
     private String writeModuleInRealm() {
-        String module = """
-            module "${clientName}" {
-                source = "./${clientNameLowerCase}"
+        String module = String.format("""
+            module "${clientID}" {
+                source = "%s${clientNameLowerCase}"
             ${clientDependencies}
             }
-            """;
+            """,(clientType == ClientType.DATA_SOURCE)? "../../../modules/":"./");
 
-        Map variables = new HashMap();
-        variables.put("clientName", clientID);
-        variables.put("clientNameLowerCase", clientID.toLowerCase(Locale.ROOT));
+        Map variables = new HashMap(im.getClientMap());
         String clientDependencies = "";
         for (String clientID: requiredClients){
             clientDependencies += String.format("""
@@ -227,27 +196,22 @@ public class ClientService {
     }
 
 //    writes output. todo: check if clientType fits will make the thing work with the 3 types.
-    private void writeOutputs() {
+    private void writeOutputs(boolean hasRoles) {
         //todo: this is weird. change this.
-        String moduleName = (clientType ==ClientType.PAYARA)? "payara-client": (clientType == ClientType.BASIC)? "client-roles" :"client-roles-data-source";
-        String outputs = String.format("""
-                        output "CLIENT" {
-                            value = ${clientType}.CLIENT
-                        }
-                        output "ROLES" {
-                            value = module.%s.ROLES
-                        }
-                        """,moduleName);
-
-        Map values = new HashMap();
-        values.put("clientType",(clientType == ClientType.PAYARA)? "module.payara-client": (clientType == ClientType.DATA_SOURCE)? "data.keycloak_openid_client":"keycloak_openid_client" );
-
-        String variables = "";
-        for (String client: requiredClients){
-            variables +="variable \""+client+"\" {\n" + "}\n";
+        String outputs =new  StringSubstitutor(im.getClientMap()).replace( """
+                output "CLIENT" {
+                    value = ${clientResourceModule}
+                }
+                """);
+        if (hasRoles) {
+            String moduleName = (clientType == ClientType.PAYARA) ? "payara-client" : (clientType == ClientType.BASIC) ? "client-roles" : "client-roles-data-source";
+            outputs += String.format("""
+                    output "ROLES" {
+                        value = module.%s.ROLES
+                    }
+                    """, moduleName);
         }
-        values.put("variables",variables);
-        write(outputsFW,new  StringSubstitutor(values).replace(outputs));
+        write(outputsFW,outputs);
     }
 
 //    writes variables
@@ -261,7 +225,6 @@ public class ClientService {
     }
 
 
-
     // DATA SOURCE SPECIFIC FUNCTIONS:
     private void writeClientDataSource() {
         String dataSource = """
@@ -270,7 +233,7 @@ public class ClientService {
                     client_id = "${clientID}"
                 }
                 """;
-        write(mainFW,new StringSubstitutor(globals).replace(dataSource));
+        write(mainFW,new StringSubstitutor(im.getClientMap()).replace(dataSource));
     }
 
     // writes the roles as a data source
@@ -281,19 +244,18 @@ public class ClientService {
                     source = "../../../../modules/client-roles-data-source"
                     client_id = data.keycloak_openid_client.CLIENT.id
                     realm_id = data.keycloak_openid_client.CLIENT.realm_id
-                    roles = ${roles}
+                    roles = %s
                 }
                 """;
 
-        Map valuesMap = new HashMap(globals);
         String roles = "{\n";
         for (RoleRepresentation roleRepresentation : clientResource.roles().list()) {
             String roleName = roleRepresentation.getName();
             roles += String.format("\t\t\"%s\" = \"%s\",\n",roleName,roleName);
         }
-        valuesMap.put("roles",roles +"\t}");
+        roles += "\t}";
 
-        write(mainFW,new StringSubstitutor(valuesMap).replace(resource));
+        write(mainFW,String.format(resource,roles));
     }
 
     private void writeOutputRole() {
@@ -334,7 +296,7 @@ public class ClientService {
                 }
                 """;
 
-        Map valuesMap = (getClientValues(clientResource.toRepresentation()));
+        Map valuesMap = new HashMap(im.getClientMap());
         valuesMap.put("claimName",(clientID.toLowerCase() + "_role"));
         valuesMap.put("roles",writePayaraModuleRoles(clientResource));
 
@@ -351,22 +313,22 @@ public class ClientService {
                                 "description" = "${description}" 
                             },
                     """;
-            roles  += new StringSubstitutor(getRoleValues(roleRepresentation)).replace(role);
+            roles  += new StringSubstitutor(im.getRoleInformation(roleRepresentation)).replace(role);
         }
         return roles +"\t}";
     }
-
 
     // write and import a normal client
     private void writeClientResource() {
         ClientRepresentation clientRepresentation = realmResource.clients().get(clientUUID).toRepresentation();
 
+        //todo: some of these are hard coded: maybe fix it
         String resource = """
                 resource "keycloak_openid_client" "CLIENT" {
                     access_token_lifespan = "${accessTokenLifeSpan}"
                     access_type = "${accessType}"
                     admin_url   = "${adminURL}"
-                    backchannel_logout_session_required = false
+                    backchannel_logout_session_required = ${backChannelLogoutSessionRequired}
                     base_url    = "${baseURL}"
                     client_authenticator_type = "client-secret"
                     client_id   = "${clientID}"
@@ -375,9 +337,10 @@ public class ClientService {
                     direct_access_grants_enabled = false
                     enabled = true
                     frontchannel_logout_enabled = false
-                    full_scope_allowed          = false
+                    full_scope_allowed          = ${fullScopeAllowed}
                     implicit_flow_enabled       = false
                     name = "${clientName}"
+                    pkce_code_challenge_method = "${pkceCodeChallengeMethod}"
                     realm_id = "${realmName}"
                     service_accounts_enabled =${serviceAccountsEnabled}
                     standard_flow_enabled = ${standardFlowEnabled}
@@ -386,7 +349,7 @@ public class ClientService {
                     web_origins = ${webOrigins}
                 }
                 """;
-        write(mainFW,new StringSubstitutor(getClientValues(clientRepresentation)).replace(resource));
+        write(mainFW,new StringSubstitutor(im.getClientMap()).replace(resource));
     }
 
     // write and import all mappers. if payara, ignore the usermodel.
@@ -401,7 +364,6 @@ public class ClientService {
         writeUserSessionNoteMapperResources();
     }
 
-
     /**writes the audience mapper resource**/
     private void writeAudienceMapperResources() {
         for(ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
@@ -415,7 +377,7 @@ public class ClientService {
                                 realm_id = ${clientResourceModule}.realm_id
                             }
                             """;
-                write(mainFW,new StringSubstitutor(getMapperValues(pmr)).replace(resource));
+                write(mainFW,new StringSubstitutor(im.getMapperInformation(pmr)).replace(resource));
             }
         }
     }
@@ -434,7 +396,7 @@ public class ClientService {
                                 realm_id = ${clientResourceModule}.realm_id
                             }
                             """;
-                write(mainFW,new StringSubstitutor(getMapperValues(pmr)).replace(resource));
+                write(mainFW,new StringSubstitutor(im.getMapperInformation(pmr)).replace(resource));
             }
         }
     }
@@ -466,7 +428,7 @@ public class ClientService {
                             session_note = "${sessionNote}"
                         }
                         """;
-                write(mainFW, new StringSubstitutor(getMapperValues(pmr)).replace(resource));
+                write(mainFW, new StringSubstitutor(im.getMapperInformation(pmr)).replace(resource));
             }
         }
     }
@@ -482,7 +444,7 @@ public class ClientService {
                         roles = ${roles}
                     }
                     """;
-            Map values = new HashMap<>(globals);
+            Map values = new HashMap(im.getClientMap());
             try{
                 values.put("roles", writeScopeMappingRoles());
             } catch (Exception e){
@@ -506,13 +468,13 @@ public class ClientService {
                 for(RoleRepresentation rr: map.get(client).getMappings()) {
                     if(client.equalsIgnoreCase(clientID)){
                         roles += String.format("\n\t\t\"$%s/${name}\" = %s.ROLES[\"${name}\"].id,",
-                                client, clientResourceModule);
+                                client, im.getClientInfo("clientResourceModule"));
                     }else {
                         requiredClients.add(client);
                         roles += String.format("\n\t\t\"%s/${name}\" = var.%s.ROLES[\"${name}\"].id,",
                                 client,client);
                     }
-                    roles = new StringSubstitutor(getRoleValues(rr)).replace(roles);
+                    roles = new StringSubstitutor(im.getRoleInformation(rr)).replace(roles);
                 }
             }
         }
@@ -526,7 +488,7 @@ public class ClientService {
     }
 
     /**writes the client-roles module**/
-    private void writeAllRoles() {
+    private void writeAllRoles() throws Exception{
             String module = """
                     module "client-roles" {
                         source = "../../../../modules/client-roles"
@@ -537,8 +499,9 @@ public class ClientService {
                     """;
 
             String roles = "{\n";
+            if(realmResource.clients().get(clientUUID).roles().list().isEmpty()) throw new Exception();
             for (RoleRepresentation rr : realmResource.clients().get(clientUUID).roles().list()) {
-                roles += new StringSubstitutor(getRoleValues(rr)).replace("""
+                roles += new StringSubstitutor(im.getRoleInformation(rr)).replace("""
                                 "${name}" = {
                                     "name" = "${name}"
                                     "description" = "${description}"
@@ -546,7 +509,7 @@ public class ClientService {
                         """);
             }
             roles += "\t}";
-            Map values = new HashMap<>(globals);
+            Map values = new HashMap<>(im.getClientMap());
             values.put("roles",roles);
 
             write(mainFW,new StringSubstitutor(values).replace(module));
@@ -570,8 +533,11 @@ public class ClientService {
                         	client_roles = ${client_roles}
                         }
                         """;
-                Map values = new HashMap();
-                values.put("clientResourceModule", clientResourceModule);
+                if(mappingsRepresentation.getRealmMappings() == null && mappingsRepresentation.getClientMappings() == null){
+                    return;
+                }
+
+                Map values = new HashMap(im.getClientMap());
                 values.put("realm_roles",writeServiceAccountRealmRoles(mappingsRepresentation));
                 values.put("client_roles",writeServiceAccountClientRoles(mappingsRepresentation));
 
@@ -583,6 +549,7 @@ public class ClientService {
     /** helper for writing SA roles**/
     private String writeServiceAccountRealmRoles(MappingsRepresentation mr) {
         String roles = "{\n";
+        if(mr.getRealmMappings() == null) return "{}";
         for(RoleRepresentation rr: mr.getRealmMappings()){
             roles += "\t\t\"" + rr.getName() + "\" = \"" + rr.getName() + "\",\n";
         }
@@ -592,8 +559,9 @@ public class ClientService {
     /** helper for writing SA roles**/
     private String writeServiceAccountClientRoles(MappingsRepresentation mr) {
         String roles = "{\n";
+        if(mr.getClientMappings() == null) return "{}";
         for(String client : mr.getClientMappings().keySet()){
-            String roleClientPath = clientResourceModule;
+            String roleClientPath = im.getClientInfo("clientResourceModule");
             if(!client.equalsIgnoreCase(clientID)){
                 requiredClients.add(client);
                 roleClientPath = "var." + client +".CLIENT";
@@ -605,7 +573,7 @@ public class ClientService {
                                     "role_id" = "${name}"
                                 }
                         """;
-                Map values = getRoleValues(rr);
+                Map values = im.getRoleInformation(rr);
                 values.put("roleClientName",client);
                 values.put("roleClientPath",roleClientPath);
 
@@ -630,12 +598,12 @@ public class ClientService {
         return result;
     }
 
-    /** imports a client**/
-    //todo: fix this. why does still need an extra module? should be taken care of somewhere else
-    // it has an extra module because both payara and basic clients use this.
+    /** imports a client
+     *  has an extra module because both payara and basic clients use this.**/
     private String importClient(String extraModule){
-        String importStr =terraformImport + extraModule + ".keycloak_openid_client.CLIENT ${realmName}/${clientUUID}\n";
-        return new StringSubstitutor(globals).replace(importStr);
+        System.out.println("hello: " + (im.getClientMap().get("clientUUID")));
+        String importStr =String.format("${terraformImport}%s.keycloak_openid_client.CLIENT ${realmName}/${clientUUID}\n",extraModule);
+        return new StringSubstitutor(im.getClientMap()).replace(importStr);
     }
     /** imports all the mappers associated with the client**/
     private String importAllMapperResources() {
@@ -662,9 +630,9 @@ public class ClientService {
                     continue;
             }
 
-            String importStatement = terraformImport + ".${mapperType}.${name-hyphenated} ";
+            String importStatement = "${terraformImport}.${mapperType}.${name-hyphenated} ";
             importStatement += "${realmName}/client/${clientUUID}/${id}\n";
-            Map values = getMapperValues(pmr);
+            Map values = im.getMapperInformation(pmr);
             values.put("mapperType", mapperType);
 
             result += new StringSubstitutor(values).replace(importStatement);
@@ -680,9 +648,9 @@ public class ClientService {
         String result = "";
         for(ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
             if(pmr.getProtocolMapper().equalsIgnoreCase("oidc-usermodel-client-role-mapper")){
-                String importStatement =terraformImport + ".module.payara-client.keycloak_openid_user_client_role_protocol_mapper.client_role_mapper ";
+                String importStatement = "${terraformImport}.module.payara-client.keycloak_openid_user_client_role_protocol_mapper.client_role_mapper ";
                 importStatement += "${realmName}/client/${clientUUID}/${id}\n";
-                result += new StringSubstitutor(getMapperValues(pmr)).replace(importStatement);
+                result += new StringSubstitutor(im.getMapperInformation(pmr)).replace(importStatement);
             }
         }
         return result;
@@ -699,10 +667,9 @@ public class ClientService {
             for (String client : roleMappingResource.getAll().getClientMappings().keySet()) {
                 String roleClientID = realmResource.clients().findByClientId(client).get(0).getId();
                 for(RoleRepresentation rr: map.get(client).getMappings()) {
-                    String resourcePath =terraformImport;
-                    resourcePath += ".module.scope-mappings.keycloak_generic_client_role_mapper.SCOPE-MAPPING[\\\""+client+"/${name}\\\"] ";
+                    String resourcePath = "${terraformImport}.module.scope-mappings.keycloak_generic_client_role_mapper.SCOPE-MAPPING[\\\""+client+"/${name}\\\"] ";
                     resourcePath += "${realmName}/client/${clientUUID}/scope-mappings/"+roleClientID+"/${ID}\n";
-                    result += new StringSubstitutor(getRoleValues(rr)).replace(resourcePath);
+                    result += new StringSubstitutor(im.getRoleInformation(rr)).replace(resourcePath);
                 }
             }
         }
@@ -710,8 +677,7 @@ public class ClientService {
         List <RoleRepresentation> realmList = roleMappingResource.getAll().getRealmMappings();
         if(!(realmList == null || realmList.isEmpty())){
             for (RoleRepresentation rr : realmList) {
-                String resourcePath =terraformImport;
-                resourcePath += ".module.scope-mappings.keycloak_generic_client_role_mapper.SCOPE-MAPPING[\\\"realm/${name}\\\"] ";
+                String resourcePath ="${terraformImport}.module.scope-mappings.keycloak_generic_client_role_mapper.SCOPE-MAPPING[\\\"realm/${name}\\\"] ";
                 resourcePath += "${realmName}/client/${clientUUID}/scope-mappings/${ID}\n";
 
                 result += resourcePath;
@@ -722,19 +688,15 @@ public class ClientService {
 
     /**
      * writes the import statements to an output file
-     * defaults path is:
-     *          module.ENVIRONMENT.module.REALM.module.CLIENT.keycloak_role.ROLES[ROLE_ID]
-     * extraModule: if resource is located somewhere else:
-     *          module.ENVIRONMENT.module.REALM.module.CLIENT.extraModule.keycloak_role.ROLES[ROLE_ID]
-     */
+     * */
     private String importAllRoles(String extraModule) {
         String result = "";
         RolesResource rolesResource = realmResource.clients().get(clientUUID).roles();
         for(RoleRepresentation roleRepresentation: rolesResource.list() ){
-            String resource = terraformImport + extraModule + """
-                    .keycloak_role.ROLES[\\\"${name}\\\"] ${realmName}/${ID}
-                    """;
-            result += new StringSubstitutor(getRoleValues(roleRepresentation)).replace(resource);
+            String resource =  String.format("""
+                    ${terraformImport}%s.keycloak_role.ROLES[\\\"${name}\\\"] ${realmName}/${ID}
+                    """,extraModule);
+            result += new StringSubstitutor(im.getRoleInformation(roleRepresentation)).replace(resource);
         }
         return result;
     }
@@ -747,19 +709,20 @@ public class ClientService {
             MappingsRepresentation mappingsRepresentation = realmResource.users().get(userID).roles().getAll();
 
             for(RoleRepresentation rr: mappingsRepresentation.getRealmMappings()){
-                String resourcePath =terraformImport + ".module.service-account-roles.keycloak_openid_client_service_account_realm_role.ROLE[\\\"" + rr.getName() + "\\\"] ";
+                String resourcePath ="${terraformImport}.module.service-account-roles.keycloak_openid_client_service_account_realm_role.ROLE[\\\"" + rr.getName() + "\\\"] ";
                 resourcePath += String.format("${realmName}/%s/${ID}\n",userID);
-                result += new StringSubstitutor(getRoleValues(rr)).replace(resourcePath);
+                result += new StringSubstitutor(im.getRoleInformation(rr)).replace(resourcePath);
             }
-
-            for(String client : mappingsRepresentation.getClientMappings().keySet()){
-                ClientMappingsRepresentation cmr= mappingsRepresentation.getClientMappings().get(client);
-                String roleClientName = cmr.getClient();
-                String roleClientID = cmr.getId();
-                for(RoleRepresentation rr: cmr.getMappings()) {
-                    String resourcePath =terraformImport + ".module.service-account-roles.keycloak_openid_client_service_account_role.ROLE[\\\"" +roleClientName+"/"+rr.getName() + "\\\"] ";
-                    resourcePath +=  String.format("${realmName}/%s/%s/${ID}\n",userID,roleClientID);
-                    result += new StringSubstitutor(getRoleValues(rr)).replace(resourcePath);
+            if(mappingsRepresentation.getClientMappings() != null) {
+                for (String client : mappingsRepresentation.getClientMappings().keySet()) {
+                    ClientMappingsRepresentation cmr = mappingsRepresentation.getClientMappings().get(client);
+                    String roleClientName = cmr.getClient();
+                    String roleClientID = cmr.getId();
+                    for (RoleRepresentation rr : cmr.getMappings()) {
+                        String resourcePath = "${terraformImport}.module.service-account-roles.keycloak_openid_client_service_account_role.ROLE[\\\"" + roleClientName + "/" + rr.getName() + "\\\"] ";
+                        resourcePath += String.format("${realmName}/%s/%s/${ID}\n", userID, roleClientID);
+                        result += new StringSubstitutor(im.getRoleInformation(rr)).replace(resourcePath);
+                    }
                 }
             }
         }
@@ -767,72 +730,10 @@ public class ClientService {
     }
 
 
-    //    GET MAP METHODS
-
-    /** gets values from a client**/
-    private Map getClientValues(ClientRepresentation cr){
-        Map result = new HashMap<>(globals);
-
-        result.put("accessTokenLifeSpan",(cr.getAttributes().get("access.token.lifespan") == null)? "": cr.getAttributes().get("access.token.lifespan"));
-        result.put("accessType",(cr.isPublicClient())? "PUBLIC": ((cr.isBearerOnly())? "BEARER-ONLY":"CONFIDENTIAL"));
-        result.put("adminURL",(cr.getAdminUrl() == null)? "": cr.getAdminUrl());
-        result.put("baseURL",(cr.getBaseUrl() == null)? "": cr.getBaseUrl());
-        result.put("clientID",(cr.getClientId() == null)? "": cr.getClientId());
-        result.put("clientName",(cr.getName() == null)? "": cr.getName());
-        result.put("description",(cr.getDescription() == null)? "":cr.getDescription());
-        result.put("serviceAccountsEnabled",cr.isServiceAccountsEnabled().toString());
-        result.put("standardFlowEnabled", cr.isStandardFlowEnabled().toString());
-        result.put("useRefreshToken",(cr.getAttributes().get("use.refresh.tokens") ==null)? "false":cr.getAttributes().get("use.refresh.tokens"));
-
-        //todo: these two feel a bit out of place
-        String validRedirectURIS = "[\n";
-        for (String uri : cr.getRedirectUris()) {
-            validRedirectURIS += String.format("\t\t\"%s\",\n",uri);
-        }
-        result.put("validRedirectURIS",validRedirectURIS +"\t]");
-
-        String webOrigins = "[\n";
-        for(String uri : cr.getWebOrigins()) {
-            webOrigins += String.format("\t\t\"%s\",\n",uri);
-        }
-        result.put("webOrigins",webOrigins + "\t]");
-
-        return result;
-    }
-
-    // get values from a role
-//     todo: this is kinda useless right now... either expand on this or delete this
-    private Map getRoleValues(RoleRepresentation rr){
-        Map result = new HashMap<>(globals);
-        result.put("name",rr.getName());
-        result.put("ID",rr.getId());
-        result.put("description",(rr.getDescription() == null)? "":rr.getDescription());
-
-        return result;
-    }
-
-    //gets values the mapper needs. some configs in a mapper aren't present in another mapper, but it's ok
-    private Map getMapperValues(ProtocolMapperRepresentation pmr) {
-        Map values = new HashMap(globals);
-        values.put("name-hyphenated",pmr.getName().replaceAll(" ","-"));
-        values.put("name",pmr.getName());
-        values.put("addToIdToken",pmr.getConfig().get("id.token.claim"));
-        values.put("claimName",pmr.getConfig().get("claim.name"));
-        values.put("claimValueType",pmr.getConfig().get("jsonType.label"));
-        values.put("id",pmr.getId());
-        values.put("includedClientAudience",pmr.getConfig().get("included.client.audience"));
-        values.put("sessionNote",pmr.getConfig().get("user.session.note"));
-        values.put("userAttribute",pmr.getConfig().get("user.attribute"));
-
-        return  values;
-    }
-
-
-
-
-
     // FILE METHODS
+
     public void closeFile() throws IOException{
+        if(clientType == ClientType.DATA_SOURCE) return;
         mainFW.close();
         outputsFW.close();
         variablesFW.close();
@@ -847,21 +748,44 @@ public class ClientService {
         }
     }
 
+    // creates a single file writer. helper for configureFileWriters
+    private FileWriter createFileWriter(String path) throws IOException {
+        System.out.println("\t\t" + path);
+        if (!(new File(path).createNewFile()) && !(new File(path).exists())) {
+            throw new RuntimeException("File can't be created");
+        }
+        return new FileWriter(path);
+    }
+    private static void recursiveDelete(File file)
+    {
+        try {
+            FileUtils.deleteDirectory(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (!file.exists()) return;
+        if (file.isDirectory())
+        {
+            for (File f : file.listFiles())  recursiveDelete(f);
+        }
+        file.delete();
+    }
 
 
+    //OTHER METHODS
     /**
      * gets the Client's UUID from a clientID
      *
      * @return String representation of the clientUUID
      * @throws Exception when multiple clients or no clients found
      */
-    private String getClientUUID(String clientID, RealmResource rr) throws Exception {
+    private String getClientUUID(String clientID, RealmResource rr){
         ClientsResource clientsResource = rr.clients();
         List<ClientRepresentation> clientRepresentationList = clientsResource.findByClientId(clientID);
         if (clientRepresentationList.size() > 1) {
-            throw new Exception("more than 1 client found");
+            throw new RuntimeException("more than 1 client found");
         } else if (clientRepresentationList.size() < 1) {
-            throw new Exception("client not found");
+            throw new RuntimeException("client not found");
         } else {
             String clientUUID = clientRepresentationList.get(0).getId();
             return clientUUID;

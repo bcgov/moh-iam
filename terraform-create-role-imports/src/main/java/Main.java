@@ -7,6 +7,7 @@ import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.representations.idm.ClientRepresentation;
 
 import java.io.*;
 
@@ -36,9 +37,9 @@ public class Main {
         JsonObject inputJSON = readJsonFile(configProperties.getProperty("inputFile"));
 
         RealmResource realmResource = getRealmResource(configProperties);
-        String environmentName = (String) inputJSON.get("environment");
-        String realmName = (String) inputJSON.get("realmName");
-        String path = configProperties.getProperty("path");
+        String environmentName = configProperties.getProperty("environment");
+        String realmName = configProperties.getProperty("realm");
+        String path = configProperties.getProperty("outputPath");
         String phase = configProperties.getProperty("phase");
 
         String realmFolderPath = path + realmName.toLowerCase(Locale.ROOT);
@@ -51,6 +52,8 @@ public class Main {
         FileWriter importFW = createFileWriter(path + "imports.bash");
         FileWriter realmVersions = createFileWriter(realmFolderPath+"\\versions.tf");
 
+        Map<String, String> env = System.getenv();
+        for(String sthing: env.keySet()) System.out.println(sthing);
         JsonArray clients =(JsonArray) inputJSON.get("clients");
         clients.forEach(client -> {
             JsonObject JSONclient = (JsonObject) client;
@@ -97,11 +100,11 @@ public class Main {
     }
     private static RealmResource getRealmResource(Properties configProperties) {
         Keycloak keycloak = KeycloakBuilder.builder() //
-                .serverUrl(configProperties.getProperty("serverURL")) //
+                .serverUrl(getServerUrl(configProperties)) //
                 .realm(configProperties.getProperty("realm")) //
                 .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
                 .clientId(configProperties.getProperty("clientID")) //
-                .clientSecret(configProperties.getProperty("clientSecret")) //
+                .clientSecret(getClientSecret(configProperties)) //
                 .build();
         RealmResource realmResource = keycloak.realm(configProperties.getProperty("realm"));
 
@@ -154,6 +157,25 @@ public class Main {
             filewriter.write(input);
         }catch (Exception e){
             throw new RuntimeException();
+        }
+    }
+
+    private static String getClientSecret(Properties configProperties) {
+        Map<String, String> env = System.getenv();
+        switch (configProperties.getProperty("environment")){
+            case "KEYCLOAK_DEV": return env.get("TF_VAR_dev_client_secret");
+            case "KEYCLOAK_TEST": return env.get("TF_VAR_test_client_secret");
+            case "KEYCLOAK_PROD": return env.get("TF_VAR_prod_client_secret");
+            default: throw new RuntimeException();
+        }
+    }
+
+    private static String getServerUrl(Properties configProperties) {
+        switch (configProperties.getProperty("environment")){
+            case "KEYCLOAK_DEV": return "https://common-logon-dev.hlth.gov.bc.ca/auth";
+            case "KEYCLOAK_TEST": return "https://common-logon-test.hlth.gov.bc.ca/auth";
+            case "KEYCLOAK_PROD": return "https://common-logon.hlth.gov.bc.ca/auth";
+            default: throw new RuntimeException();
         }
     }
 }
