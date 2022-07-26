@@ -327,14 +327,13 @@ public class ClientService {
                 resource "keycloak_openid_client" "CLIENT" {
                     access_token_lifespan = "${accessTokenLifeSpan}"
                     access_type = "${accessType}"
-                    admin_url   = "${adminURL}"
                     backchannel_logout_session_required = ${backChannelLogoutSessionRequired}
                     base_url    = "${baseURL}"
                     client_authenticator_type = "client-secret"
                     client_id   = "${clientID}"
                     consent_required = false
                     description = "${description}"
-                    direct_access_grants_enabled = false
+                    direct_access_grants_enabled = ${directAccessGrantsEnabled}
                     enabled = true
                     frontchannel_logout_enabled = false
                     full_scope_allowed          = ${fullScopeAllowed}
@@ -372,7 +371,7 @@ public class ClientService {
                             resource "keycloak_openid_audience_protocol_mapper" "${name-hyphenated}" {
                                 add_to_id_token = ${addToIdToken}
                                 client_id = ${clientResourceModule}.id
-                                included_client_audience = "${includedClientAudience}"
+                                ${includedClientOrCustomAudience}
                                 name = "${name}"
                                 realm_id = ${clientResourceModule}.realm_id
                             }
@@ -389,6 +388,7 @@ public class ClientService {
                 String resource = """
                             resource "keycloak_openid_user_attribute_protocol_mapper" "${name-hyphenated}" {
                                 add_to_id_token = ${addToIdToken}
+                                add_to_userinfo = ${addToUserInfo}
                                 claim_name = "${claimName}"
                                 client_id = ${clientResourceModule}.id
                                 name = "${name}"
@@ -521,7 +521,11 @@ public class ClientService {
             ClientResource clientResource = realmResource.clients().get(clientUUID);
             if (clientResource.toRepresentation().isServiceAccountsEnabled()) {
                 String id = clientResource.getServiceAccountUser().getId();
-                MappingsRepresentation mappingsRepresentation = realmResource.users().get(id).roles().getAll();
+                UsersResource usr = realmResource.users();
+                UserResource ur  = usr.get(id);
+                RoleMappingResource rmr = ur.roles();
+                MappingsRepresentation mappingsRepresentation = rmr.getAll();
+
 
                 String module = """                   
                         module "service-account-roles" {

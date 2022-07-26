@@ -47,36 +47,43 @@ public class Main {
         if(!(new File(realmFolderPath).mkdir()) && !(new File(realmFolderPath).exists())) {
             throw new RuntimeException("Folder can't be created and doesn't exists");
         }
-
         FileWriter realmFW = createFileWriter(realmFolderPath+"\\main.tf");
         FileWriter importFW = createFileWriter(path + "imports.bash");
         FileWriter realmVersions = createFileWriter(realmFolderPath+"\\versions.tf");
 
-        Map<String, String> env = System.getenv();
-        for(String sthing: env.keySet()) System.out.println(sthing);
         JsonArray clients =(JsonArray) inputJSON.get("clients");
         clients.forEach(client -> {
             JsonObject JSONclient = (JsonObject) client;
             try{
-                ClientService clientService = new ClientService(realmResource,
-                        (String) JSONclient.get("clientID"),
-                        environmentName,
-                        (String) JSONclient.get("clientType"),
-                        realmFolderPath+"\\");
+//                System.out.println(JSONclient.get("clientID"));
+                List<ClientRepresentation> clientRepresentationList = realmResource.clients().findAll((String) JSONclient.get("clientID"),true,true,0,((boolean) JSONclient.get("isList"))? -1:1);
 
-                if (phase.equalsIgnoreCase("1")){
-                    //create all non-dependent
-                write(realmFW, clientService.createAllNonDependentResources());
-                write(importFW,clientService.createAllNonDependentImports());
-                }else if(phase.equalsIgnoreCase("2")){
-                    //create all resources, but import only dependent
-                write(realmFW, clientService.createResources());
-                write(importFW,clientService.createAllDependentImports());
+                for (ClientRepresentation cr: clientRepresentationList) {
+                    System.out.println(cr.getClientId());
+                    ClientService clientService = new ClientService(realmResource,
+                            cr.getClientId(),
+                            environmentName,
+                            (String) JSONclient.get("clientType"),
+                            realmFolderPath + "\\");
+
+                    if (phase.equalsIgnoreCase("1") && !(boolean)JSONclient.get("isMaintained")) {
+                        //create all non-dependent
+                        write(realmFW, clientService.createAllNonDependentResources());
+                        write(importFW, clientService.createAllNonDependentImports());
+                    } else {
+                        //create all resources, but import only dependent
+                        write(realmFW, clientService.createResources());
+                        if(!(boolean)JSONclient.get("isMaintained")) {
+                            System.out.println("writing imports for : " + cr.getClientId());
+                            write(importFW, clientService.createAllDependentImports());
+                        }
+                    }
+                    clientService.closeFile();
                 }
-                clientService.closeFile();
             }catch (Exception e){
                 e.printStackTrace();
             }
+
         });
 
         realmVersions.write(keycloakProvider);

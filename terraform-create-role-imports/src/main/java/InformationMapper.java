@@ -30,6 +30,9 @@ public class InformationMapper {
     }
 
     public void getClientValues(ClientRepresentation cr){
+
+
+        client.put("directAccessGrantsEnabled",cr.isDirectAccessGrantsEnabled().toString());
         client.put("backChannelLogoutSessionRequired",(cr.getAttributes().get("backchannel.logout.session.required") == null)? "true":cr.getAttributes().get("backchannel.logout.session.required"));
         client.put("pkceCodeChallengeMethod",(cr.getAttributes().get("pkce.code.challenge.method") == null)? "":cr.getAttributes().get("pkce.code.challenge.method"));
         client.put("accessTokenLifeSpan",(cr.getAttributes().get("access.token.lifespan") == null)? "": cr.getAttributes().get("access.token.lifespan"));
@@ -44,7 +47,6 @@ public class InformationMapper {
         client.put("standardFlowEnabled", cr.isStandardFlowEnabled().toString());
         client.put("useRefreshToken",(cr.getAttributes().get("use.refresh.tokens") ==null)? "true":cr.getAttributes().get("use.refresh.tokens"));
 
-        System.out.println(cr.getClientId() +" = " +  cr.getAttributes().get("use.refresh.tokens"));
         //todo: these two feel a bit out of place
         String validRedirectURIS = "[\n";
         for (String uri : cr.getRedirectUris()) {
@@ -75,15 +77,25 @@ public class InformationMapper {
         String id = pmr.getId();
         if(!mappers.containsKey(id)){
             Map values = new HashMap(client);
+            values.put(("addToUserInfo"), (pmr.getConfig().get("userinfo.token.claim") == null)? "false":pmr.getConfig().get("userinfo.token.claim"));
             values.put("name-hyphenated",pmr.getName().replaceAll(" ","-"));
             values.put("name",pmr.getName());
             values.put("addToIdToken",pmr.getConfig().get("id.token.claim"));
             values.put("claimName",pmr.getConfig().get("claim.name"));
             values.put("claimValueType",pmr.getConfig().get("jsonType.label"));
             values.put("id",id);
-            values.put("includedClientAudience",pmr.getConfig().get("included.client.audience"));
             values.put("sessionNote",pmr.getConfig().get("user.session.note"));
-            values.put("userAttribute",pmr.getConfig().get("user.attribute"));
+            values.put("userAttribute",(pmr.getConfig().get("user.attribute") == null)? "":pmr.getConfig().get("user.attribute"));
+
+            if(pmr.getConfig().get("included.client.audience") != null) {
+                values.put("includedClientOrCustomAudience","included_client_audience = \"" + (pmr.getConfig().get("included.client.audience")) + "\"");
+
+            } else if(pmr.getConfig().get("included.custom.audience") != null) {
+                values.put("includedClientOrCustomAudience","included_custom_audience = \"" + (pmr.getConfig().get("included.custom.audience")) + "\"");
+            }
+
+
+
 
             mappers.put(id,values);
         }
