@@ -20,77 +20,21 @@ import java.io.File;
 
 
 public class Main {
-    private static String keycloakProvider = """
-                terraform {
-                  required_providers {
-                    keycloak = {
-                      source  = "mrparkers/keycloak"
-                      version = ">= 3.0.0"
-                    }
-                  }
-                }
-                """;
 
     public static void main(String[] args) throws Exception {
         Properties configProperties = getProperties();
+        String outputPath = configProperties.getProperty("outputPath");
+        String environment = configProperties.getProperty("environment");
+        System.out.println(outputPath +"input_"+environment + ".json");
+        JsonObject inputJSON = readJsonFile(outputPath +"input_"+environment + ".json");
 
-        JsonObject inputJSON = readJsonFile(configProperties.getProperty("inputFile"));
+        File realm = new File(outputPath + configProperties.getProperty("realm").toLowerCase(Locale.ROOT));
 
-        RealmResource realmResource = getRealmResource(configProperties);
-        String environmentName = configProperties.getProperty("environment");
-        String realmName = configProperties.getProperty("realm");
-        String path = configProperties.getProperty("outputPath");
-        String phase = configProperties.getProperty("phase");
+        recursiveDelete(realm);
+        RealmService rs = new RealmService(configProperties,(JsonArray) inputJSON.get("clients"));
 
-        String realmFolderPath = path + realmName.toLowerCase(Locale.ROOT);
-        recursiveDelete(new File(realmFolderPath));
-        if(!(new File(realmFolderPath).mkdir()) && !(new File(realmFolderPath).exists())) {
-            throw new RuntimeException("Folder can't be created and doesn't exists");
-        }
-        FileWriter realmFW = createFileWriter(realmFolderPath+"\\main.tf");
-        FileWriter importFW = createFileWriter(path + "imports.bash");
-        FileWriter realmVersions = createFileWriter(realmFolderPath+"\\versions.tf");
-
-        JsonArray clients =(JsonArray) inputJSON.get("clients");
-        clients.forEach(client -> {
-            JsonObject JSONclient = (JsonObject) client;
-            try{
-//                System.out.println(JSONclient.get("clientID"));
-                List<ClientRepresentation> clientRepresentationList = realmResource.clients().findAll((String) JSONclient.get("clientID"),true,true,0,((boolean) JSONclient.get("isList"))? -1:1);
-
-                for (ClientRepresentation cr: clientRepresentationList) {
-                    System.out.println(cr.getClientId());
-                    ClientService clientService = new ClientService(realmResource,
-                            cr.getClientId(),
-                            environmentName,
-                            (String) JSONclient.get("clientType"),
-                            realmFolderPath + "\\");
-
-                    if (phase.equalsIgnoreCase("1") && !(boolean)JSONclient.get("isMaintained")) {
-                        //create all non-dependent
-                        write(realmFW, clientService.createAllNonDependentResources());
-                        write(importFW, clientService.createAllNonDependentImports());
-                    } else {
-                        //create all resources, but import only dependent
-                        write(realmFW, clientService.createResources());
-                        if(!(boolean)JSONclient.get("isMaintained")) {
-                            System.out.println("writing imports for : " + cr.getClientId());
-                            write(importFW, clientService.createAllDependentImports());
-                        }
-                    }
-                    clientService.closeFile();
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
-        });
-
-        realmVersions.write(keycloakProvider);
-
-        realmFW.close();
-        importFW.close();
-        realmVersions.close();
+        rs.writeClients();
+        rs.closeFileWriters();
     }
 
     private static Properties getProperties() throws Exception{
@@ -104,18 +48,6 @@ public class Main {
         Objects.requireNonNull(inputStream, String.format("Configuration file not found at '%s'.", configPath));
         configProperties.load(inputStream);
         return configProperties;
-    }
-    private static RealmResource getRealmResource(Properties configProperties) {
-        Keycloak keycloak = KeycloakBuilder.builder() //
-                .serverUrl(getServerUrl(configProperties)) //
-                .realm(configProperties.getProperty("realm")) //
-                .grantType(OAuth2Constants.CLIENT_CREDENTIALS) //
-                .clientId(configProperties.getProperty("clientID")) //
-                .clientSecret(getClientSecret(configProperties)) //
-                .build();
-        RealmResource realmResource = keycloak.realm(configProperties.getProperty("realm"));
-
-        return  realmResource;
     }
     private static JsonObject readJsonFile(String inputFile) {
         JsonObject result = null;
@@ -135,13 +67,6 @@ public class Main {
         }
         return result;
     }
-    private static FileWriter createFileWriter(String path) throws IOException {
-        System.out.println(path);
-        if (!(new File(path).createNewFile()) && !(new File(path).exists())) {
-            throw new RuntimeException("File can't be created");
-        }
-        return new FileWriter(path);
-    }
 
 
     private static void recursiveDelete(File file)
@@ -159,30 +84,4 @@ public class Main {
         file.delete();
     }
 
-    private static void write(FileWriter filewriter, String input){
-        try{
-            filewriter.write(input);
-        }catch (Exception e){
-            throw new RuntimeException();
-        }
-    }
-
-    private static String getClientSecret(Properties configProperties) {
-        Map<String, String> env = System.getenv();
-        switch (configProperties.getProperty("environment")){
-            case "KEYCLOAK_DEV": return env.get("TF_VAR_dev_client_secret");
-            case "KEYCLOAK_TEST": return env.get("TF_VAR_test_client_secret");
-            case "KEYCLOAK_PROD": return env.get("TF_VAR_prod_client_secret");
-            default: throw new RuntimeException();
-        }
-    }
-
-    private static String getServerUrl(Properties configProperties) {
-        switch (configProperties.getProperty("environment")){
-            case "KEYCLOAK_DEV": return "https://common-logon-dev.hlth.gov.bc.ca/auth";
-            case "KEYCLOAK_TEST": return "https://common-logon-test.hlth.gov.bc.ca/auth";
-            case "KEYCLOAK_PROD": return "https://common-logon.hlth.gov.bc.ca/auth";
-            default: throw new RuntimeException();
-        }
-    }
 }

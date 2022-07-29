@@ -1,0 +1,46 @@
+{
+  "clients" : [
+    {
+      "clientID" : "account",
+      "clientType" : "data source",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "realm-management",
+      "clientType" : "data source",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "FMDB",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "MIWT",
+      "clientType" : "payara",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "GIS",
+      "clientType" : "payara",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "PIDP",
+      "clientType" : "basic",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "USER-MANAGEMENT",
+      "clientType" : "basic",
+      "isList" : true,
+      "isMaintained": true
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "clients" : [
+    {
+      "clientID" : "account",
+      "clientType" : "data source",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "realm-management",
+      "clientType" : "data source",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "DMFT",
+      "clientType" : "basic",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "FMDB",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "GIS",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "HCIMWEB",
+      "clientType" : "payara",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "MIWT",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "PIDP",
+      "clientType" : "basic",
+      "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "PLR",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": false
+    },
+    {
+      "clientID" : "PLR-SHOPPERS",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "UCI-SSO",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "USER-MANAGEMENT",
+      "clientType" : "basic",
+      "isList" : true,
+      "isMaintained": true
+    }
+  ]
+}

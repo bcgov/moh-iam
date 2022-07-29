@@ -62,7 +62,7 @@ public class ClientService {
     // initializes the file writers.
     private void configureFileWriters(String path) {
         String folderPath = path + clientID.toLowerCase(Locale.ROOT);
-        System.out.println("\t" + folderPath);
+//        System.out.println("\t" + folderPath);
         if(clientType == ClientType.DATA_SOURCE) {
             return;
         }
@@ -286,21 +286,34 @@ public class ClientService {
         ClientResource clientResource = realmResource.clients().get(clientUUID);
         String module = """
                 module "payara-client" {
+                
                 	source = "../../../../modules/payara-client"
+                	mapper_name = "${name}"
                 	claim_name  = "${claimName}"
                 	client_id   = "${clientID}"
                 	base_url    = "${baseURL}"
                 	description = "${description}"
-                	valid_redirect_uris = ${validRedirectURIS}
+                	client_name = "${clientName}"
                 	roles = ${roles}
+                	service_accounts_enabled = ${serviceAccountsEnabled}
+                	use_refresh_token = ${useRefreshToken}
+                	valid_redirect_uris = ${validRedirectURIS}
                 }
                 """;
 
         Map valuesMap = new HashMap(im.getClientMap());
-        valuesMap.put("claimName",(clientID.toLowerCase() + "_role"));
+        valuesMap.putAll(getClientMapperInfo());
         valuesMap.put("roles",writePayaraModuleRoles(clientResource));
 
         write(mainFW,new StringSubstitutor(valuesMap).replace(module));
+    }
+    private Map getClientMapperInfo() {
+        for (ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
+            if (pmr.getProtocolMapper().equalsIgnoreCase("oidc-usermodel-client-role-mapper")) {
+                return im.getMapperInformation(pmr);
+            }
+        }
+        throw new RuntimeException();
     }
 
     // helper for writePayaraModule. writes the roles in the payara module
@@ -360,8 +373,33 @@ public class ClientService {
         if(clientType != ClientType.PAYARA){
             writeUserModelClientRoleMapperResources();
         }
+        writeHardcodedClaimMapperResources();
         writeUserSessionNoteMapperResources();
     }
+
+    private void writeHardcodedClaimMapperResources() {
+        for(ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
+            if(pmr.getProtocolMapper().equalsIgnoreCase("oidc-hardcoded-claim-mapper")){
+                String resource = """
+                            resource "keycloak_openid_hardcoded_claim_protocol_mapper" "${name-hyphenated}" {
+                                add_to_access_token = ${addToAccessToken}
+                                add_to_id_token = ${addToIdToken}
+                                add_to_userinfo = ${addToUserInfo}
+                                claim_name = "${claimName}"
+                                claim_value = "${claimValue}"
+                                claim_value_type = "${claimValueType}"
+                                client_id = ${clientResourceModule}.id
+                                ${includedClientOrCustomAudience}
+                                name = "${name}"
+
+                                realm_id = ${clientResourceModule}.realm_id
+                            }
+                            """;
+                write(mainFW,new StringSubstitutor(im.getMapperInformation(pmr)).replace(resource));
+            }
+        }
+    }
+
 
     /**writes the audience mapper resource**/
     private void writeAudienceMapperResources() {
@@ -623,6 +661,9 @@ public class ClientService {
                     break;
                 case "oidc-audience-mapper":
                     mapperType = "keycloak_openid_audience_protocol_mapper";
+                    break;
+                case "oidc-hardcoded-claim-mapper":
+                    mapperType = "keycloak_openid_hardcoded_claim_protocol_mapper";
                     break;
                 case "oidc-usermodel-attribute-mapper":
                     mapperType = "keycloak_openid_user_attribute_protocol_mapper";
