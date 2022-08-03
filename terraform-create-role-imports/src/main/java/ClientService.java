@@ -296,7 +296,7 @@ public class ClientService {
                 	client_name = "${clientName}"
                 	roles = ${roles}
                 	service_accounts_enabled = ${serviceAccountsEnabled}
-                	use_refresh_token = ${useRefreshToken}
+                	${useRefreshToken}
                 	valid_redirect_uris = ${validRedirectURIS}
                 }
                 """;
@@ -305,7 +305,7 @@ public class ClientService {
         valuesMap.putAll(getClientMapperInfo());
         valuesMap.put("roles",writePayaraModuleRoles(clientResource));
 
-        write(mainFW,new StringSubstitutor(valuesMap).replace(module));
+        write(mainFW,removeBlankLine(new StringSubstitutor(valuesMap).replace(module)));
     }
     private Map getClientMapperInfo() {
         for (ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
@@ -340,7 +340,7 @@ public class ClientService {
                 resource "keycloak_openid_client" "CLIENT" {
                     access_token_lifespan = "${accessTokenLifeSpan}"
                     access_type = "${accessType}"
-                    backchannel_logout_session_required = ${backChannelLogoutSessionRequired}
+                    ${backChannelLogoutSessionRequired}
                     base_url    = "${baseURL}"
                     client_authenticator_type = "client-secret"
                     client_id   = "${clientID}"
@@ -356,12 +356,12 @@ public class ClientService {
                     realm_id = "${realmName}"
                     service_accounts_enabled =${serviceAccountsEnabled}
                     standard_flow_enabled = ${standardFlowEnabled}
-                    use_refresh_tokens = ${useRefreshToken}
+                    ${useRefreshToken}
                     valid_redirect_uris = ${validRedirectURIS}
                     web_origins = ${webOrigins}
                 }
                 """;
-        write(mainFW,new StringSubstitutor(im.getClientMap()).replace(resource));
+        write(mainFW,removeBlankLine(new StringSubstitutor(im.getClientMap()).replace(resource)));
     }
 
     // write and import all mappers. if payara, ignore the usermodel.

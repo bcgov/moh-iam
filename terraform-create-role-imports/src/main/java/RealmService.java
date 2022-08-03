@@ -64,6 +64,7 @@ public class RealmService {
     }
 
     public void writeClients(){
+        for(ClientRepresentation cr: rr.clients().findAll()) System.out.println(cr.getClientId());
         clients.forEach(client -> {
             JsonObject JSONclient = (JsonObject) client;
             try{

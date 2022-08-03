@@ -31,7 +31,7 @@ public class InformationMapper {
 
     public void getClientValues(ClientRepresentation cr){
         client.put("directAccessGrantsEnabled",cr.isDirectAccessGrantsEnabled().toString());
-        client.put("backChannelLogoutSessionRequired",(cr.getAttributes().get("backchannel.logout.session.required") == null)? "true":cr.getAttributes().get("backchannel.logout.session.required"));
+        client.put("backChannelLogoutSessionRequired",(cr.getAttributes().get("backchannel.logout.session.required") == null)? "":String.format("backchannel_logout_session_required = %s", cr.getAttributes().get("backchannel.logout.session.required")));
         client.put("pkceCodeChallengeMethod",(cr.getAttributes().get("pkce.code.challenge.method") == null)? "":cr.getAttributes().get("pkce.code.challenge.method"));
         client.put("accessTokenLifeSpan",(cr.getAttributes().get("access.token.lifespan") == null)? "": cr.getAttributes().get("access.token.lifespan"));
         client.put("accessType",(cr.isPublicClient())? "PUBLIC": ((cr.isBearerOnly())? "BEARER-ONLY":"CONFIDENTIAL"));
@@ -43,7 +43,7 @@ public class InformationMapper {
         client.put("description",(cr.getDescription() == null)? "":cr.getDescription());
         client.put("serviceAccountsEnabled",cr.isServiceAccountsEnabled().toString());
         client.put("standardFlowEnabled", cr.isStandardFlowEnabled().toString());
-        client.put("useRefreshToken",(cr.getAttributes().get("use.refresh.tokens") ==null)? "true":cr.getAttributes().get("use.refresh.tokens"));
+        client.put("useRefreshToken",(cr.getAttributes().get("use.refresh.tokens") ==null)? "":String.format("use_refresh_tokens = %s",cr.getAttributes().get("use.refresh.tokens")));
 
         //todo: these two feel a bit out of place
         String validRedirectURIS = "[\n";
