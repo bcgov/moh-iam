@@ -81,13 +81,16 @@ public class InformationMapper {
 
             values.put("name-hyphenated",pmr.getName().replaceAll(" ","-"));
             values.put("name",pmr.getName());
-            values.put("addToIdToken",pmr.getConfig().get("id.token.claim"));
             values.put("claimName",pmr.getConfig().get("claim.name"));
             values.put("claimValue",pmr.getConfig().get("claim.value"));
             values.put("claimValueType",pmr.getConfig().get("jsonType.label"));
             values.put("id",id);
             values.put("sessionNote",pmr.getConfig().get("user.session.note"));
             values.put("userAttribute",(pmr.getConfig().get("user.attribute") == null)? "":pmr.getConfig().get("user.attribute"));
+
+
+            values.put("client_role_mapper_add_to_id_token",(pmr.getConfig().get("id.token.claim") == null)? "":"client_role_mapper_add_to_id_token = " + pmr.getConfig().get("id.token.claim"));
+            values.put("client_role_mapper_add_to_userinfo",(pmr.getConfig().get("userinfo.token.claim") == null)? "":"client_role_mapper_add_to_userinfo = " + pmr.getConfig().get("userinfo.token.claim"));
 
             if(pmr.getConfig().get("included.client.audience") != null) {
                 values.put("includedClientOrCustomAudience","included_client_audience = \"" + (pmr.getConfig().get("included.client.audience")) + "\"");

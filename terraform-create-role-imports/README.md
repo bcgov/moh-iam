@@ -3,16 +3,18 @@
 ### How to use this:
 1. Store the client secret values as environment variables named `TF_VAR_dev_client_secret`, `TF_VAR_test_client_secret`
 and `TF_VAR_prod_client_secret`.
-2. Specify the clients you want to import in the input.json file
+2. Specify the clients you want to import in their respective files(eg `input_KEYCLOAK_DEV.json` for the dev environment)
    1. `clientID` should be the client's ID, and _not_ the client name or UUID. 
    2. `clientType` can be: `basic`, `data source` or `payara`.
-3. Write the information in the `configuration.properties` file. The `phase` value should be set to 1.
-4. run the script. A folder with the name of the realm should appear on the path specified on `outputPath`
-5. Move this folder to the Terraform repo.
-6. Run `imports.bash` on the Terraform repo. 
-7. Change the `phase` value to 2. 
-8. Move this folder to the Terraform repo.
-9. Run `imports.bash` on the Terraform repo. 
+   3. `isList`: If true, it will create client configs for all clients that match the given `clientID`. If false, it will create the configuration for the first client it finds.
+3. In the `configurations.properties` file, 
+4. The `phase` value should be set to 1.
+5. run the script. A folder with the name of the realm should appear on the path specified on `outputPath`
+6. Move this folder to the Terraform repo.
+7. Run `imports.bash` on the Terraform repo. 
+8. Change the `phase` value to 2. 
+9. Move this folder to the Terraform repo.
+10. Run `imports.bash` on the Terraform repo. 
 
 
 

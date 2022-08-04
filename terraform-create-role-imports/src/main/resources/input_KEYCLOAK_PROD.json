@@ -13,20 +13,104 @@
       "isMaintained": true
     },
     {
+    "clientID" : "BCER-CP",
+    "clientType" : "basic",
+    "isList" : false,
+    "isMaintained": true
+    },
+    {
+      "clientID" : "EACL",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "EMCOD",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
       "clientID" : "FMDB",
       "clientType" : "payara",
       "isList" : false,
       "isMaintained": true
     },
     {
-      "clientID" : "MIWT",
+      "clientID" : "GIS",
       "clientType" : "payara",
-      "isList" : true,
+      "isList" : false,
       "isMaintained": true
     },
     {
-      "clientID" : "GIS",
+      "clientID" : "HAMIS",
       "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "HEM",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": false
+    },
+    {
+      "clientID" : "hnsesb_api_gateway_client_manager",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": false
+    },
+    {
+      "clientID" : "HOOPC",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "HCIMWEB",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "HSCIS",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "IEN",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "LDAP-ACC-TRANS",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "LDAP-ACC-TRANS-SERVICE",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "MIWT",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "MOH-SERVICENOW",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "MSPDIRECT",
+      "clientType" : "basic",
       "isList" : true,
       "isMaintained": true
     },
@@ -37,9 +121,69 @@
       "isMaintained": true
     },
     {
+      "clientID" : "PLR",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "PRIME-WEBAPP-ENROLLMENT",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "PRIME-WEBAPP-ENROLLMENT-SERVICE",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "SAT-EFORMS",
+      "clientType" : "basic",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "SA-DBAAC-PORTAL",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "SA-HIBC-SERVICE-BC-PORTAL",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": false
+    },
+    {
+      "clientID" : "SA-SFDC",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "SFDS",
+      "clientType" : "payara",
+      "isList" : false,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "SWT",
+      "clientType" : "payara",
+      "isList" : true,
+      "isMaintained": false
+    },
+    {
       "clientID" : "USER-MANAGEMENT",
       "clientType" : "basic",
       "isList" : true,
+      "isMaintained": true
+    },
+    {
+      "clientID" : "WEBCAPS",
+      "clientType" : "basic",
+      "isList" : false,
       "isMaintained": true
     }
   ]

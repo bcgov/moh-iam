@@ -62,7 +62,6 @@ public class ClientService {
     // initializes the file writers.
     private void configureFileWriters(String path) {
         String folderPath = path + clientID.toLowerCase(Locale.ROOT);
-//        System.out.println("\t" + folderPath);
         if(clientType == ClientType.DATA_SOURCE) {
             return;
         }
@@ -143,6 +142,7 @@ public class ClientService {
 
         result +=  importAllMapperResources();
 
+        System.out.println("hello tere : "+result);
         return result;
     }
     public String createAllDependentImports() {
@@ -297,6 +297,8 @@ public class ClientService {
                 	roles = ${roles}
                 	service_accounts_enabled = ${serviceAccountsEnabled}
                 	${useRefreshToken}
+                	${client_role_mapper_add_to_id_token}
+                	${client_role_mapper_add_to_userinfo}
                 	valid_redirect_uris = ${validRedirectURIS}
                 }
                 """;
@@ -647,6 +649,8 @@ public class ClientService {
         String importStr =String.format("${terraformImport}%s.keycloak_openid_client.CLIENT ${realmName}/${clientUUID}\n",extraModule);
         return new StringSubstitutor(im.getClientMap()).replace(importStr);
     }
+
+    //todo: this doesn't include all types of mappers. it includes only mappers that the current keycloak clients use.
     /** imports all the mappers associated with the client**/
     private String importAllMapperResources() {
         String result = "";
@@ -654,10 +658,11 @@ public class ClientService {
         for (ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
             String mapperType;
             String protocolMapper = pmr.getProtocolMapper();
+            System.out.println("hello" + protocolMapper);
             switch (protocolMapper){
-                case "the one that payara style uses":
+                case "oidc-usermodel-client-role-mapper":
                     if(clientType == ClientType.PAYARA) continue;
-                    mapperType = "the one that the payara style uses";
+                    mapperType = "keycloak_openid_user_client_role_protocol_mapper";
                     break;
                 case "oidc-audience-mapper":
                     mapperType = "keycloak_openid_audience_protocol_mapper";
@@ -672,7 +677,7 @@ public class ClientService {
                     mapperType = "keycloak_openid_user_session_note_protocol_mapper";
                     break;
                 default:
-                    continue;
+                    throw new RuntimeException();
             }
 
             String importStatement = "${terraformImport}.${mapperType}.${name-hyphenated} ";
@@ -795,7 +800,6 @@ public class ClientService {
 
     // creates a single file writer. helper for configureFileWriters
     private FileWriter createFileWriter(String path) throws IOException {
-        System.out.println("\t\t" + path);
         if (!(new File(path).createNewFile()) && !(new File(path).exists())) {
             throw new RuntimeException("File can't be created");
         }

@@ -62,8 +62,6 @@ public class Main {
         }
         return result;
     }
-
-
     private static void recursiveDelete(File file)
     {
         try {
