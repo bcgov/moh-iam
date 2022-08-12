@@ -3,9 +3,7 @@ create-healthnet-test-users/
 pom-sample.html
 *.class
 src/main/java/source.java
-.idea/create-healthnet-test-users.iml
 *.iml
-*.xml
 .idea/libraries/Maven__backport_util_concurrent_backport_util_concurrent_3_1.xml
 .idea/libraries/Maven__com_fasterxml_jackson_core_jackson_annotations_2_10_5.xml
 .idea/libraries/Maven__com_fasterxml_jackson_core_jackson_core_2_10_5.xml
