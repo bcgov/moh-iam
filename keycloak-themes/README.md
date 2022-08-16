@@ -7,7 +7,7 @@ This theme package contains themes for both the Login and Account pages. The Log
 In both cases the CSS has also been updated to better align with Ministry of Health Standards.
 
 ### Login Theme Notes
-The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in the Keycloak Admin console.
+The top level heading (Ministry of Health) is set by the Realm HTML Display Name which can be configured in the Keycloak Admin console.
 
 The second level heading (application name) is pulled from the Client Name which can be configured in the Keycloak Admin Console.
 
@@ -21,7 +21,7 @@ The top level header is set in the template.ftl template file.
 ## moh-idp
 This theme package contains a theme for the moh-idp realm Login page.
 
-The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in Keycloak's Admin console.
+The top level heading (Ministry of Health) is set by the Realm HTML Display Name which can be configured in Keycloak's Admin console.
 
 The second level heading is set in the messages.properties file in the theme.
 
