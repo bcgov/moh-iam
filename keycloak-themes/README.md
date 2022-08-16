@@ -1,5 +1,5 @@
 # Overview
-This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak. For further instructions regarding creating or updating themes see the reference link.
+This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak (themes are still fine as of Keycloak 15.0.2). For further instructions regarding creating or updating themes see the reference link.
 
 ## moh-app-realm
 This theme package contains themes for both the Login and Account pages. The Login theme has been designed to only show a list of identity providers. The Account page removes the options for users to view and manage password, authentication, and applications. 
