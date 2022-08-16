@@ -52,7 +52,7 @@ rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cac
 ```
 
 # Tested on
-* Keycloak 9.0.2
+* Keycloak 9.0.2 + 15.0.2
 
 # References
 * Keycloak Documentation: [Creating, Updating, and Configuring Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
