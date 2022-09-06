@@ -1,5 +1,5 @@
 # Overview
-This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak. For further instructions regarding creating or updating themes see the reference link.
+This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak (themes are still fine as of Keycloak 15.0.2). For further instructions regarding creating or updating themes see the reference link.
 
 ## moh-app-realm
 This theme package contains themes for both the Login and Account pages. The Login theme has been designed to only show a list of identity providers. The Account page removes the options for users to view and manage password, authentication, and applications. 
@@ -7,7 +7,7 @@ This theme package contains themes for both the Login and Account pages. The Log
 In both cases the CSS has also been updated to better align with Ministry of Health Standards.
 
 ### Login Theme Notes
-The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in the Keycloak Admin console.
+The top level heading (Ministry of Health) is set by the Realm HTML Display Name which can be configured in the Keycloak Admin console.
 
 The second level heading (application name) is pulled from the Client Name which can be configured in the Keycloak Admin Console.
 
@@ -21,7 +21,7 @@ The top level header is set in the template.ftl template file.
 ## moh-idp
 This theme package contains a theme for the moh-idp realm Login page.
 
-The top level heading (Ministry of Health) is set by the Realm Display Name which can be configured in Keycloak's Admin console.
+The top level heading (Ministry of Health) is set by the Realm HTML Display Name which can be configured in Keycloak's Admin console.
 
 The second level heading is set in the messages.properties file in the theme.
 
@@ -52,7 +52,7 @@ rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cac
 ```
 
 # Tested on
-* Keycloak 9.0.2
+* Keycloak 9.0.2 + 15.0.2
 
 # References
 * Keycloak Documentation: [Creating, Updating, and Configuring Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
