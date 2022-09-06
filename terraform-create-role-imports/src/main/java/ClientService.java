@@ -94,7 +94,7 @@ public class ClientService {
                 writeAllRoles();
             }catch (Exception e){
                 hasRoles = false;
-                System.out.println("no roles found");
+                System.out.println("\t\tno roles found");
             }
         }
         writeAllMapperResources();
@@ -117,7 +117,7 @@ public class ClientService {
                 writeAllRoles();
             }catch (Exception e){
                 hasRoles = false;
-                System.out.println("no roles found");
+                System.out.println("\t\tno roles found");
             }
         }
         writeAllMapperResources();
@@ -142,7 +142,6 @@ public class ClientService {
 
         result +=  importAllMapperResources();
 
-        System.out.println("hello tere : "+result);
         return result;
     }
     public String createAllDependentImports() {
@@ -488,7 +487,7 @@ public class ClientService {
             try{
                 values.put("roles", writeScopeMappingRoles());
             } catch (Exception e){
-                System.out.println("\t\t\tno scope mappings found");
+                System.out.println("\t\tno scope mappings found");
                 return;
             }
             write(mainFW,new StringSubstitutor(values).replace(module));
@@ -645,7 +644,6 @@ public class ClientService {
     /** imports a client
      *  has an extra module because both payara and basic clients use this.**/
     private String importClient(String extraModule){
-        System.out.println("hello: " + (im.getClientMap().get("clientUUID")));
         String importStr =String.format("${terraformImport}%s.keycloak_openid_client.CLIENT ${realmName}/${clientUUID}\n",extraModule);
         return new StringSubstitutor(im.getClientMap()).replace(importStr);
     }
@@ -658,7 +656,6 @@ public class ClientService {
         for (ProtocolMapperRepresentation pmr : realmResource.clients().get(clientUUID).toRepresentation().getProtocolMappers()) {
             String mapperType;
             String protocolMapper = pmr.getProtocolMapper();
-            System.out.println("hello" + protocolMapper);
             switch (protocolMapper){
                 case "oidc-usermodel-client-role-mapper":
                     if(clientType == ClientType.PAYARA) continue;
@@ -677,7 +674,7 @@ public class ClientService {
                     mapperType = "keycloak_openid_user_session_note_protocol_mapper";
                     break;
                 default:
-                    throw new RuntimeException();
+                    throw new RuntimeException(protocolMapper + ": ability to write this mapper isn't available on  this script");
             }
 
             String importStatement = "${terraformImport}.${mapperType}.${name-hyphenated} ";
@@ -730,7 +727,8 @@ public class ClientService {
                 String resourcePath ="${terraformImport}.module.scope-mappings.keycloak_generic_client_role_mapper.SCOPE-MAPPING[\\\"realm/${name}\\\"] ";
                 resourcePath += "${realmName}/client/${clientUUID}/scope-mappings/${ID}\n";
 
-                result += resourcePath;
+                result += new StringSubstitutor(im.getRoleInformation(rr)).replace(resourcePath);
+//                result += resourcePath;
             }
         }
         return result;

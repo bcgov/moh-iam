@@ -114,6 +114,7 @@ public class InformationMapper {
         if(!roles.containsKey(rr.getId())){
             Map result = new HashMap<>(client);
 
+            result.putAll(client);
             result.put("name",rr.getName());
             result.put("ID",rr.getId());
             result.put("description",(rr.getDescription() == null)? "":rr.getDescription());

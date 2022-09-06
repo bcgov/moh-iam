@@ -19,7 +19,6 @@ public class RealmService {
     String environmentName;
     String realmName;
 
-    String outputPath;
     String realmFolderPath;
     String phase;
     JsonArray clients;
@@ -64,11 +63,10 @@ public class RealmService {
     }
 
     public void writeClients(){
-        for(ClientRepresentation cr: rr.clients().findAll()) System.out.println(cr.getClientId());
         clients.forEach(client -> {
             JsonObject JSONclient = (JsonObject) client;
             try{
-                System.out.println((String) JSONclient.get("clientID") + JSONclient.get("clientType"));
+                System.out.println((String) JSONclient.get("clientID") +" written as: "+ JSONclient.get("clientType"));
 
                 List<ClientRepresentation> clientRepresentationList = rr.clients().findAll((String) JSONclient.get("clientID"),true,true,0,((boolean) JSONclient.get("isList"))? -1:1);
 
@@ -87,7 +85,7 @@ public class RealmService {
                         //create all resources, but import only dependent
                         write(realmFW, clientService.createResources());
                         if(!(boolean)JSONclient.get("isMaintained")) {
-                            System.out.println("writing imports for : " + cr.getClientId());
+                            System.out.println("\t\twriting imports for : " + cr.getClientId());
                             write(importFW, clientService.createAllDependentImports());
                         }
                     }
@@ -127,7 +125,6 @@ public class RealmService {
     }
 
     private static FileWriter createFileWriter(String path) throws IOException {
-//        System.out.println(path);
         if (!(new File(path).createNewFile()) && !(new File(path).exists())) {
             throw new RuntimeException("File can't be created");
         }

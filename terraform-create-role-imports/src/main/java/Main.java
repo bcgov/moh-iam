@@ -1,17 +1,12 @@
-
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-
 import java.net.URL;
 import java.util.*;
 
-import java.io.File;
-
-//Import Scanner class
 
 
 public class Main {
