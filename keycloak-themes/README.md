@@ -1,5 +1,5 @@
 # Overview
-This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak (themes are still fine as of Keycloak 15.0.2). For further instructions regarding creating or updating themes see the reference link.
+This directory consists of two themes which are used to style the **moh_idp** and **moh_applications** Keycloak realms. These themes are based on Keycloak 9.0 and may need to be updated for use with different versions of Keycloak (themes are still fine as of Keycloak 18.0.2). For further instructions regarding creating or updating themes see the reference link.
 
 ## moh-app-realm
 This theme package contains themes for both the Login and Account pages. The Login theme has been designed to only show a list of identity providers. The Account page removes the options for users to view and manage password, authentication, and applications. 
@@ -44,15 +44,15 @@ The settings to apply the the login theme only to a specific client are found at
 During a deploy, some theme resource files such as scripts may remain cached after restarting Keycloak. This cache can be cleared with the following:
 
 As the `gfadmin` user, remove the cache folder for a specific theme found under `/data/gfadmin/software/keycloak/domain/servers/server-<one|two>/tmp/kc-gzip-cache/?????/` (where `?????` can be found from inspecting a theme resource file from your browser's **Developer Tools -> Network** tab).
-> **Note:** Dev `?????=lir42`, Test `?????=4nox8`, and Prod `?????=jo96m` but this could change in the future.
+> **Note:** Dev `?????=m465f`, Test `?????=4nox8`, and Prod `?????=jo96m` but this could change in the future.
 
 e.g. To clear the cache for the moh-app-realm login theme in Keycloak Dev, run the following command as `gfadmin`:
 ```
-rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cache/lir42/login/moh-app-realm/
+rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cache/m465f/login/moh-app-realm/
 ```
 
 # Tested on
-* Keycloak 9.0.2 + 15.0.2
+* Keycloak 9.0.2, 15.0.2, and 18.0.2
 
 # References
 * Keycloak Documentation: [Creating, Updating, and Configuring Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
