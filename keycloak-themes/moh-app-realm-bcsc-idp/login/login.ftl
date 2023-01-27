@@ -64,12 +64,11 @@
             </div>
         </#if>
 		
-		<#-- this script checks the 'idps_to_show' query parameter and hides any IDP's that are not listed, along with any starting with 'bcsc' (use moh-app-realm-bcsc-idp theme for showing those) -->
+		<#-- this script checks the 'idps_to_show' query parameter and hides any IDP's that are not listed -->
 		<script>
 		   <#if social.providers??>
 				var idProviders=[<#list social.providers as p>'${p.alias?string}',</#list>]
 				hideIdProviders(idProviders);
-				hideBcscIdProviders(idProviders);
 		   </#if>
 		</script>
     </div>
