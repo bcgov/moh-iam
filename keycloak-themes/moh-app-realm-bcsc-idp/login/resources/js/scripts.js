@@ -18,14 +18,6 @@ function hideIdProviders(idProviders) {
     }
 };
 
-function hideBcscIdProviders(idProviders) {
-    for (var i = 0; i < idProviders.length; i++) {
-        if (idProviders[i].startsWith('bcsc')) {
-            document.getElementById('zocial-' + idProviders[i]).style.display = 'none';
-        }
-    }
-};
-
 // When the user clicks on the button, open the modal
 function showInstructionsModal() {
     var modal = document.getElementById("instructions-modal");
