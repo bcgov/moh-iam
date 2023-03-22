@@ -23,7 +23,7 @@
                             <input type="hidden" id="stateChecker" name="stateChecker" value="${stateChecker}">
                             <input type="hidden" id="action" name="action" value="remove">
                             <input type="hidden" id="providerId" name="providerId" value="${identity.providerId!}">
-                            <button id="remove-link-${identity.providerId!}" class="btn btn-default">${msg("doRemove")}</button>
+                            <#-- <button id="remove-link-${identity.providerId!}" class="btn btn-default">${msg("doRemove")}</button> -->
                         </form>
                     </#if>
                 <#else>
@@ -31,7 +31,7 @@
                         <input type="hidden" id="stateChecker" name="stateChecker" value="${stateChecker}">
                         <input type="hidden" id="action" name="action" value="add">
                         <input type="hidden" id="providerId" name="providerId" value="${identity.providerId!}">
-                        <button id="add-link-${identity.providerId!}" class="btn btn-default">${msg("doAdd")}</button>
+                        <#-- <button id="add-link-${identity.providerId!}" class="btn btn-default">${msg("doAdd")}</button> -->
                     </form>
                 </#if>
             </div>
