@@ -10,13 +10,13 @@
     <div id="federated-identities">
     <#list federatedIdentity.identities as identity>
         <div class="row margin-bottom">
-            <div class="col-sm-3 col-md-3">
+            <div class="col-sm-4 col-md-4">
                 <label for="${identity.providerId!}" class="control-label">${identity.displayName!}</label>
             </div>
             <div class="col-sm-5 col-md-5">
                 <input disabled="true" class="form-control" value="${identity.userName!}">
             </div>
-            <div class="col-sm-4 col-md-4">
+            <div class="col-sm-3 col-md-3">
                 <#if identity.connected>
                     <#if federatedIdentity.removeLinkPossible>
                         <form action="${url.socialUrl}" method="post" class="form-inline">
