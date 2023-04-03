@@ -1,7 +1,11 @@
 <#import "template.ftl" as layout>
 <@layout.registrationLayout displayInfo=social.displayInfo displayWide=(realm.password && social.providers??); section>
     <#if section = "header">
-        Welcome to ${client.getName()}
+        <#if client.getName()?has_content>
+            Welcome to ${client.getName()}
+        <#else>
+            Welcome to 
+        </#if>        
     <#elseif section = "form">
     <div id="kc-form" <#if realm.password && social.providers??>class="${properties.kcContentWrapperClass!}"</#if>>
 	  <#if !social.providers?? ||  social.providers?size == 0>
