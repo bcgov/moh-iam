@@ -32,6 +32,7 @@ ol {
 .zocial, a.zocial {
 	font-family: "BCSans", Helvetica, Arial, sans-serif;
 	font-size: 16px;
+    line-height: 2.1em;
 }
 .form-control {
 	border: 2px solid #003366;
