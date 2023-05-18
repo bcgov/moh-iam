@@ -136,6 +136,12 @@ ol {
 .login-pf-page .login-pf-social-link a:hover {
 	background: #204A88 !important;
 }
+.login-pf-page .login-pf-social-link.idp-outage a {
+	background: #D8292F;
+}
+.login-pf-page .login-pf-social-link.idp-outage a:hover {
+	background: #DA6266 !important;
+}
 #kc-form-buttons {
 	margin-top: 30px;
 }

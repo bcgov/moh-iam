@@ -60,9 +60,13 @@
         <#if realm.password && social.providers??>
             <div id="kc-social-providers" class="${properties.kcFormSocialAccountContentClass!} ${properties.kcFormSocialAccountClass!}">
                 <ul class="${properties.kcFormSocialAccountListClass!}">
+                    <#-- by default all identity providers are shown, different message is displayed in case of IDP outage -->
                     <#list social.providers as p>	
-						<#-- by default all identity providers are shown -->
-						<li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: block" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
+                        <#if p.displayName?contains("outage")>
+                            <li class="${properties.kcFormSocialAccountListLinkClass!} idp-outage"><a style="display: block;" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName?remove_ending("outage")} is currently unavailable. Teams supporting this identity provider are working to restore it.</span></a></li>
+                        <#else>
+						    <li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: block" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
+                        </#if>
                     </#list>
                 </ul>
             </div>
