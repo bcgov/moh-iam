@@ -54,11 +54,6 @@ e.g. To clear the cache for the moh-app-realm login theme in Keycloak Dev, run t
 rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cache/m465f/login/moh-app-realm/
 ```
 
-# IDP Outage Notification
-In case of a rare event of an IDP outage, the login page can be edited, to inform users about the issue. To display the outage notification, a developer needs to append the word `outage` to the Display Name attribute of the affected Identity Provider in the corresponding realm. For example, if IDIR IDP is not working, changing Display Name from `IDIR` to `IDIR outage` in the `moh_applications` realm will result in displaying the following message: `Login with IDIR is currently unavailable. Teams supporting this identity provider are working to restore it.` No server restart is needed. To delete the notification, the Display Name must be set to the previous value.
-
-![image](https://github.com/bcgov/moh-iam/assets/68440291/39f4864f-76cf-42dc-9854-35b7e1352478)
-
 # Tested on
 * Keycloak 9.0.2, 15.0.2, and 18.0.2
 
