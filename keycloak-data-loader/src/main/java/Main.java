@@ -11,7 +11,7 @@ import service.CSVFileService;
 import service.KeycloakService;
 
 /**
- * Program to handle updating Keycloak user info in a bulk upload. The proram accepts a csv file with fields:
+ * Program to handle updating Keycloak user info in a bulk upload. The program accepts a csv file with fields:
  * 	User - Roles
  * 	e.g. 
  * 	testuser1,"role_1, role_2"
@@ -26,7 +26,9 @@ import service.KeycloakService;
  */
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    private static final String DEFAULT_ENV = "dev";
+
+	public static void main(String[] args) throws Exception {
     	System.out.println("Begin loading Keycloak user data...");
     	
     	String environment = determineEnvironment(args);
@@ -36,9 +38,9 @@ public class Main {
 	    CSVFileService csvFileService = new CSVFileService();
 	    
 		try {
-			List<UserData> userInfo = csvFileService.extractFileInfo(configProperties.getProperty("data-file-location"));
+			List<UserData> userDataList = csvFileService.extractFileInfo(configProperties.getProperty("data-file-location"));
 			
-		    keycloakService.updateKeycloakData(configProperties.getProperty("application"), userInfo);
+		    keycloakService.updateKeycloakData(configProperties.getProperty("application"), userDataList);
 
 	    	System.out.println("Completed loading Keycloak user data.");
 		} catch (Exception e) {
@@ -48,7 +50,7 @@ public class Main {
     }
 
 	private static String determineEnvironment(String[] args) {
-		String environment = "dev";
+		String environment = DEFAULT_ENV;
         if (args != null && args.length != 0) {
         	environment = args[0]; 
         	System.out.println("Running against environment: " + environment);
