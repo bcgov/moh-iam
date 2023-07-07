@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
@@ -71,7 +72,11 @@ public class KeycloakService {
 			
 			UserRepresentation userRepresentation = processUsername(usersResource, username);
 			
-			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
+			if (userRepresentation != null) {
+				processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
+			} else {
+				throw new RuntimeException(String.format("Could not find user for %s", username));
+			}
 		});
 
 		System.out.println("Completed updating Keycloak data...");
@@ -102,36 +107,42 @@ public class KeycloakService {
 			Response newUser = usersResource.create(userRepresentation);
 			if (newUser.getStatus() == HttpStatus.SC_CREATED) {
 				System.out.println("User created with resource URL path: " + newUser.getLocation().getPath());
-			}
+			}			
+			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
 			userSearchResults = usersResource.search(username);
+		} 
+		
+		if (userSearchResults.size() != 1) {
+			System.out.println(String.format("Found %d users for %s", userSearchResults.size(), username));
+			return null;
 		}
 		
 		UserRepresentation userRepresentation = userSearchResults.get(0);
+		System.out.println(String.format("Using user: %s; ID: %s", userRepresentation.getUsername(), userRepresentation.getId()));
+		
 		return userRepresentation;
 	}
 
 	private void processRoles(ClientRepresentation clientRepresentation, UsersResource usersResource,
 			Map<String, RoleRepresentation> clientRoles, UserData ud, String username,
 			UserRepresentation userRepresentation) {
-		System.out.println("Processing roles for user...");
+		System.out.println("\r\nProcessing roles for user...");
 		
 		UserResource userResource = usersResource.get(userRepresentation.getId());
 		RoleMappingResource roleMappingResource = userResource.roles();
 		System.out.println("\r\nEffective Roles for User " + username + " before update...");
-		final List<RoleRepresentation> effectiveRoles = roleMappingResource.clientLevel(clientRepresentation.getId()).listEffective();
-		for (RoleRepresentation ef : effectiveRoles) {
-			System.out.println("Role: " + ef.getId() + ", " + ef.getName());
-		}
+		List<RoleRepresentation> effectiveRoleRepresentationsBefore = roleMappingResource.clientLevel(clientRepresentation.getId()).listEffective();
+		List<String> effectiveRolesBefore = effectiveRoleRepresentationsBefore.stream().map(ef ->  ef.getName()).collect(Collectors.toList());
+		System.out.println("\t" + Arrays.toString(effectiveRolesBefore.toArray()));
 		
-		String[] requestedRolesArray = ud.getRoles().split(",");
-		System.out.println("\r\nRequested Roles: " + Arrays.toString(requestedRolesArray));
-		List<String> requestedRoles = Arrays.asList(requestedRolesArray);
+		List<String> requestedRoles = getRequestedRoles(ud);
+		
 		if (!requestedRoles.isEmpty()) {
 			List<RoleRepresentation> requestedRoleRepresentations = new ArrayList<RoleRepresentation>();
 			
 			requestedRoles.forEach(rr -> {
 				// Check if user has a requested role already, if so no need to add it
-				if (!userHasRole(effectiveRoles, rr)) {
+				if (!userHasRole(effectiveRolesBefore, rr)) {
 					RoleRepresentation roleRepresentation = clientRoles.get(StringUtils.strip(rr).toLowerCase());
 					if (roleRepresentation != null) {
 						requestedRoleRepresentations.add(roleRepresentation);
@@ -143,22 +154,38 @@ public class KeycloakService {
 				}
 				
 			});
-			if (!requestedRoleRepresentations.isEmpty()) { System.out.println("Adding requested roles: " + Arrays.toString(requestedRoleRepresentations.toArray()));
+			if (!requestedRoleRepresentations.isEmpty()) { 
+				System.out.println("Adding requested roles: " + Arrays.toString(requestedRoleRepresentations.toArray()));
 				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
 			}
 		}
 		
 		System.out.println("\r\nEffective Roles for User " + username + " after update...");
-		List<RoleRepresentation> effectiveRolesAfter = userResource.roles().clientLevel(clientRepresentation.getId()).listEffective();
-		for (RoleRepresentation ef : effectiveRolesAfter) {
-			System.out.println("Role: " + ef.getId() + ", " + ef.getName());
+		List<RoleRepresentation> effectiveRoleRepresentationsAfter = roleMappingResource.clientLevel(clientRepresentation.getId()).listEffective();
+		List<String> effectiveRolesAfter = effectiveRoleRepresentationsAfter.stream().map(ef ->  ef.getName()).collect(Collectors.toList());
+		System.out.println("\t" + Arrays.toString(effectiveRolesAfter.toArray()));
+		
+		if (!validateRoles(effectiveRolesBefore, effectiveRolesAfter)) {
+			System.out.println("Previously existing roles are no longer assigned to user after update.");
+			throw new RuntimeException("Previously existing roles are no longer assigned to user after update.");
 		}
 		
 		System.out.println("Finished processing roles for user.");
 	}
 
-	private boolean userHasRole(List<RoleRepresentation> effectiveRoles, String rr) {
-		return effectiveRoles.stream().anyMatch(ef -> { return StringUtils.equalsIgnoreCase(ef.getName(), rr); });
+	private List<String> getRequestedRoles(UserData ud) {
+		String[] requestedRolesArray = ud.getRoles().split(",");
+		System.out.println("\r\n\tRequested Roles: " + Arrays.toString(requestedRolesArray));
+		return Arrays.asList(requestedRolesArray);
+	}
+
+	private boolean validateRoles(List<String> effectiveRolesBefore,
+			List<String> effectiveRolesAfter) {
+		return effectiveRolesBefore.stream().allMatch(efb -> effectiveRolesAfter.contains(efb));
+	}
+
+	private boolean userHasRole(List<String> effectiveRoles, String rr) {
+		return effectiveRoles.stream().anyMatch(ef -> { return StringUtils.equalsIgnoreCase(ef, StringUtils.strip(rr)); });
 	}
 
 	private String buildUsername(UserData ud) {
