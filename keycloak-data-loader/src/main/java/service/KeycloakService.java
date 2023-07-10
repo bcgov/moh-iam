@@ -28,6 +28,8 @@ import model.csv.UserData;
 
 public class KeycloakService {
 
+	private static final String ZERO_WIDTH_NOBREAK_SPACE = "\ufeff"; //Zero Width No-Break Space (BOM, ZWNBSP) https://www.compart.com/en/unicode/U+FEFF
+
 	private static final String AT_IDIR = "@idir";
 	
 	private RealmResource realmResource;
@@ -188,9 +190,19 @@ public class KeycloakService {
 		return effectiveRoles.stream().anyMatch(ef -> { return StringUtils.equalsIgnoreCase(ef, StringUtils.strip(rr)); });
 	}
 
-	private String buildUsername(UserData ud) {
-		System.out.println("\r\nUsername specified as: " + ud.getUsername());
-		String username = addIdirSuffix(ud.getUsername());
+	private String buildUsername(UserData userData) {
+		System.out.println("\r\nUsername specified as: " + userData.getUsername());
+		
+		String username = StringUtils.strip(userData.getUsername());
+		if(username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
+			System.out.println("\r\nUsername contained \\ufeff: " + username);			
+		}
+		username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
+		if(username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
+			throw new RuntimeException("Username still contains " + ZERO_WIDTH_NOBREAK_SPACE + ": " + userData.getUsername());
+		}
+
+		username = addIdirSuffix(StringUtils.strip(username));
 		System.out.println("Processing as Username: " + username);
 		return username;
 	}
