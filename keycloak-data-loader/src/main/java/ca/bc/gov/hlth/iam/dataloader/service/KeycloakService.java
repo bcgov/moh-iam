@@ -158,7 +158,7 @@ public class KeycloakService {
 			});
 			if (!requestedRoleRepresentations.isEmpty()) { 
 				System.out.println("Adding requested roles: " + Arrays.toString(requestedRoleRepresentations.toArray()));
-//				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
+				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
 			}
 		}
 		

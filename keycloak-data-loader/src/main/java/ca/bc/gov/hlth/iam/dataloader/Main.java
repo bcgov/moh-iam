@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -33,11 +34,14 @@ public class Main {
     private static final EnvironmentEnum DEFAULT_ENV = EnvironmentEnum.DEV;
 
 	public static void main(String[] args) throws Exception {
-    	System.out.println("Begin loading Keycloak user data...");
+    	System.out.println("Begin loading Keycloak user data with args: " + Arrays.toString(args));
     	
     	EnvironmentEnum environment = determineEnvironment(args);
-        
-        Properties configProperties = getProperties(environment);
+    	new Main().processDataLoad(environment);
+    }
+
+	private void processDataLoad(EnvironmentEnum environment) throws Exception {
+		Properties configProperties = getProperties(environment);
     	KeycloakService keycloakService = new KeycloakService(configProperties, environment);    	   
 	    CSVFileService csvFileService = new CSVFileService();
 	    
@@ -50,8 +54,7 @@ public class Main {
 		} catch (Exception e) {
 			System.out.println("Loading Keycloak user data could not be completed due to: " + e.getMessage());
 		}
-		
-    }
+	}
 
 	private static EnvironmentEnum determineEnvironment(String[] args) {
 		EnvironmentEnum environment = DEFAULT_ENV;
@@ -62,7 +65,7 @@ public class Main {
 		return environment;
 	}
 
-    private static Properties getProperties(EnvironmentEnum environmen) throws Exception {
+    private Properties getProperties(EnvironmentEnum environmen) throws Exception {
         URL defaultLocation = Main.class.getClassLoader().getResource("configuration-" + environmen.getValue() + ".properties");
         String configPath = new File(defaultLocation.toURI()).getAbsolutePath();
 
