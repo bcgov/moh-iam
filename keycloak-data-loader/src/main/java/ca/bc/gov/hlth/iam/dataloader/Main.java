@@ -31,9 +31,15 @@ import ca.bc.gov.hlth.iam.dataloader.service.KeycloakService;
  */
 public class Main {
 
-    private static final EnvironmentEnum DEFAULT_ENV = EnvironmentEnum.DEV;
+	private static final EnvironmentEnum DEFAULT_ENV = EnvironmentEnum.DEV;
 
-	public static void main(String[] args) throws Exception {
+	private static final String CONFIG_FILE_NAME_TEMPLATE = "configuration-%s.properties";
+	
+    private static final String CONFIG_PROPERTY_DATA_FILE_LOCATION = "data-file-location";
+
+	private static final String CONFIG_PROPERTY_APPLICATION = "application";
+
+    public static void main(String[] args) throws Exception {
     	System.out.println("Begin loading Keycloak user data with args: " + Arrays.toString(args));
     	
     	new Main().processDataLoad(args);
@@ -46,9 +52,9 @@ public class Main {
 	    CSVFileService csvFileService = new CSVFileService();
 	    
 		try {
-			List<UserData> userDataList = csvFileService.extractFileInfo(configProperties.getProperty("data-file-location"));
+			List<UserData> userDataList = csvFileService.extractFileInfo(configProperties.getProperty(CONFIG_PROPERTY_DATA_FILE_LOCATION));
 			
-		    keycloakService.updateKeycloakData(configProperties.getProperty("application"), userDataList);
+		    keycloakService.updateKeycloakData(configProperties.getProperty(CONFIG_PROPERTY_APPLICATION), userDataList);
 
 	    	System.out.println("Completed loading Keycloak user data.");
 		} catch (Exception e) {
@@ -66,7 +72,7 @@ public class Main {
 	}
 
     private Properties getProperties(EnvironmentEnum environmen) throws Exception {
-        URL defaultLocation = Main.class.getClassLoader().getResource("configuration-" + environmen.getValue() + ".properties");
+        URL defaultLocation = Main.class.getClassLoader().getResource(String.format(CONFIG_FILE_NAME_TEMPLATE, environmen.getValue()));
         String configPath = new File(defaultLocation.toURI()).getAbsolutePath();
 
         Properties configProperties = new Properties();

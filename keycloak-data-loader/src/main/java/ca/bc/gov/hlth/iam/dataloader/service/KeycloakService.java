@@ -28,6 +28,14 @@ import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 
 public class KeycloakService {
 
+	private static final String CONFIG_PROPERTY_URL = "url";
+
+	private static final String CONFIG_PROPERTY_REALM = "realm";
+
+	private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
+
+	private static final String CONFIG_PROPERTY_USERNAME = "username";
+
 	private static final String ZERO_WIDTH_NOBREAK_SPACE = "\ufeff"; //Zero Width No-Break Space (BOM, ZWNBSP) https://www.compart.com/en/unicode/U+FEFF
 
 	private static final String AT_IDIR = "@idir";
@@ -40,18 +48,18 @@ public class KeycloakService {
 	}
 
 	public void init(Properties configProperties, EnvironmentEnum environment) {
-		System.out.println("Initializing Keycloak connection against: " + configProperties.getProperty("url"));
+		System.out.println("Initializing Keycloak connection against: " + configProperties.getProperty(CONFIG_PROPERTY_URL));
 
 		Keycloak keycloak = KeycloakBuilder.builder()
-				.serverUrl(configProperties.getProperty("url"))
-				.realm(configProperties.getProperty("realm"))
+				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
+				.realm(configProperties.getProperty(CONFIG_PROPERTY_REALM))
 				.grantType(OAuth2Constants.PASSWORD)
-				.clientId(configProperties.getProperty("client-id")) //
-				.username(configProperties.getProperty("username"))
+				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID)) //
+				.username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME))
 				.password(getUserPassword(environment))
 				.build();
 				
-		realmResource = keycloak.realm(configProperties.getProperty("realm"));
+		realmResource = keycloak.realm(configProperties.getProperty(CONFIG_PROPERTY_REALM));
 		
 		System.out.println("Keycloak connection initialized.");	
 	}
