@@ -1,4 +1,4 @@
-package service;
+package ca.bc.gov.hlth.iam.dataloader.service;
 
 import java.io.Reader;
 import java.nio.file.Files;
@@ -10,7 +10,7 @@ import java.util.List;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 
-import model.csv.UserData;
+import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 
 public class CSVFileService {
 

@@ -1,3 +1,6 @@
+
+package ca.bc.gov.hlth.iam.dataloader;
+ 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -6,9 +9,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
-import model.csv.UserData;
-import service.CSVFileService;
-import service.KeycloakService;
+import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
+import ca.bc.gov.hlth.iam.dataloader.service.CSVFileService;
+import ca.bc.gov.hlth.iam.dataloader.service.EnvironmentEnum;
+import ca.bc.gov.hlth.iam.dataloader.service.KeycloakService;
 
 /**
  * Program to handle updating Keycloak user info in a bulk upload. The program accepts a csv file with fields:
@@ -26,15 +30,15 @@ import service.KeycloakService;
  */
 public class Main {
 
-    private static final String DEFAULT_ENV = "dev";
+    private static final EnvironmentEnum DEFAULT_ENV = EnvironmentEnum.DEV;
 
 	public static void main(String[] args) throws Exception {
     	System.out.println("Begin loading Keycloak user data...");
     	
-    	String environment = determineEnvironment(args);
+    	EnvironmentEnum environment = determineEnvironment(args);
         
         Properties configProperties = getProperties(environment);
-    	KeycloakService keycloakService = new KeycloakService(configProperties);    	   
+    	KeycloakService keycloakService = new KeycloakService(configProperties, environment);    	   
 	    CSVFileService csvFileService = new CSVFileService();
 	    
 		try {
@@ -49,17 +53,17 @@ public class Main {
 		
     }
 
-	private static String determineEnvironment(String[] args) {
-		String environment = DEFAULT_ENV;
+	private static EnvironmentEnum determineEnvironment(String[] args) {
+		EnvironmentEnum environment = DEFAULT_ENV;
         if (args != null && args.length != 0) {
-        	environment = args[0]; 
+        	environment = EnvironmentEnum.valueOf(args[0].toUpperCase());
         	System.out.println("Running against environment: " + environment);
         }
 		return environment;
 	}
 
-    private static Properties getProperties(String environment) throws Exception {
-        URL defaultLocation = Main.class.getClassLoader().getResource("configuration-" + environment + ".properties");
+    private static Properties getProperties(EnvironmentEnum environmen) throws Exception {
+        URL defaultLocation = Main.class.getClassLoader().getResource("configuration-" + environmen.getValue() + ".properties");
         String configPath = new File(defaultLocation.toURI()).getAbsolutePath();
 
         Properties configProperties = new Properties();

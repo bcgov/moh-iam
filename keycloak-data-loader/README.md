@@ -15,6 +15,15 @@ The program does not remove any user configuration and the same file can be impo
 ### How to use this script:
 
 * Create a file in format described above.
-* Using the configuration.properties set the properties for the environment against which the script will be run in a suitably name file e.g. configuration-dev.properties
+* Using the configuration.properties as a template set the properties for the environment against which the script will be run in a suitably name file e.g. configuration-dev.properties.
 * Provide the Keycloak connection information, the application for which the user should be configure and the file location.
-* Run the application, providing the required environment as a Java argument e.g. 'dev'
+* Properties are used as follows:
+		* url = The URL of the keycloak instance e.g. https://common-logon-dev.hlth.gov.bc.ca/auth
+		* realm = The realm the upload will be run against e.g. moh_applications
+		* username = The username of the user created for running the uploads
+		* password = The password of the user created for running the uploads
+		* client-id = The admin client for this realm e.g. admin-cli
+		* application = The application/client the info is being uploaded for e.g. MSPDirect-Service
+		* data-file-location = The location of the file containing the keycloak user data to be uploaded
+* Run the application, providing the following Java arguments.
+	* The required environment. Valid environment values are DEV, TEST, PROD.

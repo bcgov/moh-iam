@@ -1,4 +1,4 @@
-package model.csv;
+package ca.bc.gov.hlth.iam.dataloader.model.csv;
 
 import com.opencsv.bean.CsvBindByPosition;
 

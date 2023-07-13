@@ -1,4 +1,4 @@
-package service;
+package ca.bc.gov.hlth.iam.dataloader.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +24,7 @@ import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-import model.csv.UserData;
+import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 
 public class KeycloakService {
 
@@ -34,21 +34,21 @@ public class KeycloakService {
 	
 	private RealmResource realmResource;
 	
-	public KeycloakService(Properties configProperties) {
+	public KeycloakService(Properties configProperties, EnvironmentEnum environment) {
 		super();
-		init(configProperties);
+		init(configProperties, environment);
 	}
 
-	public void init(Properties configProperties) {
-		System.out.println("Initializing Keycloak connection...");
-		
+	public void init(Properties configProperties, EnvironmentEnum environment) {
+		System.out.println("Initializing Keycloak connection against: " + configProperties.getProperty("url"));
+
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty("url"))
 				.realm(configProperties.getProperty("realm"))
 				.grantType(OAuth2Constants.PASSWORD)
 				.clientId(configProperties.getProperty("client-id")) //
 				.username(configProperties.getProperty("username"))
-				.password(configProperties.getProperty("password"))
+				.password(getUserPassword(environment))
 				.build();
 				
 		realmResource = keycloak.realm(configProperties.getProperty("realm"));
@@ -158,7 +158,7 @@ public class KeycloakService {
 			});
 			if (!requestedRoleRepresentations.isEmpty()) { 
 				System.out.println("Adding requested roles: " + Arrays.toString(requestedRoleRepresentations.toArray()));
-				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
+//				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
 			}
 		}
 		
@@ -213,5 +213,9 @@ public class KeycloakService {
 		}
 		return username;
 	}
+
+    private static String getUserPassword(EnvironmentEnum environment) {        
+        return System.getenv(environment.getPasswordKey());
+    }
 
 }
