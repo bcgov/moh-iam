@@ -15,7 +15,7 @@ The program does not remove any user configuration and the same file can be impo
 ### How to use this script:
 
 * Create a file in format described above.
-* Using the configuration.properties as a template set the properties for the environment against which the script will be run in a suitably name file e.g. configuration-dev.properties.
+* Using the configuration.properties as a template set the properties for the environment against which the script will be run in a suitably named file e.g. configuration-dev.properties.
 * Provide the Keycloak connection information, the application for which the user should be configure and the file location.
 * Properties are used as follows:
 		* url = The URL of the keycloak instance e.g. https://common-logon-dev.hlth.gov.bc.ca/auth
