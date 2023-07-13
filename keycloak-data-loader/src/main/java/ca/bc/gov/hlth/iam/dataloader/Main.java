@@ -36,11 +36,11 @@ public class Main {
 	public static void main(String[] args) throws Exception {
     	System.out.println("Begin loading Keycloak user data with args: " + Arrays.toString(args));
     	
-    	EnvironmentEnum environment = determineEnvironment(args);
-    	new Main().processDataLoad(environment);
+    	new Main().processDataLoad(args);
     }
 
-	private void processDataLoad(EnvironmentEnum environment) throws Exception {
+	private void processDataLoad(String[] args) throws Exception {
+    	EnvironmentEnum environment = determineEnvironment(args);
 		Properties configProperties = getProperties(environment);
     	KeycloakService keycloakService = new KeycloakService(configProperties, environment);    	   
 	    CSVFileService csvFileService = new CSVFileService();
@@ -58,7 +58,7 @@ public class Main {
 
 	private static EnvironmentEnum determineEnvironment(String[] args) {
 		EnvironmentEnum environment = DEFAULT_ENV;
-        if (args != null && args.length != 0) {
+        if (args.length != 0) {
         	environment = EnvironmentEnum.valueOf(args[0].toUpperCase());
         	System.out.println("Running against environment: " + environment);
         }
