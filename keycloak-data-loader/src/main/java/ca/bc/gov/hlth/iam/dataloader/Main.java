@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 import ca.bc.gov.hlth.iam.dataloader.service.CSVFileService;
 import ca.bc.gov.hlth.iam.dataloader.service.EnvironmentEnum;
@@ -31,6 +34,8 @@ import ca.bc.gov.hlth.iam.dataloader.service.KeycloakService;
  */
 public class Main {
 
+	private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
 	private static final EnvironmentEnum DEFAULT_ENV = EnvironmentEnum.DEV;
 
 	private static final String CONFIG_FILE_NAME_TEMPLATE = "configuration-%s.properties";
@@ -40,7 +45,7 @@ public class Main {
 	private static final String CONFIG_PROPERTY_APPLICATION = "application";
 
     public static void main(String[] args) throws Exception {
-    	System.out.println("Begin loading Keycloak user data with args: " + Arrays.toString(args));
+    	logger.info("Begin loading Keycloak user data with args: {}", Arrays.toString(args));
     	
     	new Main().processDataLoad(args);
     }
@@ -56,9 +61,10 @@ public class Main {
 			
 		    keycloakService.updateKeycloakData(configProperties.getProperty(CONFIG_PROPERTY_APPLICATION), userDataList);
 
-	    	System.out.println("Completed loading Keycloak user data.");
+	    	logger.info("Completed loading Keycloak user data.");
 		} catch (Exception e) {
-			System.out.println("Loading Keycloak user data could not be completed due to: " + e.getMessage());
+			logger.error("Loading Keycloak user data could not be completed due to: " + e.getMessage());
+			throw e; 
 		}
 	}
 
@@ -66,7 +72,7 @@ public class Main {
 		EnvironmentEnum environment = DEFAULT_ENV;
         if (args.length != 0) {
         	environment = EnvironmentEnum.valueOf(args[0].toUpperCase());
-        	System.out.println("Running against environment: " + environment);
+        	logger.info("Running against environment: {}", environment);
         }
 		return environment;
 	}

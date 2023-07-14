@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 
@@ -14,8 +17,10 @@ import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 
 public class CSVFileService {
 
+	private static final Logger logger = LoggerFactory.getLogger(CSVFileService.class);
+
 	public List<UserData> extractFileInfo(String fileLoction) throws Exception {
-		System.out.println("Extracting data from file at: " + fileLoction);
+		logger.info("Extracting data from file at: {}", fileLoction);
 		
 		Path path = Paths.get(fileLoction);
 		
@@ -28,11 +33,11 @@ public class CSVFileService {
 
 			csvList = (builder.parse());
 		} catch (Exception e) {
-			System.out.println("User data could not be extracted due to: " + e.getMessage());
+			logger.error("User data could not be extracted due to: {}", e.getMessage());
 			throw e;
 		}
 	    
-	    System.out.println("Extracted records: " + csvList.size());
+	    logger.info("Extracted records: {}", csvList.size());
 	    
 	    return csvList;
 	}	

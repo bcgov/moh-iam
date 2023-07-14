@@ -23,10 +23,14 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.hlth.iam.dataloader.model.csv.UserData;
 
 public class KeycloakService {
+
+	private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
 
 	private static final String CONFIG_PROPERTY_URL = "url";
 
@@ -48,7 +52,7 @@ public class KeycloakService {
 	}
 
 	public void init(Properties configProperties, EnvironmentEnum environment) {
-		System.out.println("Initializing Keycloak connection against: " + configProperties.getProperty(CONFIG_PROPERTY_URL));
+		logger.info("Initializing Keycloak connection against: {}", configProperties.getProperty(CONFIG_PROPERTY_URL));
 
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
@@ -61,22 +65,22 @@ public class KeycloakService {
 				
 		realmResource = keycloak.realm(configProperties.getProperty(CONFIG_PROPERTY_REALM));
 		
-		System.out.println("Keycloak connection initialized.");	
+		logger.info("Keycloak connection initialized.");	
 	}
 
 	public void updateKeycloakData(String clientId, List<UserData> userDataList) {
 
-		System.out.println("Begin updating Keycloak data...");
+		logger.info("Begin updating Keycloak data...");
 		
 		List<ClientRepresentation> clientRepresentations = realmResource.clients().findByClientId(clientId);
 		if (clientRepresentations.size() != 1) {
-			System.out.println(String.format("Found incorrect number of ClientRepresentations, %d, for Client: %s", clientRepresentations.size(), clientId));
-			throw new RuntimeException(String.format("Found incorrect number of ClientRepresentations, %d, for Client: %s", clientRepresentations.size(), clientId));
+			logger.error("Found incorrect number of ClientRepresentations, {}, for Client: {}", clientRepresentations.size(), clientId);
+			throw new RuntimeException(String.format("Found incorrect number of ClientRepresentations, {}, for Client: {}", clientRepresentations.size(), clientId));
 		}
 		ClientRepresentation clientRepresentation = clientRepresentations.get(0);
 		ClientResource clientResource = realmResource.clients().get(clientRepresentation.getId());
 
-		System.out.println("\r\nGetting roles for Client: " + clientId);
+		logger.info("Getting roles for Client: {}", clientId);
 		Map<String, RoleRepresentation> clientRoles = retrieveClientRoles(clientResource);
 		
 		UsersResource usersResource = realmResource.users();
@@ -87,12 +91,13 @@ public class KeycloakService {
 			UserRepresentation userRepresentation = processUsername(usersResource, username);
 			
 			if (userRepresentation == null) {
-				throw new RuntimeException(String.format("Could not find user for %s", username));
+				logger.error("Could not find user for {}", username);
+				throw new RuntimeException(String.format("Could not find user for {}", username));
 			}
 			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
 		});
 
-		System.out.println("Completed updating Keycloak data...");
+		logger.info("Completed updating Keycloak data...");
 	}
 
 	private Map<String, RoleRepresentation> retrieveClientRoles(ClientResource clientResource) {		
@@ -101,18 +106,18 @@ public class KeycloakService {
 		List<RoleRepresentation> roleRepresentationList = clientResource.roles().list();		
 		roleRepresentationList.forEach(rr -> {
 			clientRoles.put(rr.getName().toLowerCase(), rr);
-			System.out.println("Role: " + rr.getName());
+			logger.debug("Role: {}", rr.getName());
 		});
 		
 		return clientRoles;
 	}
 	
 	private UserRepresentation processUsername(UsersResource usersResource, String username) {
-		System.out.println("Processing username...\r\n");
+		logger.info("Processing username: {}...", username);
 		
 		List<UserRepresentation> userSearchResults = usersResource.search(username, true);
 		if (userSearchResults.isEmpty()) {
-			System.out.println("User did not exist.");
+			logger.info("User did not exist.");
 			UserRepresentation userRepresentation = new UserRepresentation();
 			userRepresentation.setUsername(username);
 			userRepresentation.setEnabled(true);
@@ -120,20 +125,20 @@ public class KeycloakService {
 			Response createUserResponse = usersResource.create(userRepresentation);
 			
 			if (createUserResponse.getStatus() != HttpStatus.SC_CREATED) {
-				System.out.println("User not created due to: " + createUserResponse.getStatus());
-				throw new RuntimeException("User not created due to: " + createUserResponse.getStatus());
+				logger.error("User not created due to: {}", createUserResponse.getStatus());
+				throw new RuntimeException(String.format("User not created due to: {}", createUserResponse.getStatus()));
 			}
 
-			System.out.println("User created with resource URL path: " + createUserResponse.getLocation().getPath());
+			logger.info("User created with resource URL path: {}", createUserResponse.getLocation().getPath());
 			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
 			userSearchResults = usersResource.search(username);
 		} else if (userSearchResults.size() > 1) {
-			System.out.println(String.format("Found %d users for %s", userSearchResults.size(), username));
+			logger.info("Found {} users for {}", userSearchResults.size(), username);
 			return null;
 		}
 		
 		UserRepresentation userRepresentation = userSearchResults.get(0);
-		System.out.println(String.format("Using user: %s; ID: %s", userRepresentation.getUsername(), userRepresentation.getId()));
+		logger.info("Using user: {}; ID: {}", userRepresentation.getUsername(), userRepresentation.getId());
 		
 		return userRepresentation;
 	}
@@ -141,14 +146,14 @@ public class KeycloakService {
 	private void processRoles(ClientRepresentation clientRepresentation, UsersResource usersResource,
 			Map<String, RoleRepresentation> clientRoles, UserData ud, String username,
 			UserRepresentation userRepresentation) {
-		System.out.println("\r\nProcessing roles for user...");
+		logger.info("Processing roles for user...");
 		
 		UserResource userResource = usersResource.get(userRepresentation.getId());
 		RoleMappingResource roleMappingResource = userResource.roles();
-		System.out.println("\r\nEffective Roles for User " + username + " before update...");
+		logger.info("Effective Roles for User {} before update...", username);
 		List<RoleRepresentation> effectiveRoleRepresentationsBefore = roleMappingResource.clientLevel(clientRepresentation.getId()).listEffective();
 		List<String> effectiveRolesBefore = effectiveRoleRepresentationsBefore.stream().map(ef ->  ef.getName()).collect(Collectors.toList());
-		System.out.println("\t" + Arrays.toString(effectiveRolesBefore.toArray()));
+		logger.info("\t" + Arrays.toString(effectiveRolesBefore.toArray()));
 		
 		List<String> requestedRoles = getRequestedRoles(ud);
 		
@@ -162,35 +167,36 @@ public class KeycloakService {
 					if (roleRepresentation != null) {
 						requestedRoleRepresentations.add(roleRepresentation);
 					} else {
-						System.out.println("Requested Role " + rr + " does not exist for client.");
+						logger.error("Requested Role {} does not exist for client.", rr);
+						throw new RuntimeException(String.format("Requested Role {} does not exist for client.", rr));
 					}
 				} else {
-					System.out.println("User already has requested Role: " + rr);
+					logger.debug("User already has requested Role: {}", rr);
 				}
 				
 			});
 			if (!requestedRoleRepresentations.isEmpty()) { 
-				System.out.println("Adding requested roles: " + Arrays.toString(requestedRoleRepresentations.toArray()));
+				logger.debug("Adding requested roles: {}", Arrays.toString(requestedRoleRepresentations.toArray()));
 				roleMappingResource.clientLevel(clientRepresentation.getId()).add(requestedRoleRepresentations);
 			}
 		}
 		
-		System.out.println("\r\nEffective Roles for User " + username + " after update...");
+		logger.info("Effective Roles for User {} after update...", username);
 		List<RoleRepresentation> effectiveRoleRepresentationsAfter = roleMappingResource.clientLevel(clientRepresentation.getId()).listEffective();
 		List<String> effectiveRolesAfter = effectiveRoleRepresentationsAfter.stream().map(ef ->  ef.getName()).collect(Collectors.toList());
-		System.out.println("\t" + Arrays.toString(effectiveRolesAfter.toArray()));
+		logger.info("\t" + Arrays.toString(effectiveRolesAfter.toArray()));
 		
 		if (!validateRoles(effectiveRolesBefore, effectiveRolesAfter)) {
-			System.out.println("Previously existing roles are no longer assigned to user after update.");
+			logger.error("Previously existing roles are no longer assigned to user after update.");
 			throw new RuntimeException("Previously existing roles are no longer assigned to user after update.");
 		}
 		
-		System.out.println("Finished processing roles for user.");
+		logger.info("Finished processing roles for user.");
 	}
 
 	private List<String> getRequestedRoles(UserData ud) {
 		String[] requestedRolesArray = ud.getRoles().split(",");
-		System.out.println("\r\n\tRequested Roles: " + Arrays.toString(requestedRolesArray));
+		logger.debug("\tRequested Roles: {}", Arrays.toString(requestedRolesArray));
 		return Arrays.asList(requestedRolesArray);
 	}
 
@@ -204,16 +210,16 @@ public class KeycloakService {
 	}
 
 	private String buildUsername(UserData userData) {
-		System.out.println("\r\nUsername specified as: " + userData.getUsername());
+		logger.debug("Username specified as: {}", userData.getUsername());
 		
 		String username = StringUtils.strip(userData.getUsername());
 		if (username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
-			System.out.println("\r\nUsername contained \\ufeff: " + username);			
+			logger.debug("Username contained \\ufeff: {}", username);			
 			username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
 		}
 
 		username = addIdirSuffix(StringUtils.strip(username));
-		System.out.println("Processing as Username: " + username);
+		logger.debug("Processing as Username: {}", username);
 		return username;
 	}
 
