@@ -6,7 +6,7 @@
 	<artifactId>keycloak-data-loader</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>keycloak-data-loader</name>
-	<description>Load data into keycloak	</description>
+	<description>Load data into keycloak</description>
 	<properties>
 		<java.version>13</java.version>
 	</properties>
@@ -22,9 +22,8 @@
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
-            <version> 5.7.1</version>
-        </dependency>
-        		
+            <version>5.7.1</version>
+        </dependency>        		
 	</dependencies>
 
 </project>

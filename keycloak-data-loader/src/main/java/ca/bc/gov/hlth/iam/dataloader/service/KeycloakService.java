@@ -69,6 +69,10 @@ public class KeycloakService {
 		System.out.println("Begin updating Keycloak data...");
 		
 		List<ClientRepresentation> clientRepresentations = realmResource.clients().findByClientId(clientId);
+		if (clientRepresentations.size() != 1) {
+			System.out.println(String.format("Found incorrect number of ClientRepresentations, %d, for Client: %s", clientRepresentations.size(), clientId));
+			throw new RuntimeException(String.format("Found incorrect number of ClientRepresentations, %d, for Client: %s", clientRepresentations.size(), clientId));
+		}
 		ClientRepresentation clientRepresentation = clientRepresentations.get(0);
 		ClientResource clientResource = realmResource.clients().get(clientRepresentation.getId());
 
@@ -82,11 +86,10 @@ public class KeycloakService {
 			
 			UserRepresentation userRepresentation = processUsername(usersResource, username);
 			
-			if (userRepresentation != null) {
-				processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
-			} else {
+			if (userRepresentation == null) {
 				throw new RuntimeException(String.format("Could not find user for %s", username));
 			}
+			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
 		});
 
 		System.out.println("Completed updating Keycloak data...");
@@ -114,15 +117,17 @@ public class KeycloakService {
 			userRepresentation.setUsername(username);
 			userRepresentation.setEnabled(true);
 
-			Response newUser = usersResource.create(userRepresentation);
-			if (newUser.getStatus() == HttpStatus.SC_CREATED) {
-				System.out.println("User created with resource URL path: " + newUser.getLocation().getPath());
-			}			
+			Response createUserResponse = usersResource.create(userRepresentation);
+			
+			if (createUserResponse.getStatus() != HttpStatus.SC_CREATED) {
+				System.out.println("User not created due to: " + createUserResponse.getStatus());
+				throw new RuntimeException("User not created due to: " + createUserResponse.getStatus());
+			}
+
+			System.out.println("User created with resource URL path: " + createUserResponse.getLocation().getPath());
 			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
 			userSearchResults = usersResource.search(username);
-		} 
-		
-		if (userSearchResults.size() != 1) {
+		} else if (userSearchResults.size() > 1) {
 			System.out.println(String.format("Found %d users for %s", userSearchResults.size(), username));
 			return null;
 		}
@@ -202,12 +207,9 @@ public class KeycloakService {
 		System.out.println("\r\nUsername specified as: " + userData.getUsername());
 		
 		String username = StringUtils.strip(userData.getUsername());
-		if(username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
+		if (username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
 			System.out.println("\r\nUsername contained \\ufeff: " + username);			
-		}
-		username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
-		if(username.contains(ZERO_WIDTH_NOBREAK_SPACE)) {
-			throw new RuntimeException("Username still contains " + ZERO_WIDTH_NOBREAK_SPACE + ": " + userData.getUsername());
+			username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
 		}
 
 		username = addIdirSuffix(StringUtils.strip(username));

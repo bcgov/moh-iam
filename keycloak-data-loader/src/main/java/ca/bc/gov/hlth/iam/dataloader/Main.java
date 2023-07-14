@@ -74,12 +74,12 @@ public class Main {
     private Properties getProperties(EnvironmentEnum environmen) throws Exception {
         URL defaultLocation = Main.class.getClassLoader().getResource(String.format(CONFIG_FILE_NAME_TEMPLATE, environmen.getValue()));
         String configPath = new File(defaultLocation.toURI()).getAbsolutePath();
-
-        Properties configProperties = new Properties();
         File file = new File(configPath);
 
         InputStream inputStream = (file.exists())? new FileInputStream(file) : Main.class.getResourceAsStream(configPath);
         Objects.requireNonNull(inputStream, String.format("Configuration file not found at '%s'.", configPath));
+        
+        Properties configProperties = new Properties();
         configProperties.load(inputStream);
         return configProperties;
     }
