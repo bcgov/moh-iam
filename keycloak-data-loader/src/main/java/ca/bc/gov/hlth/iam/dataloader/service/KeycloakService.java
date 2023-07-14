@@ -39,10 +39,14 @@ public class KeycloakService {
 	private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
 
 	private static final String CONFIG_PROPERTY_USERNAME = "username";
+	
+	private static final String CONFIG_PROPERTY_USERNAME_SUFFIX = "username-suffix";
 
 	private static final String ZERO_WIDTH_NOBREAK_SPACE = "\ufeff"; //Zero Width No-Break Space (BOM, ZWNBSP) https://www.compart.com/en/unicode/U+FEFF
 
-	private static final String AT_IDIR = "@idir";
+	private String usernameSuffix;
+
+	private String realm;
 	
 	private RealmResource realmResource;
 	
@@ -53,17 +57,22 @@ public class KeycloakService {
 
 	public void init(Properties configProperties, EnvironmentEnum environment) {
 		logger.info("Initializing Keycloak connection against: {}", configProperties.getProperty(CONFIG_PROPERTY_URL));
+		realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
+		logger.info("Using Realm: {}", realm);
+
+		usernameSuffix = configProperties.getProperty(CONFIG_PROPERTY_USERNAME_SUFFIX);
+		logger.info("Username suffix: {}", usernameSuffix);
 
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
-				.realm(configProperties.getProperty(CONFIG_PROPERTY_REALM))
+				.realm(realm)
 				.grantType(OAuth2Constants.PASSWORD)
 				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID)) //
 				.username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME))
 				.password(getUserPassword(environment))
 				.build();
 				
-		realmResource = keycloak.realm(configProperties.getProperty(CONFIG_PROPERTY_REALM));
+		realmResource = keycloak.realm(realm);
 		
 		logger.info("Keycloak connection initialized.");	
 	}
@@ -114,7 +123,7 @@ public class KeycloakService {
 	
 	private UserRepresentation processUsername(UsersResource usersResource, String username) {
 		logger.info("Processing username: {}...", username);
-		
+
 		List<UserRepresentation> userSearchResults = usersResource.search(username, true);
 		if (userSearchResults.isEmpty()) {
 			logger.info("User did not exist.");
@@ -218,14 +227,14 @@ public class KeycloakService {
 			username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
 		}
 
-		username = addIdirSuffix(StringUtils.strip(username));
+		username = addUsernameSuffix(StringUtils.strip(username));
 		logger.debug("Processing as Username: {}", username);
 		return username;
 	}
 
-	private String addIdirSuffix(String username) {
-		if (!username.endsWith(AT_IDIR)) {
-			username += AT_IDIR;
+	private String addUsernameSuffix(String username) {
+		if (StringUtils.isNotBlank(usernameSuffix) && !StringUtils.endsWith(username, usernameSuffix)) {
+			username += usernameSuffix;
 		}
 		return username;
 	}
