@@ -56,9 +56,9 @@ public class Main {
     	KeycloakService keycloakService = new KeycloakService(configProperties, environment);    	   
 	    CSVFileService csvFileService = new CSVFileService();
 	    
-		try {
-			List<UserData> userDataList = csvFileService.extractFileInfo(configProperties.getProperty(CONFIG_PROPERTY_DATA_FILE_LOCATION));
-			
+		List<UserData> userDataList = csvFileService.extractFileInfo(configProperties.getProperty(CONFIG_PROPERTY_DATA_FILE_LOCATION));
+
+		try {			
 		    keycloakService.updateKeycloakData(configProperties.getProperty(CONFIG_PROPERTY_APPLICATION), userDataList);
 
 	    	logger.info("Completed loading Keycloak user data.");

@@ -49,6 +49,8 @@ public class KeycloakService {
 	private String realm;
 	
 	private RealmResource realmResource;
+
+	private List<String> usersCreated = new ArrayList<>();
 	
 	public KeycloakService(Properties configProperties, EnvironmentEnum environment) {
 		super();
@@ -106,6 +108,8 @@ public class KeycloakService {
 			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
 		});
 
+		printSummary();
+		
 		logger.info("Completed updating Keycloak data...");
 	}
 
@@ -137,10 +141,13 @@ public class KeycloakService {
 				logger.error("User not created due to: {}", createUserResponse.getStatus());
 				throw new RuntimeException(String.format("User not created due to: {}", createUserResponse.getStatus()));
 			}
-
+			
+			usersCreated.add(String.format("Username: %s; Path: %s", userRepresentation.getUsername(), createUserResponse.getLocation().getPath()));
 			logger.info("User created with resource URL path: {}", createUserResponse.getLocation().getPath());
+			
 			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
 			userSearchResults = usersResource.search(username);
+			createUserResponse.getLocation().getPath();
 		} else if (userSearchResults.size() > 1) {
 			logger.info("Found {} users for {}", userSearchResults.size(), username);
 			return null;
@@ -242,5 +249,15 @@ public class KeycloakService {
     private static String getUserPassword(EnvironmentEnum environment) {        
         return System.getenv(environment.getPasswordKey());
     }
+
+	private void printSummary() {
+		logger.info("**************************************************************************************************");		
+		logger.info("********************************  DATA UPLOAD SUMMARY  *******************************************");		
+		logger.info("**************************************************************************************************");		
+		logger.info("Total Users Created: {}", usersCreated.size());
+		usersCreated.forEach(uc -> {
+			logger.info("Created User: {}", uc);
+		});
+	}
 
 }
