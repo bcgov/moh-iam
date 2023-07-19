@@ -47,10 +47,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
     	logger.info("Begin loading Keycloak user data with args: {}", Arrays.toString(args));
     	
-    	new Main().processDataLoad(args);
+    	processDataLoad(args);
     }
 
-	private void processDataLoad(String[] args) throws Exception {
+	private static void processDataLoad(String[] args) throws Exception {
     	EnvironmentEnum environment = determineEnvironment(args);
 		Properties configProperties = getProperties(environment);
     	KeycloakService keycloakService = new KeycloakService(configProperties, environment);    	   
@@ -77,7 +77,7 @@ public class Main {
 		return environment;
 	}
 
-    private Properties getProperties(EnvironmentEnum environmen) throws Exception {
+    private static Properties getProperties(EnvironmentEnum environmen) throws Exception {
         URL defaultLocation = Main.class.getClassLoader().getResource(String.format(CONFIG_FILE_NAME_TEMPLATE, environmen.getValue()));
         String configPath = new File(defaultLocation.toURI()).getAbsolutePath();
         File file = new File(configPath);

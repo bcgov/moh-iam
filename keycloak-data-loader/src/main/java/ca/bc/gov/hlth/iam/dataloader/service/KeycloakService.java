@@ -156,8 +156,8 @@ public class KeycloakService {
 			usersCreated.add(String.format("Username: %s; Path: %s", userRepresentation.getUsername(), createUserResponse.getLocation().getPath()));
 			logger.info("User created with resource URL path: {}", createUserResponse.getLocation().getPath());
 			
-			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
-			userSearchResults = usersResource.search(username);
+			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.
+			userSearchResults = usersResource.search(username, true);
 		} else if (userSearchResults.size() > 1) {
 			logger.info("Found {} users for {}", userSearchResults.size(), username);
 			return null;
