@@ -24,6 +24,7 @@ The program does not remove any user configuration and the same file can be impo
 		* password = The password of the user created for running the uploads
 		* client-id = The admin client for this realm e.g. admin-cli
 		* application = The application/client the info is being uploaded for e.g. MSPDirect-Service
+		* username-type = This value will be used to indicate if a prefix or suffix is to be added to the supplied usernames. Valid values are specified in the UsernameTypeEnum, which defines the value to be added to the username and whether it is prefix or suffix e.g. IDIR defines a suffix of @idir so with supplied username 'test1' would result in username of 'test1@idir' being processed. If no change to the username is required then specify NONE and the username will processed as supplied.
 		* data-file-location = The location of the file containing the keycloak user data to be uploaded
 * Run the application, providing the following Java arguments.
-	* The required environment. Valid environment values are DEV, TEST, PROD.
+	* The required environment. Valid environment values are DEV, TEST, PROD.	

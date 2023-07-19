@@ -40,11 +40,11 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_USERNAME = "username";
 	
-	private static final String CONFIG_PROPERTY_USERNAME_SUFFIX = "username-suffix";
+	private static final String CONFIG_PROPERTY_USERNAME_TYPE = "username-type";
 
 	private static final String ZERO_WIDTH_NOBREAK_SPACE = "\ufeff"; //Zero Width No-Break Space (BOM, ZWNBSP) https://www.compart.com/en/unicode/U+FEFF
 
-	private String usernameSuffix;
+	private UsernameTypeEnum usernameTypeEnum;
 
 	private String realm;
 	
@@ -62,8 +62,7 @@ public class KeycloakService {
 		realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
 		logger.info("Using Realm: {}", realm);
 
-		usernameSuffix = configProperties.getProperty(CONFIG_PROPERTY_USERNAME_SUFFIX);
-		logger.info("Username suffix: {}", usernameSuffix);
+		determineUsernameType(configProperties);			
 
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
@@ -77,6 +76,18 @@ public class KeycloakService {
 		realmResource = keycloak.realm(realm);
 		
 		logger.info("Keycloak connection initialized.");	
+	}
+
+	private void determineUsernameType(Properties configProperties) {
+		String usernameType = configProperties.getProperty(CONFIG_PROPERTY_USERNAME_TYPE);
+		logger.info("{} property is: {}", CONFIG_PROPERTY_USERNAME_TYPE, usernameType);
+		try {
+            usernameTypeEnum = UsernameTypeEnum.valueOf(usernameType);
+            logger.info("Username Type Enum: {} with '{}' {}", usernameTypeEnum, usernameTypeEnum.getValue(), usernameTypeEnum.isPrefix() ? "prefix" : "suffix");
+		} catch(IllegalArgumentException iae) {
+	        logger.error("{} property {} is not valid. A valid username type from the allowed list must be provided.", CONFIG_PROPERTY_USERNAME_TYPE, usernameType);
+			throw new RuntimeException(String.format("{} property %s is not valid. A valid username type from the allowed list must be provided.", CONFIG_PROPERTY_USERNAME_TYPE, usernameType));
+		}
 	}
 
 	public void updateKeycloakData(String clientId, List<UserData> userDataList) {
@@ -240,10 +251,23 @@ public class KeycloakService {
 	}
 
 	private String addUsernameSuffix(String username) {
-		if (StringUtils.isNotBlank(usernameSuffix) && !StringUtils.endsWith(username, usernameSuffix)) {
-			username += usernameSuffix;
+		if (usernameTypeEnum != UsernameTypeEnum.NONE && !usernameComplete(username)) {
+			username += usernameTypeEnum.getValue();
 		}
 		return username;
+	}
+
+	/*
+	 * Check if the required prefix/suffix is already in the username
+	 */
+	private boolean usernameComplete(String username) {
+		boolean isComplete = false;
+		if (usernameTypeEnum.isPrefix()) {
+			isComplete = StringUtils.startsWithIgnoreCase(username, usernameTypeEnum.getValue());
+		} else {
+			isComplete = StringUtils.endsWithIgnoreCase(username, usernameTypeEnum.getValue());
+		}
+		return isComplete;
 	}
 
     private static String getUserPassword(EnvironmentEnum environment) {        
