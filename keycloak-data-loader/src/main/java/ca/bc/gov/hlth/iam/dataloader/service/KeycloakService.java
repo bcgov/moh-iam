@@ -158,7 +158,6 @@ public class KeycloakService {
 			
 			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.			
 			userSearchResults = usersResource.search(username);
-			createUserResponse.getLocation().getPath();
 		} else if (userSearchResults.size() > 1) {
 			logger.info("Found {} users for {}", userSearchResults.size(), username);
 			return null;
