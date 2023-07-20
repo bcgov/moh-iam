@@ -50,7 +50,7 @@ public class KeycloakService {
 	
 	private RealmResource realmResource;
 
-	private List<String> usersCreated = new ArrayList<>();
+	private List<String[]> usersCreated = new ArrayList<>();
 	
 	public KeycloakService(Properties configProperties, EnvironmentEnum environment) {
 		super();
@@ -153,7 +153,7 @@ public class KeycloakService {
 				throw new RuntimeException(String.format("User not created due to: {}", createUserResponse.getStatus()));
 			}
 			
-			usersCreated.add(String.format("Username: %s; Path: %s", userRepresentation.getUsername(), createUserResponse.getLocation().getPath()));
+			usersCreated.add(new String[]{userRepresentation.getUsername(), createUserResponse.getLocation().getPath()});
 			logger.info("User created with resource URL path: {}", createUserResponse.getLocation().getPath());
 			
 			//TODO (dbarrett) Look to use usersResource.get(id) as a better way to get the user.
@@ -274,13 +274,16 @@ public class KeycloakService {
     }
 
 	private void printSummary() {
+		List<String> usernames = new ArrayList<>();
 		logger.info("**************************************************************************************************");		
 		logger.info("********************************  DATA UPLOAD SUMMARY  *******************************************");		
 		logger.info("**************************************************************************************************");		
 		logger.info("Total Users Created: {}", usersCreated.size());
 		usersCreated.forEach(uc -> {
-			logger.info("Created User: {}", uc);
+			logger.info("Username: {}; Path: {}", uc[0], uc[1]);			
+			usernames.add(uc[0]);
 		});
+		logger.info("Created usernames list: {}", Arrays.toString(usernames.toArray()));
 	}
 
 }
