@@ -154,3 +154,15 @@ modules.xml
 .idea/sonarlint
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all
+
+### Secure properties ###
+**/src/main/resources/configuration-*.properties
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
