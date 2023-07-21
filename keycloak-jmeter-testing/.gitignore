@@ -1,0 +1,10 @@
+# Config
+dev.properties
+test.properties
+users.csv
+
+# Jmeter
+jmeter.log
+*.jtl
+/reports
+/temp
