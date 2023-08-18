@@ -243,7 +243,6 @@ public class KeycloakService {
 			logger.debug("Username contained \\ufeff: {}", username);			
 			username = username.replace(ZERO_WIDTH_NOBREAK_SPACE, "");
 		}
-
 		username = addUsernameSuffix(StringUtils.strip(username));
 		logger.debug("Processing as Username: {}", username);
 		return username;
@@ -251,7 +250,11 @@ public class KeycloakService {
 
 	private String addUsernameSuffix(String username) {
 		if (usernameTypeEnum != UsernameTypeEnum.NONE && !usernameComplete(username)) {
-			username += usernameTypeEnum.getValue();
+			if (usernameTypeEnum.isPrefix()) {
+				username = usernameTypeEnum.getValue() + username;				
+			} else {
+				username += usernameTypeEnum.getValue();
+			}
 		}
 		return username;
 	}
