@@ -2,7 +2,7 @@
 
 You need to have <span>Keycloak</span> running. It is recommended to use Keycloak 22 or later.
 
-All you need to build this project is Java 11 (Java SDK 11) or later and Maven 3.6.3 or later.
+All you need to build this project is Java 17 (Java SDK 17) or later and Maven 3.6.3 or later.
 
 If you want to do the JSX example, you will need to install npm on your system.
 
