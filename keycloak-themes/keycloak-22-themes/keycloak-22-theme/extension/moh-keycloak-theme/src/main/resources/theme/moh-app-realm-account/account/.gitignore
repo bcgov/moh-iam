@@ -1,0 +1,6 @@
+# Do not commit, installed at compile time
+node_modules
+web_modules
+
+resources/content/moh-app-realm-account/*
+resources/public/app.css
