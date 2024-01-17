@@ -28,7 +28,7 @@ This theme package is a copy of the [moh-app-realm](https://github.com/bcgov/moh
 
 # How to Customize
 
-Please refer to this README for more detailed information on how to build the JAR and edit the themes contained inside.
+Please refer to [this README](https://github.com/bcgov/moh-iam/blob/keycloak-22-themes/keycloak-themes/keycloak-22-themes/keycloak-22-theme/extension/moh-keycloak-theme/README.md) for more detailed information on how to build the JAR and edit the themes contained inside.
 
 # How to Deploy
 
