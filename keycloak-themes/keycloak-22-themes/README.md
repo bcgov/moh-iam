@@ -4,9 +4,9 @@ This directory consists of three themes which are used to style the **moh_applic
 
 ## moh-app-realm
 
-This theme extends the Login page. The Login theme has been designed to only show a list of identity providers and explicitly excludes any IDPs that start with "bcsc". The Account page removes the options for users to view and manage password, authentication, and applications.
+This theme extends the Login page. The Login theme has been designed to only show a list of identity providers and explicitly excludes any IDPs that start with "bcsc".
 
-In both cases the CSS has also been updated to better align with Ministry of Health Standards.
+CSS has been updated to better align with Ministry of Health Standards.
 
 ### Login Theme Notes
 
