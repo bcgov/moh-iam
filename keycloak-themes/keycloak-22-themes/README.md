@@ -26,6 +26,10 @@ This theme extends the Account page. The moh-app-realm-account theme is built on
 
 This theme package is a copy of the [moh-app-realm](https://github.com/bcgov/moh-iam/tree/master/keycloak-themes#moh-app-realm) theme above with the one change being that it does not explicitly exclude any IDPs that start with "bcsc". It can be applied on a per client basis for those clients that require BCSC integration but do not have a custom login page (e.g. HCIMWeb).
 
+# How to Customize
+
+Please refer to this README for more detailed information on how to build the JAR and edit the themes contained inside.
+
 # How to Deploy
 
 In order to add the themes to a Keycloak installation:
@@ -40,10 +44,6 @@ The settings to apply the account theme, or a login theme for the whole realm, a
 
 The settings to apply the the login theme only to a specific client are found at:
 `Client -> Client Name -> Settings -> Login Theme.`
-
-# How to Customize
-
-Please refer to this README for more detailed information on how to build the JAR and edit the themes contained inside.
 
 ## Clearing Theme Cache
 
