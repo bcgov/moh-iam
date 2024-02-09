@@ -125,6 +125,10 @@ a.zocial {
   border-left: none;
 }
 
+.login-pf-page .login-pf-social-link {
+  margin-bottom: 0px;
+}
+
 .login-pf-page .login-pf-social-link a,
 .login-pf-page .login-pf-social-link a:hover {
   background-color: #002663;
@@ -137,6 +141,7 @@ a.zocial {
   text-decoration: none;
   width: 100%;
   box-shadow: none;
+  margin-bottom: 15px;
 }
 .login-pf-page .login-pf-social-link a:hover {
   background: #204a88 !important;
