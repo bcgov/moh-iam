@@ -49,14 +49,14 @@ The settings to apply the the login theme only to a specific client are found at
 
 During a deploy, some theme resource files such as scripts may remain cached after restarting Keycloak. This cache can be cleared with the following:
 
-As the `gfadmin` user, remove the cache folder for a specific theme found under `/data/gfadmin/software/keycloak/domain/servers/server-<one|two>/tmp/kc-gzip-cache/?????/` (where `?????` can be found from inspecting a theme resource file from your browser's **Developer Tools -> Network** tab).
+As the `gfadmin` user, remove the cache folder for a specific theme found under `/data/gfadmin/software/keycloak/data/tmp/kc-gzip-cache/16iu5/login/moh-app-realm/` (where `?????` can be found from inspecting a theme resource file from your browser's **Developer Tools -> Network** tab).
 
-> **Note:** Dev `?????=m465f`, Test `?????=4nox8`, and Prod `?????=jo96m` but this could change in the future.
+> **Note:** Dev `?????=m465f`, Test `?????=4nox8`, and Prod `?????=16iu5` but this could change in the future.
 
 e.g. To clear the cache for the moh-app-realm login theme in Keycloak Dev, run the following command as `gfadmin`:
 
 ```
-rm -rf /data/gfadmin/software/keycloak/domain/servers/server-one/tmp/kc-gzip-cache/m465f/login/moh-app-realm/
+rm -rf /data/gfadmin/software/keycloak/data/tmp/kc-gzip-cache/m465f/login/moh-app-realm/
 ```
 
 # Tested on
