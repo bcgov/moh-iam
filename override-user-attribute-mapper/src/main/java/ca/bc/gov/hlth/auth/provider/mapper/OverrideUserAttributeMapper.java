@@ -1,4 +1,4 @@
-package com.cgi.auth.provider.mapper;
+package ca.bc.gov.hlth.auth.provider.mapper;
 
 import org.jboss.logging.Logger;
 import org.keycloak.models.ProtocolMapperModel;
