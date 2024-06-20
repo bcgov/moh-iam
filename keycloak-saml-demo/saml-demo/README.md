@@ -1,0 +1,44 @@
+- ## Project Overview
+	- This is a simple Spring Boot application that allows for Keycloak authentication over SAML protocol. The application allows user login and logout via Keycloak and displays the attributes passed in SAML Response. To see a full AuthResponse please use [SAML Tracer](https://addons.mozilla.org/en-CA/firefox/addon/saml-tracer/) browser tool.
+	- Tech stack: Java 17, Keycloak 21
+- ### Terminology
+	- Asserting party (ap) == Identity provider (idp) == Keycloak
+	- Relying party (rp) == Service provider (sp) == Spring Boot application
+
+- ## SAML flow
+	- In this app POST binding is used for AuthnRequest, AuthnResponse, SingleLogout
+	- AuthnRequest - sp generates XML document, signs and serializes it. The request is sent to idp as POST body. (If HTTP redirect binding was used, SAML request would be present in URL)
+	- AuthnResponse - idp receives the request, verifies it and prepares response. The response is sent to Assertion Consumer Service URL `{baseURL}/login/saml2/sso/{registrationId}`.
+	- Both Requests and responses are signed - both sp and idp need to have each other keys
+	- Both assertions and documents can be signed, if only one thing is signed, better document as it contains assertion. This sample app signs only document.
+
+- ## Setup instructions
+	- ### Keycloak client
+	- The service provider is registered in Keycloak DEV environment as a **saml-demo** client
+		- **Client ID** -> `saml-demo` This value is expected in Issuer field in incoming AuthnRequests
+			- In Spring Security module, it it referenced as `entityId` Without setting it explicitly in code, the default value is: `entityId = {baseUrl}/saml2/service-provider-metadata/{registrationId}`
+		- **Root URL** -> `http://localhost:8080`
+		- **Home URL** -> `http://localhost:8080`
+		- **Valid redirect URIs** -> `http://localhost:8080/*`
+		- **Valid post logout redirect URIs** -> `http://localhost:8080/*`
+		- **Logout Service POST Binding URL** -> `/logout/saml2/slo`
+			- `{baseURL}/logout/saml2/slo` is the endpoint that Spring exposes for SAML logout
+		- Additionally, client has 3 predefined and 2 custom mappers configured.
+			- X500 surename, givenName, email (all predefined)
+			- email (custom, user Attribute mapper)
+			- OrganizationName (custom, hardcoded value)
+		- Rest of the settings was left as default
+	- ### Certificates
+		- This application needs two certificates. (Two pairs of public + private keys) Each party has another's certificate so they can validate signatures signed with private keys.
+		- For signing AuthnRequests:
+			- Credentials were generated using this command:
+			  `openssl req -newkey rsa:2048 -nodes -keyout rp-key.key -x509 -days 365 -out rp-certificate.crt`
+			- Both files should be present in `resources/signing` folder in Spring Boot application
+			- The .crt file was imported (as Certificate PEM type) to **saml-demo** Keycloak client on dev environment, so that Keycloak can verify the AuthnRequest.
+		- For signing AuthnResponses:
+			- The certificate can be found in [Keycloak's SAML metadata descriptor](https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/saml/descriptor). The certificate needs to be copied to Spring Boot app, so that it can verify Keycloak's AuthnResponse. It should be placed in `application.yml` file under `signing-cert` property
+		
+- ## Useful links
+	- [SAML Certificates](https://support.pingidentity.com/s/article/Introduction-to-SAML-Certificates)
+	- [Spring Docs](https://docs.spring.io/spring-security/reference/servlet/saml2/login/overview.html#servlet-saml2login-sp-initiated-factory)
+	- [Intro to SAML](https://goteleport.com/blog/how-saml-authentication-works/)

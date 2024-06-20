@@ -1,0 +1,15 @@
+saml2:
+  rp:
+    signing:
+      # openssl req -newkey rsa:2048 -nodes -keyout rp-key.key -x509 -days 365 -out rp-certificate.crt
+      cert-location: signing/rp-certificate.crt
+      key-location: signing/rp-key.key
+  ap:
+    metadata:
+      location: https://common-logon-dev.hlth.gov.bc.ca/auth/realms/moh_applications/protocol/saml/descriptor
+    signing-cert: #paste Keycloak public certificate from SAML descriptor metadata here
+
+
+
+
+
