@@ -2,24 +2,54 @@ package ca.bc.gov.hlth.iam.clientgeneration.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x509.Time;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -27,13 +57,16 @@ import org.keycloak.admin.client.resource.ClientAttributeCertificateResource;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.ClientsResource;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.common.util.KeystoreUtil.KeystoreFormat;
 import org.keycloak.representations.KeyStoreConfig;
+import org.keycloak.representations.idm.CertificateRepresentation;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
+import com.opencsv.ICSVWriter;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -46,7 +79,7 @@ public class KeycloakService {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
 
-	private static final String BATCH_NUMBER = "01";
+	private static final String BATCH_NUMBER = "04";
 
 	private static final String OUTPUT_LOCATION = "C:\\tmp\\ppm\\batch" + BATCH_NUMBER;
 	
@@ -54,9 +87,9 @@ public class KeycloakService {
 	
 	private static final String OUTPUT_FILE = OUTPUT_LOCATION + "\\client_information_" + BATCH_NUMBER + ".csv";
 
-	private static final String CLIENT_ID_BASE = "aaappm-api-";
+	private static final String CLIENT_ID_BASE = "ppm-api-";
 
-	private static final String CLIENT_NAME_BASE = "aaaPPM API ";
+	private static final String CLIENT_NAME_BASE = "PPM API ";
 
 	private static final String CLIENT_DESCRIPTION = "Batch generated client for use with clients that wish to onboard to using PPM API.";
 
@@ -79,6 +112,8 @@ public class KeycloakService {
 	private static final String FILE_EXTENSION_PFX = ".pfx";
 
 	private static final String FILE_EXTENSION_JKS = ".jks";
+
+	private static final String FILE_EXTENSION_CRT = ".crt";
 
 	private static final String KEYCLOAK_FORMAT_PKCS12 = "PKCS12";
 
@@ -188,13 +223,14 @@ public class KeycloakService {
 				throw new Exception("New Client not found");
 			}
 	
-			ClientAttributeCertificateResource certficateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
 			KeyStoreConfig keyStoreConfig = createKeyStoreConfig(clientId);
-			byte[] keyStoreBytes = certficateResource.generateAndGetKeystore(keyStoreConfig);
+			ClientAttributeCertificateResource certficateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
 	
-			saveKeyStoreAsCertificate(keyStoreBytes, clientId, keyStoreConfig.getStorePassword());
-	
-			ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig);
+//			KeyStore keyStore = saveKeyStoreAsCertificate2(certficateResource, keyStoreConfig, clientId);
+			KeyStore keyStore = uploadKeyAndCertificate(clientId, keyStoreConfig.getKeyPassword(), clientResource);
+			
+			X509Certificate x509Certificate = (X509Certificate)keyStore.getCertificate(clientId);
+			ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig, x509Certificate.getNotAfter().toString());
 			logger.info(cc.toString());
 			
 			return cc;
@@ -228,32 +264,154 @@ public class KeycloakService {
 		cr.setProtocolMappers(createAudienceProtocolMapper());
 	}
 
-	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig kc) {
+	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String expiryDate) {
 		ClientCredentials cc = new ClientCredentials();
 		cc.setClientId(clientId);
-		cc.setCertFileName(kc.getKeyAlias() + fileExtension);
-		cc.setCertAlias(kc.getKeyAlias());
-		cc.setKeyPassword(kc.getKeyPassword());
-		cc.setStorePassword(kc.getStorePassword());
+		cc.setCertFileName(keyStoreConfig.getKeyAlias() + fileExtension);
+		cc.setCertAlias(keyStoreConfig.getKeyAlias());
+		cc.setKeyPassword(keyStoreConfig.getKeyPassword());
+		cc.setStorePassword(keyStoreConfig.getStorePassword());
+		cc.setExpirtyDate(expiryDate);
 		return cc;
 	}
 
-	private void saveKeyStoreAsCertificate(byte[] keyStoreBytes, String clientId, String keystorePassword) throws Exception {
+	private KeyStore saveKeyStoreAsCertificate(ClientAttributeCertificateResource certficateResource, KeyStoreConfig keyStoreConfig, String clientId) throws Exception {
+		
+		String keystorePassword =  keyStoreConfig.getStorePassword();
+		byte[] keyStoreBytes = certficateResource.generateAndGetKeystore(keyStoreConfig);		
 		ByteArrayInputStream keyStoreIs = new ByteArrayInputStream(keyStoreBytes);
 		KeyStore keyStore = null;
+		
 		try {
 			keyStore = KeystoreTools.loadKeyStore(keyStoreIs, keystorePassword, keystoreFormat);
 			keyStoreIs.close();
-			File f = new File(OUTPUT_LOCATION_CERTS + clientId + fileExtension);
+			
+			//Save the initial pfx file
+			File f = new File(OUTPUT_LOCATION_CERTS + clientId + "_OLD" + fileExtension);
 			FileOutputStream fos = new FileOutputStream(f);
-			keyStore.store(fos, keystorePassword.toCharArray());
+			keyStore.store(fos, keystorePassword.toCharArray());			
+			
+			//Create a new public key cert so that we can reset the date 
+			X509Certificate x509Certificate = (X509Certificate)keyStore.getCertificate(clientId);
+			final PrivateKey privateKey = (PrivateKey) keyStore.getKey(clientId, keystorePassword.toCharArray());
+			
+	        //Generate an x509 certificate using the keypair (required for creating java key stores)
+	        X509Certificate newX509Certificate = generateX509(x509Certificate.getPublicKey(), privateKey, 1, clientId);
+	        X509Certificate[] certChain = new X509Certificate[1];
+	        certChain[0] = newX509Certificate;
+			
+			KeyStore newKeyStore = KeyStore.getInstance(keystoreFormat);
+			newKeyStore.load(null, keystorePassword.toCharArray());
+	        newKeyStore.setKeyEntry(clientId, privateKey, keystorePassword.toCharArray(), certChain);
+			
+			File f2 = new File(OUTPUT_LOCATION_CERTS + clientId + fileExtension);
+			FileOutputStream fos2 = new FileOutputStream(f2);
+			newKeyStore.store(fos2, keystorePassword.toCharArray());
+			
 		} catch (Exception e) {
 			logger.error("Error saving KeyStore file: {}", e.getMessage());
 			throw e;
 		}
+		return keyStore;
 	}
 
-	private KeyStoreConfig createKeyStoreConfig(String clientId) {
+    public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
+
+        //Generate a keypair
+    	KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        KeyPair kp = kpg.generateKeyPair();
+
+        //Generate an x509 certificate using the keypair (required for creating java key stores)
+        X509Certificate x509Certificate = generateX509(kp, 1, clientId);
+        X509Certificate[] certChain = new X509Certificate[1];
+        certChain[0] = x509Certificate;
+
+        //Generate a java key store
+        KeyStore keyStore = KeyStore.getInstance(KEYCLOAK_FORMAT_PKCS12);
+        char[] password = keystorePassword.toCharArray();
+        keyStore.load(null, password);
+        keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
+
+        StringWriter sw = new StringWriter();
+        try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
+            pw.writeObject(x509Certificate);
+        }
+        // Store the public key in cert format
+        String x509CertificatePath = OUTPUT_LOCATION_CERTS + clientId + FILE_EXTENSION_CRT;
+        FileOutputStream certFos = new FileOutputStream(x509CertificatePath, false);
+        certFos.write(sw.toString().getBytes(StandardCharsets.UTF_8));
+        certFos.close();
+        
+        //Upload the newly created public cert to the keycloak client's as its JWT signing public key, the private key will be sent to the client in the pfx file created later 
+		ClientAttributeCertificateResource certificateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
+
+        MultipartFormDataOutput keyCertForm = new MultipartFormDataOutput();
+
+        keyCertForm.addFormData("keystoreFormat", KeystoreFormat.PKCS12.toString(), MediaType.TEXT_PLAIN_TYPE);
+        keyCertForm.addFormData("keyAlias", clientId, MediaType.TEXT_PLAIN_TYPE);
+        keyCertForm.addFormData("keyPassword", keystorePassword, MediaType.TEXT_PLAIN_TYPE);
+        keyCertForm.addFormData("storePassword", keystorePassword, MediaType.TEXT_PLAIN_TYPE);
+
+        FileInputStream fs = new FileInputStream(x509CertificatePath);
+        byte [] x509CertificateContent = fs.readAllBytes();
+        fs.close();
+
+        MultipartFormDataOutput form = new MultipartFormDataOutput();
+        form.addFormData("keystoreFormat", "Certificate PEM", MediaType.TEXT_PLAIN_TYPE);
+        form.addFormData("file", x509CertificateContent, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        CertificateRepresentation uploadedJksCertificate = certificateResource.uploadJksCertificate(form);
+        logger.info(uploadedJksCertificate.getCertificate());
+        logger.info("Certificate: {}", uploadedJksCertificate.getCertificate());
+        logger.info("privateKey not included: {}", uploadedJksCertificate.getPrivateKey());
+
+		File f = new File(OUTPUT_LOCATION_CERTS + clientId + fileExtension);
+		FileOutputStream fos = new FileOutputStream(f);
+		keyStore.store(fos, keystorePassword.toCharArray());
+		
+		return keyStore;
+    }
+
+    private X509Certificate generateX509(KeyPair keyPair, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    	return generateX509(keyPair.getPublic(), keyPair.getPrivate(), certExpiryYears, clientId);
+    }
+    
+    private X509Certificate generateX509(PublicKey publicKey, PrivateKey privateKey, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+
+        //Setup effective and expiry dates
+        //Bouncy Castle currently only works with java.util.Date but it's still nicer to create them with java.time.LocalDate
+        LocalDate effectiveLocalDate = LocalDate.now();
+        LocalDate expiryLocalDate = effectiveLocalDate.plusYears(certExpiryYears);
+
+        Date effectiveDate = java.sql.Date.valueOf(effectiveLocalDate);
+        Date expiryDate = java.sql.Date.valueOf(expiryLocalDate);
+
+        //Random for the cert serial
+        SecureRandom random = new SecureRandom();
+
+        //Set X509 initialization properties
+        X500Name issuer = new X500Name("CN=" + clientId);
+        BigInteger serial = new BigInteger(160, random);
+        Time notBefore = new Time(effectiveDate);
+        Time notAfter = new Time(expiryDate);
+        X500Name subject = new X500Name("CN=" + clientId);
+        SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfo.getInstance(publicKey.getEncoded());
+
+        //Create cert builder
+        X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, publicKeyInfo);
+        //Create cert signer using private key
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(privateKey);
+        //Create the X509 certificate
+        X509CertificateHolder certHolder = certBuilder.build(signer);
+        //Extract X509 cert from custom Bouncy Castle wrapper
+        X509Certificate cert = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider()).getCertificate(certHolder);
+
+        cert.verify(publicKey);
+
+        return cert;
+    }
+
+    private KeyStoreConfig createKeyStoreConfig(String clientId) {
 		KeyStoreConfig keyStoreConfig = new KeyStoreConfig();
 
 		//TODO Restrict password chars if they cause an issue
@@ -311,13 +469,14 @@ public class KeycloakService {
 		return Arrays.asList(scopesArray);
 	}
 
-	public void writeCsvFromBean(List<ClientCredentials> sampleData) {
+	private void writeCsvFromBean(List<ClientCredentials> sampleData) {
 
 		Path path = Paths.get(OUTPUT_FILE);
 		try (Writer writer = new FileWriter(path.toString())) {
 
 			StatefulBeanToCsv<ClientCredentials> sbc = new StatefulBeanToCsvBuilder<ClientCredentials>(writer)
-					.withQuotechar('\'').withSeparator(CSVWriter.DEFAULT_SEPARATOR).build();
+					.withQuotechar(ICSVWriter.NO_QUOTE_CHARACTER)
+					.withSeparator(CSVWriter.DEFAULT_SEPARATOR).build();
 
 			sbc.write(sampleData);
 		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {

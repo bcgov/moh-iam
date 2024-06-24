@@ -46,6 +46,19 @@
 			<version>8.18</version>
 		</dependency>
 
+	    <!-- crypto algorithms -->
+	    <dependency>
+	      <groupId>org.bouncycastle</groupId>
+	      <artifactId>bcprov-jdk15on</artifactId>
+	      <version>1.66</version>
+	    </dependency>
+	    <!-- certificate generation -->
+	    <dependency>
+	      <groupId>org.bouncycastle</groupId>
+	      <artifactId>bcpkix-jdk15on</artifactId>
+	      <version>1.66</version>
+	    </dependency>
+	
 	</dependencies>
 
 </project>

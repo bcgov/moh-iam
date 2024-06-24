@@ -18,6 +18,9 @@ public class ClientCredentials {
 	
 	@CsvBindByPosition(position = 4)
 	private String storePassword;
+	
+	@CsvBindByPosition(position = 5)
+	private String expirtyDate;
 
 	public String getClientId() {
 		return clientId;
@@ -58,11 +61,20 @@ public class ClientCredentials {
 	public void setStorePassword(String storePassword) {
 		this.storePassword = storePassword;
 	}
+	
+	public String getExpirtyDate() {
+		return expirtyDate;
+	}
+
+	public void setExpirtyDate(String expirtyDate) {
+		this.expirtyDate = expirtyDate;
+	}
 
 	@Override
 	public String toString() {
 		return "ClientCredentials [clientId=" + clientId + ", certFileName=" + certFileName + ", certAlias=" + certAlias
-				+ ", keyPassword=" + keyPassword + ", storePassword=" + storePassword + "]";
+				+ ", keyPassword=" + keyPassword + ", storePassword=" + storePassword + ", expirtyDate=" + expirtyDate
+				+ "]";
 	}
 	
 }
