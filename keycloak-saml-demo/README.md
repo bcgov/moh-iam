@@ -1,6 +1,9 @@
 - ## Project Overview
 	- This is a simple Spring Boot application that allows for Keycloak authentication over SAML protocol. The application allows user login and logout via Keycloak and displays the attributes passed in SAML Response. To see a full AuthResponse please use [SAML Tracer](https://addons.mozilla.org/en-CA/firefox/addon/saml-tracer/) browser tool.
 	- Tech stack: Java 17, Keycloak 21
+- ### How to run
+  	- `mvn clean install`
+  	- `java -jar name-of-the-jar`
 - ### Terminology
 	- Asserting party (ap) == Identity provider (idp) == Keycloak
 	- Relying party (rp) == Service provider (sp) == Spring Boot application
