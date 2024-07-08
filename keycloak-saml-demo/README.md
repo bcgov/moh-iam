@@ -4,6 +4,7 @@
 - ### How to run
   	- `mvn clean install`
   	- `java -jar name-of-the-jar`
+  	- Alternatively, you can run it form your IDE
 - ### Terminology
 	- Asserting party (ap) == Identity provider (idp) == Keycloak
 	- Relying party (rp) == Service provider (sp) == Spring Boot application
