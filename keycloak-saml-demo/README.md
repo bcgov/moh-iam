@@ -37,6 +37,7 @@
 		- For signing AuthnRequests:
 			- Credentials were generated using this command:
 			  `openssl req -newkey rsa:2048 -nodes -keyout rp-key.key -x509 -days 365 -out rp-certificate.crt`
+     			- The certificate is stored in KeePass under `Dev saml-demo certificate`
 			- Both files should be present in `resources/signing` folder in Spring Boot application
 			- The .crt file was imported (as Certificate PEM type) to **saml-demo** Keycloak client on dev environment, so that Keycloak can verify the AuthnRequest.
 		- For signing AuthnResponses:
