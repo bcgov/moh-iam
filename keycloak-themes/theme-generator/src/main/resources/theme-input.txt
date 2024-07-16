@@ -1,0 +1,4 @@
+IDIR : ["idir", "idir_aad"],
+ALL : ["idir", "idir_aad", "phsa", "phsa_aad", "fnha_aad", "bceid_business", "bcprovider_aad", "moh_idp"],
+IDIR-HA : ["idir", "idir_aad", "phsa", "phsa_aad"],
+NONE : []
