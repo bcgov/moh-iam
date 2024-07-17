@@ -1,5 +1,5 @@
 ## Theme Generator Application
-This Java application reads configurations from theme-input.txt, copies the theme-template folder to theme-output under different names specified in the input file, and updates the script.js file in each copied folder, so that only specified identity providers are shown.
+This Java application reads configurations from theme-input.txt, copies the theme-template folder to theme-output under different names specified in the input file, and updates the scripts.js file in each copied folder, so that only specified identity providers are shown.
 
 ### Usage
 1. Make sure the theme-template folder is located inside the src/main/resources and has the following structure:
@@ -8,12 +8,12 @@ This Java application reads configurations from theme-input.txt, copies the them
     └── login
         ├── resources
         │   └── js
-        │       └── script.js
+        │       └── scripts.js
         ├── login.ftl
         └── theme.properties
     ```
    - login.ftl is a FreeMarker Template file. Body of the theme.
-   - script.js contains functions that compliment the ftl file. Importantly, it contains `const IDPS_TO_SHOW = [];` line, which will be replaced with the corresponding array from theme-input.txt for each copied folder.
+   - scripts.js contains functions that compliment the ftl file. Importantly, it contains `const IDPS_TO_SHOW = [];` line, which will be replaced with the corresponding array from theme-input.txt for each copied folder.
    - theme.properties defines basic property of the theme. In this case it defines parent of a theme: `moh-app-realm` That's where the base template and styles are inherited from.
 
 
@@ -33,7 +33,7 @@ This Java application reads configurations from theme-input.txt, copies the them
 
 3. Build the application:
 
-   `mvn clean install`
+   `mvn clean package`
 4. Run the application:
 
     `java -jar target/theme-generator.jar`

@@ -91,6 +91,7 @@
                             <#else>
                                 <li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: block" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
                             </#if>
+                            <liv> WOOOHOHOO </liv>
                         </#list>
                     </ul>
                 </div>

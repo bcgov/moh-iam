@@ -1,5 +1,7 @@
 package com.cgi;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -10,12 +12,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
-
-public class ThemeGenerator
-{
-    public static void main( String[] args )
-    {
+public class ThemeGenerator {
+    public static void main(String[] args) {
         try {
             // Paths for the input file, template folder, and output folder
             Path inputFilePath = Paths.get(ThemeGenerator.class.getResource("/theme-input.txt").toURI());
@@ -34,9 +32,10 @@ public class ThemeGenerator
                     // Copy the template folder to the destination
                     copyFolder(templateFolderPath.toFile(), destination.toFile());
                     System.out.println("Copied " + templateFolderPath + " to " + destination);
-                    updateScriptJs(destination.resolve("login/resources/js/script.js"), idpsToShow);
+                    updateScriptJs(destination.resolve("login/resources/js/scripts.js"), idpsToShow);
                 }
             }
+
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
