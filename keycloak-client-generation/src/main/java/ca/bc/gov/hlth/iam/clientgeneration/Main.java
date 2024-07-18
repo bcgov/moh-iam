@@ -19,9 +19,15 @@ import ca.bc.gov.hlth.iam.clientgeneration.service.KeycloakService;
  * Program to create new clients. The clients are created with a default set of properties currently suited to creating
  * clients for use by PPM API clients. The main characteristic of these clients is that they authenticate by "Signed JWT".
  *  
- * Currently this program will output:
- * 	- List of client IDs for the newly created clients
- * 	- Their associated JWT information of PFX cert and passwords 
+ * Currently this program will output a CVS file containing:
+ * 	- A list of Client IDs for the newly created clients
+ * 	- The client's associated cert info which includes:
+ * 		- cert file name
+ * 		- cert file alias
+ * 		- key password
+ * 		- store password
+ * 		- cert expiry date
+ * 	The certificates will also be genearated and saved locally. 
  *  
  */
 public class Main {

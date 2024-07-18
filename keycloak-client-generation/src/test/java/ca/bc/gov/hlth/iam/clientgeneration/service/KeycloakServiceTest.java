@@ -1,6 +1,5 @@
 package ca.bc.gov.hlth.iam.clientgeneration.service;
 
-import static ca.bc.gov.hlth.iam.clientgeneration.service.KeycloakService.OUTPUT_LOCATION_CERTS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,6 +51,8 @@ public class KeycloakServiceTest {
 
 	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
 
+	private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
+
 	private static Properties configProperties;
 	
 	@BeforeAll
@@ -59,19 +60,24 @@ public class KeycloakServiceTest {
 		configProperties = getProperties(EnvironmentEnum.DEV);
 	}
 	
+	/**
+	 * Add x load of clients and clean them up by removing them when done.
+	 * @throws Exception
+	 */
 	@Test
     public void testBulkClientGenerationLoad() throws Exception {
-
+		int numberOfClientsToCreate = 500;
 		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);
-	    List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, 1, 1);
-
-	    assertEquals(1, clientCredentials.size());
+	    List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, numberOfClientsToCreate, 1);	
+	    assertEquals(numberOfClientsToCreate, clientCredentials.size());
 	    
-	    keycloakService.processClientsCleanUp(clientCredentials);
-
-	    keycloakService.processClientsCleanUp(clientCredentials);
+//	    keycloakService.processClientsCleanUp(clientCredentials);
 	}
 	
+	/**
+	 *  Test adds a new client and then checks that the certificate can be used to get a valid token. It also
+	 *  fires a request to the PPM API which can be validated in that application. 
+	 */
 	@Test
     public void testBulkClientGeneration_verify_authentication() throws Exception {
 
@@ -140,7 +146,7 @@ public class KeycloakServiceTest {
     }
 	
     public ClientAuthentication buildAuthenticationMethod(ClientCredentials clientCredentials, URI tokenEndpoint) throws Exception {
-        File certFile = new File(OUTPUT_LOCATION_CERTS + clientCredentials.getCertFileName());
+        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\certs\\" + clientCredentials.getCertFileName());
         KeyStore keyStore = KeystoreTools.loadKeyStore(certFile, clientCredentials.getStorePassword(), configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT));
         RSAPrivateKey privateKey = (RSAPrivateKey) keyStore.getKey(clientCredentials.getCertAlias(), clientCredentials.getStorePassword().toCharArray());
         try {
@@ -164,22 +170,6 @@ public class KeycloakServiceTest {
         return configProperties;
     }
 
-    private static final String SAMPLE_MESSAGE_MEDICATION_STATEMENT = "{\r\n"
-    		+ "    \"resourceType\": \"DocumentReference\",\r\n"
-    		+ "    \"masterIdentifier\": {\r\n"
-    		+ "        \"system\": \"urn:ietf:rfc:3986\",\r\n"
-    		+ "        \"value\": \"urn:uuid:D8196F60-8E3F-40A6-B5C8-B5680B2C21EC\"\r\n"
-    		+ "    },\r\n"
-    		+ "    \"status\": \"current\",\r\n"
-    		+ "    \"date\": \"2020-07-30T01:09:57Z\",\r\n"
-    		+ "    \"content\": [{\r\n"
-    		+ "        \"attachment\": {\r\n"
-    		+ "            \"contentType\": \"x-application/hl7-v2+er7\",\r\n"
-    		+ "            \"data\": \"TVNIfF5+XCZ8REVTS1RPUHxCQzAxMDAwMDA2fFBOUHxQUHx8TUE6MjQuODUuMTQwLjkwfFpQTnwwMjYwOTB8RHwyLjENWlpafFRSUHx8MDI2MDkwfFAxfFhYQktSfHx8DVpDQXwwMDAwMDF8MDN8MDB8QVJ8MDQNWkNCfEJDMDAwMDAxQUJ8MjQwMzA1fDAyNjA5MA1aQ0N8fHx8fHx8fHx8MDAwOTczNTM5MTQxOXwNDQ==\"\r\n"
-    		+ "        }\r\n"
-    		+ "    }]\r\n"
-    		+ "}";
-    
     private static final String SAMPLE_MESSAGE_PATIENT = "{\r\n"
     		+ "    \"resourceType\": \"DocumentReference\",\r\n"
     		+ "    \"masterIdentifier\": {\r\n"
@@ -196,5 +186,21 @@ public class KeycloakServiceTest {
     		+ "    }]\r\n"
     		+ "}";
     
+    
+    private static final String SAMPLE_MESSAGE_MEDICATION_STATEMENT = "{\r\n"
+    		+ "    \"resourceType\": \"DocumentReference\",\r\n"
+    		+ "    \"masterIdentifier\": {\r\n"
+    		+ "        \"system\": \"urn:ietf:rfc:3986\",\r\n"
+    		+ "        \"value\": \"urn:uuid:D8196F60-8E3F-40A6-B5C8-B5680B2C21EC\"\r\n"
+    		+ "    },\r\n"
+    		+ "    \"status\": \"current\",\r\n"
+    		+ "    \"date\": \"2020-07-30T01:09:57Z\",\r\n"
+    		+ "    \"content\": [{\r\n"
+    		+ "        \"attachment\": {\r\n"
+    		+ "            \"contentType\": \"x-application/hl7-v2+er7\",\r\n"
+    		+ "            \"data\": \"TVNIfF5+XCZ8REVTS1RPUHxCQzAxMDAwMDA2fFBOUHxQUHx8TUE6MjQuODUuMTQwLjkwfFpQTnwwMjYwOTB8RHwyLjENWlpafFRSUHx8MDI2MDkwfFAxfFhYQktSfHx8DVpDQXwwMDAwMDF8MDN8MDB8QVJ8MDQNWkNCfEJDMDAwMDAxQUJ8MjQwMzA1fDAyNjA5MA1aQ0N8fHx8fHx8fHx8MDAwOTczNTM5MTQxOXwNDQ==\"\r\n"
+    		+ "        }\r\n"
+    		+ "    }]\r\n"
+    		+ "}";
     
 }
