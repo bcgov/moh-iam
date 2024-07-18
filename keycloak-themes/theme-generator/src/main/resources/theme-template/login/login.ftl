@@ -91,7 +91,6 @@
                             <#else>
                                 <li class="${properties.kcFormSocialAccountListLinkClass!}"><a style="display: block" href="${p.loginUrl}" id="zocial-${p.alias}" class="zocial ${p.providerId}"> <span>Login with ${p.displayName}</span></a></li>
                             </#if>
-                            <liv> WOOOHOHOO </liv>
                         </#list>
                     </ul>
                 </div>
@@ -121,7 +120,7 @@
                 <p>
                     <b>Email</b>
                     <br>
-                    <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca</a>
+                    <a href="mailto:HLTH.ServiceDesk@gov.bc.ca">HLTH.ServiceDesk@gov.bc.ca</a>
                     <br>
                     <b>Hours</b>
                     <br>
