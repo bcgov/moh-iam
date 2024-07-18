@@ -121,7 +121,7 @@
             <p>
                 <b>Email</b>
                 <br>
-                <a href="mailto:hlth.helpdesk@gov.bc.ca">hlth.helpdesk@gov.bc.ca</a>
+                <a href="mailto:HLTH.ServiceDesk@gov.bc.ca">HLTH.ServiceDesk@gov.bc.ca</a>
                 <br>
                 <b>Hours</b>
                 <br>
