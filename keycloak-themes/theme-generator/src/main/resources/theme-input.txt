@@ -1,4 +1,18 @@
-IDIR : ["idir", "idir_aad"],
-ALL : ["idir", "idir_aad", "phsa", "phsa_aad", "fnha_aad", "bceid_business", "bcprovider_aad", "moh_idp"],
-IDIR-HA : ["idir", "idir_aad", "phsa", "phsa_aad"],
-NONE : []
+IDIR_AAD : ["idir_aad"],
+PHSA : ["phsa"],
+PHSA_AAD : ["phsa_aad"],
+BCEID : ["bceid_business"],
+BCPROVIDER : ["bcprovider_aad"],
+FNHA : ["fnha_aad"],
+IDIR_AAD-PHSA: ["idir_aad", "phsa"],
+IDIR_AAD-PHSA_AAD: ["idir_aad","phsa_aad"],
+IDIR_AAD-PHSA_AAD-BCEID: ["idir_aad", "phsa_aad", "bceid_business"],
+IDIR_AAD-PHSA-BCEID: ["idir_aad", "phsa", "phsa_aad", "bceid_business"],
+IDIR_AAD-PHSA_AAD-BCPROVIDER : ["idir_aad","phsa_aad", "bcprovider_aad"]
+IDIR_AAD-PHSA-BCPROVIDER: ["idir_aad","phsa", "bcprovider_aad"]
+IDIR_AAD-PHSA_AAD-BCPROVIDER-BCEID : ["idir_aad","phsa_aad", "bcprovider_aad", "bceid_business"]
+IDIR_AAD-PHSA-BCPROVIDER-BCEID: ["idir_aad","phsa", "bcprovider_aad", "bceid_business"]
+IDIR_AAD-PHSA_AAD-BCPROVIDER-FNHA: ["idir_aad", "phsa_aad", "bcprovider_aad", "fnha_aad"]
+IDIR_AAD-PHSA-BCPROVIDER-FNHA: ["idir_aad", "phsa", "bcprovider_aad", "fnha_aad"]
+IDIR_AAD-BCEID : ["idir_aad", "bceid_business"],
+IDIR_AAD-FNHA : ["idir_aad", "fnha_aad"],
