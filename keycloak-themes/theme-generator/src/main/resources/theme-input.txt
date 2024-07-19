@@ -1,18 +1,19 @@
-IDIR_AAD : ["idir_aad"],
-PHSA : ["phsa"],
-PHSA_AAD : ["phsa_aad"],
-BCEID : ["bceid_business"],
-BCPROVIDER : ["bcprovider_aad"],
-FNHA : ["fnha_aad"],
-IDIR_AAD-PHSA: ["idir_aad", "phsa"],
-IDIR_AAD-PHSA_AAD: ["idir_aad","phsa_aad"],
-IDIR_AAD-PHSA_AAD-BCEID: ["idir_aad", "phsa_aad", "bceid_business"],
-IDIR_AAD-PHSA-BCEID: ["idir_aad", "phsa", "phsa_aad", "bceid_business"],
-IDIR_AAD-PHSA_AAD-BCPROVIDER : ["idir_aad","phsa_aad", "bcprovider_aad"]
-IDIR_AAD-PHSA-BCPROVIDER: ["idir_aad","phsa", "bcprovider_aad"]
-IDIR_AAD-PHSA_AAD-BCPROVIDER-BCEID : ["idir_aad","phsa_aad", "bcprovider_aad", "bceid_business"]
-IDIR_AAD-PHSA-BCPROVIDER-BCEID: ["idir_aad","phsa", "bcprovider_aad", "bceid_business"]
-IDIR_AAD-PHSA_AAD-BCPROVIDER-FNHA: ["idir_aad", "phsa_aad", "bcprovider_aad", "fnha_aad"]
-IDIR_AAD-PHSA-BCPROVIDER-FNHA: ["idir_aad", "phsa", "bcprovider_aad", "fnha_aad"]
-IDIR_AAD-BCEID : ["idir_aad", "bceid_business"],
-IDIR_AAD-FNHA : ["idir_aad", "fnha_aad"],
+idir_aad : ["idir_aad"],
+phsa : ["phsa"],
+phsa_aad : ["phsa_aad"],
+bceid : ["bceid_business"],
+bcprovider : ["bcprovider_aad"],
+fnha : ["fnha_aad"],
+idir_aad-phsa: ["idir_aad", "phsa"],
+idir_aad-phsa_aad: ["idir_aad","phsa_aad"],
+idir_aad-phsa-bceid: ["idir_aad", "phsa", "phsa_aad", "bceid_business"],
+idir_aad-phsa_aad-bceid: ["idir_aad", "phsa_aad", "bceid_business"],
+idir_aad-phsa-bcprovider: ["idir_aad","phsa", "bcprovider_aad"],
+idir_aad-phsa_aad-bcprovider : ["idir_aad","phsa_aad", "bcprovider_aad"],
+idir_aad-phsa-bcprovider-bceid: ["idir_aad","phsa", "bcprovider_aad", "bceid_business"],
+idir_aad-phsa_aad-bcprovider-bceid : ["idir_aad","phsa_aad", "bcprovider_aad", "bceid_business"],
+idir_aad-phsa-bcprovider-fnha: ["idir_aad", "phsa", "bcprovider_aad", "fnha_aad"],
+idir_aad-phsa_aad-bcprovider-fnha: ["idir_aad", "phsa_aad", "bcprovider_aad", "fnha_aad"],
+idir_aad-bceid : ["idir_aad", "bceid_business"],
+idir_aad-fnha : ["idir_aad", "fnha_aad"],
+idir-idir_aad-phsa-bceid-fnha : ["idir", "idir_aad", "phsa", "bceid_business", "fnha_aad"],
