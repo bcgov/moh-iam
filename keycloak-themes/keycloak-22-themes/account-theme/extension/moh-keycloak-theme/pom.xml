@@ -9,7 +9,7 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>moh-keycloak-theme</artifactId>
+    <artifactId>account-theme</artifactId>
     <packaging>jar</packaging>
     <name>Keycloak Quickstarts: Extend Account Console</name>
     <description>Keycloak MoH Account Console Theme</description>
@@ -56,6 +56,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>moh-keycloak-theme</finalName>
+        <finalName>account-theme</finalName>
     </build>
 </project>
