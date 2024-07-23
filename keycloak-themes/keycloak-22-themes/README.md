@@ -1,6 +1,6 @@
 # Overview
 
-This directory consists of three themes which are used to style the **moh_applications** Keycloak realm. These themes are based on Keycloak 22.0.5. The three custom themes are packaged within a single JAR file.
+This directory consists of multiple themes which are used to style the **moh_applications** Keycloak realm. These themes are based on Keycloak 22.0.5. JAR file contains account theme, login-themes folder contains different versions of a login theme.
 
 ## moh-app-realm
 
@@ -26,16 +26,29 @@ This theme extends the Account page. The moh-app-realm-account theme is built on
 
 This theme package is a copy of the [moh-app-realm](https://github.com/bcgov/moh-iam/tree/master/keycloak-themes#moh-app-realm) theme above with the one change being that it does not explicitly exclude any IDPs that start with "bcsc". It can be applied on a per client basis for those clients that require BCSC integration but do not have a custom login page (e.g. HCIMWeb).
 
+## Other themes in `login-themes` directory
+
+Other themes are a copy of the [moh-app-realm](https://github.com/bcgov/moh-iam/tree/master/keycloak-themes#moh-app-realm) theme, with a fixed list of Identity Providers that are displayed. They were created to customize login screen of those applications that cannot develop a page on their own or pass "idps_to_show/ kc_idp_hint" parameters inside authentication request.
+
 # How to Customize
 
+## Account Theme
+
 Please refer to [this README](https://github.com/bcgov/moh-iam/blob/keycloak-22-themes/keycloak-themes/keycloak-22-themes/keycloak-22-theme/extension/moh-keycloak-theme/README.md) for more detailed information on how to build the JAR and edit the themes contained inside.
+
+## Login Theme
+
+Please refer to official [Keycloak Documentation](https://www.keycloak.org/docs/latest/server_development/#_themes)
 
 # How to Deploy
 
 In order to add the themes to a Keycloak installation:
 
 1. Copy the JAR file to the "providers" directory in your Keycloak installation.
-2. Restart Keycloak.
+2. Copy the folders from "login-themes" to the "themes" directory in your Keycloak installation.
+3. Restart Keycloak.
+
+Please note that steps 1 and 2 are independent of each other. There is no need to update the 'login-themes' folder if you only want to update the account theme.
 
 The theme will be available for selection in the Keycloak Admin Console.
 
