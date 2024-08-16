@@ -57,10 +57,8 @@ public class KeycloakServiceTest {
 
     private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
 
-    private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
-
-    private String configFileName;
-    private Properties configProperties;
+    private static String configFileName;
+    private static Properties configProperties;
 
     /**
      * Load the confugiration properties from the configuration properties file
@@ -68,7 +66,7 @@ public class KeycloakServiceTest {
      * @throws IOException if the resource doesn't exist or can't be loaded
      */
     @BeforeAll
-    public void loadProperties() throws IOException {
+    public static void loadProperties() throws IOException {
         // Determine the file name from the name pattern and the environment.
         configFileName = String.format(CONFIG_FILE_NAME_TEMPLATE, EnvironmentEnum.DEV.getValue());
 
