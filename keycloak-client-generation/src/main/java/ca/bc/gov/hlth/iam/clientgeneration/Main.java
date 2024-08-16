@@ -1,14 +1,8 @@
 package ca.bc.gov.hlth.iam.clientgeneration;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Properties;
-import java.net.URISyntaxException;
-import java.net.URL;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -46,10 +40,21 @@ public class Main {
         logger.info("Begin processing clients with args: {}", Arrays.toString(args));
 
         EnvironmentEnum environment = determineEnvironment(args);
-        Properties configProperties = getProperties(environment);
+        Properties configProperties;
+
+        // Try to load the batch properties.
+        try {
+            configProperties = getProperties(environment);
+        }
+        catch (IOException e) {
+            logger.error("Failed to load properties: ", e);
+            logger.error("Abort.");
+            return;
+        }
 
         KeycloakService keycloakService;
 
+        // Try to instantiate the Keycloak actor.
         try {
             keycloakService = new KeycloakService(configProperties, environment);
         }
@@ -59,6 +64,7 @@ public class Main {
             return;
         }
 
+        // Add the clients.
         keycloakService.addClients(configProperties, determineNumberOfClients(args), determineClientStartNumber(args));
         logger.info("Completed creating clients.");
     }
@@ -115,44 +121,15 @@ public class Main {
      * Load the properties for the current batch from the known properties file.
      * @param environment the current environment
      * @return a Properties object containing the properties for the current batch
+     * @throws IOException if an error occurs while loading the batch properties
      */
-    private static Properties getProperties(EnvironmentEnum environment) {
-        // Access the config file resource.
-        URL defaultLocation = Main.class.getClassLoader().getResource(String.format(CONFIG_FILE_NAME_TEMPLATE, environment.getValue()));
-        String configPath;
+    private static Properties getProperties(EnvironmentEnum environment) throws IOException {
+        // Load the resource file using the ClassLoader.
+        InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(String.format(CONFIG_FILE_NAME_TEMPLATE, environment.getValue()));
 
-        // Try to determine the config file's absolute path.
-        try {
-            configPath = new File(defaultLocation.toURI()).getAbsolutePath();
-        }
-        catch (URISyntaxException e) {
-            logger.error("Failed to load config file: ", e);
-            return null;
-        }
-
-        File file = new File(configPath);
-        InputStream inputStream;
-
-        // Try to open the config file as an InputStream.
-        try {
-            inputStream = file.exists() ? new FileInputStream(file) : Main.class.getResourceAsStream(configPath);
-        }
-        catch (FileNotFoundException e) {
-            logger.error("Failed to load config file: ", e);
-            return null;
-        }
-
-        Objects.requireNonNull(inputStream, String.format("Configuration file not found at '%s'.", configPath));
+        // Load the properties from the config file.
         Properties configProperties = new Properties();
-
-        // Try to load the properties from the config file.
-        try {
-            configProperties.load(inputStream);
-        }
-        catch (IOException e) {
-            logger.error("Failed to load config file: ", e);
-            return null;
-        }
+        configProperties.load(inputStream);
 
         return configProperties;
     }
