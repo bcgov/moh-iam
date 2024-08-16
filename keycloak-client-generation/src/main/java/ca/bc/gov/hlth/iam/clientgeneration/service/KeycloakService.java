@@ -77,234 +77,273 @@ import ca.bc.gov.hlth.iam.clientgeneration.model.csv.ClientCredentials;
 
 public class KeycloakService {
 
-	private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
+    private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
 
-	private static final String CLIENT_ID_BASE = "ppm-api-BC";
+    private static final String CLIENT_ID_BASE = "ppm-api-BC";
 
-	private static final String CLIENT_NAME_BASE = "PPM API ";
+    private static final String CLIENT_NAME_BASE = "PPM API ";
 
-	private static final String CLIENT_DESCRIPTION = "Batch generated client for use with clients that wish to onboard to using PPM API.";
+    private static final String CLIENT_DESCRIPTION = "Batch generated client for use with clients that wish to onboard to using PPM API.";
 
-	//TODO Move config props to common file
-	private static final String CONFIG_PROPERTY_URL = "url";
+    // TODO Move config props to common file
+    private static final String CONFIG_PROPERTY_URL = "url";
 
-	private static final String CONFIG_PROPERTY_REALM = "realm";
+    private static final String CONFIG_PROPERTY_REALM = "realm";
 
-	private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
+    private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
 
-	private static final String CONFIG_PROPERTY_USERNAME = "username";
+    private static final String CONFIG_PROPERTY_USERNAME = "username";
 
-	private static final String CONFIG_PROPERTY_SCOPES = "scopes";
+    private static final String CONFIG_PROPERTY_SCOPES = "scopes";
 
-	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
+    private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
 
-	private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
+    private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
 
-	private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
+    private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
 
-	private static final String AUTH_TYPE_CLIENT_JWT = "client-jwt";
+    private static final String AUTH_TYPE_CLIENT_JWT = "client-jwt";
 
-	private static final String JWT_CREDENTIAL = "jwt.credential";
+    private static final String JWT_CREDENTIAL = "jwt.credential";
 
-	private static final String FILE_EXTENSION_PFX = ".pfx";
+    private static final String FILE_EXTENSION_PFX = ".pfx";
 
-	private static final String FILE_EXTENSION_JKS = ".jks";
+    private static final String FILE_EXTENSION_JKS = ".jks";
 
-	private static final String FILE_EXTENSION_CRT = ".crt";
+    private static final String FILE_EXTENSION_CRT = ".crt";
 
-	private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&^";
+    private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&^";
 
-	private String realm;
+    private String realm;
 
-	//default to PKCS12
-	private String keystoreFormat = PKCS12.toString();
-	
-	private String fileExtension;
+    // default to PKCS12
+    private String keystoreFormat = PKCS12.toString();
 
-	private RealmResource realmResource;
+    private String fileExtension;
 
-	private String batchNumber;
-	
-	private String outputLocation;	
-	
-	private String outputLocationCerts;
-	
-	private String outputLocationX509Certs;
-	
-	private String outputFile;
+    private RealmResource realmResource;
 
-	public KeycloakService(Properties configProperties, EnvironmentEnum environment) throws Exception {
-		
-		//TODO upgrade mvn dependency to use Keycloak admin 25 to match Keycloak version 
-		
-		super();
-		init(configProperties, environment);
-	}
+    private String batchNumber;
 
-	private void init(Properties configProperties, EnvironmentEnum environment) throws Exception {
-		logger.info("Initializing Keycloak connection against: {}", configProperties.getProperty(CONFIG_PROPERTY_URL));
-		realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
-		logger.info("Using Realm: {}", realm);
+    private String outputLocation;
 
-		Keycloak keycloak = KeycloakBuilder.builder().serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
-				.realm(realm).grantType(OAuth2Constants.PASSWORD)
-				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID)) //
-				.username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME)).password(getUserPassword(environment))
-				.build();
+    private String outputLocationCerts;
 
-		realmResource = keycloak.realm(realm);
+    private String outputLocationX509Certs;
 
-		if (StringUtils.isNoneBlank(configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT))) {
-			keystoreFormat = configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT);
-		};
-		
-		fileExtension = determineFileExtenstion();
-		
-		batchNumber = configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER);
-		
-		initOutput(configProperties);		
-		
-		logger.info("Keycloak connection initialized.");
-	}
+    private String outputFile;
 
-	private static String getUserPassword(EnvironmentEnum environment) {
-		return System.getenv(environment.getPasswordKey());
-	}
+    // TODO upgrade mvn dependency to use Keycloak admin 25 to match Keycloak version
 
-	public List<ClientCredentials> addClients(Properties configProperties, int numberOfClients, int clientStartNumber) {
-		
-		logger.info("Begin addClients...");
-		
-		ClientsResource clientsResource = realmResource.clients();
-	
-		List<ClientCredentials> clientCredentials = new ArrayList<>();
-		
-		List<String> clientScopes = retrieveClientScopes(configProperties);
-		
-		
-		try {
-			for (int i=0; i<numberOfClients;i++) {
-				ClientCredentials clientCredential = addClient(clientsResource, clientScopes, clientStartNumber + i);
-				if (clientCredentials != null) {
-					clientCredentials.add(clientCredential);
-				}
-			}
-		
-			writeCsvFromBean(clientCredentials);
-		} catch (Exception e) {
-			logger.error("Error during batch run. Stopping processing. All created clients will be removed. Please fix error and retry. Error was: {}", e.getMessage());
-		    processClientsCleanUp(clientCredentials);
-		}
+    /**
+     * Create and initialize a client to interact with a Keycloak realm.
+     * @param configProperties the properties defining the session
+     * @param environment the environment for the current session
+     * @throws IOException if the output locations cannot be initialized
+     */
+    public KeycloakService(Properties configProperties, EnvironmentEnum environment) throws Exception {
+        logger.info("Initializing Keycloak connection against: {}", configProperties.getProperty(CONFIG_PROPERTY_URL));
 
-		logger.info("End addClients.");
-		return clientCredentials;
-		
-	}
-	
-	public ClientCredentials addClient(ClientsResource clientsResource, List<String> scropes, int clientIteration) throws Exception {
-		
-		logger.info("Begin addingClient...");
-		
-		String clientSuffix = StringUtils.leftPad(Integer.toString(clientIteration), 8, "0"); 
-		logger.info("Usign clientSuffix: {}", clientSuffix);
-		
-		String clientId = CLIENT_ID_BASE + clientSuffix;
-		String clientName = CLIENT_NAME_BASE + clientSuffix;
-		logger.info("Creating: {} : {}", clientId, clientName);
+        realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
+        logger.info("Using Realm: {}", realm);
 
-		ClientRepresentation cr = new ClientRepresentation();
-		cr.setClientId(clientId);
-		cr.setName(clientName);
-		cr.setDescription(CLIENT_DESCRIPTION);
+        // Get the Keycloak client and authenticate.
+        Keycloak keycloak = KeycloakBuilder.builder()
+                .serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
+                .realm(realm)
+                .grantType(OAuth2Constants.PASSWORD)
+                .clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID))
+                .username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME))
+                .password(getUserPassword(environment))
+                .build();
 
-		populateDefaultsClientRepresentation(cr,scropes);
+        // Get the realm resources.
+        realmResource = keycloak.realm(realm);
 
-		//TODO Remvoe or add a flag so this can be turned off when not in test mode
-		processClientCleanUp(cr.getClientId(), clientsResource);
-		
-		if(existsClient(clientId, clientsResource)) {
-			logger.warn("Client {} already exists", clientId);
-			return null;
-		}
-		Response response = clientsResource.create(cr);
+        // If defined, set the keystore format.
+        if (StringUtils.isNoneBlank(configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT))) {
+            keystoreFormat = configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT);
+        };
 
-		logger.info("Status: {}", response.getStatus());
-		if (response.getStatus() != 201) {
-			throw new Exception(response.getStatusInfo().getReasonPhrase());
-		}
+        fileExtension = determineFileExtension();
 
-		ClientRepresentation clientRepresentation = retrieveClient(clientsResource, cr.getClientId());			
-		ClientResource clientResource = clientsResource.get(clientRepresentation.getId());
-		if (clientResource == null) {
-			throw new Exception("New Client not found");
-		}
+        batchNumber = configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER);
 
-		KeyStoreConfig keyStoreConfig = createKeyStoreConfig(clientId);
+        // Initialize the output locations.
+        initOutput(configProperties);
 
-		KeyStore keyStore = uploadKeyAndCertificate(clientId, keyStoreConfig.getKeyPassword(), clientResource);
-		
-		X509Certificate x509Certificate = (X509Certificate)keyStore.getCertificate(clientId);
-		ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig, x509Certificate.getNotAfter().toString());
-		logger.info(cc.toString());
-		
-		return cc;
-	}
+        logger.info("Keycloak connection initialized.");
+    }
 
-	private void populateDefaultsClientRepresentation(ClientRepresentation cr, List<String> scropes) {
-		cr.setEnabled(true);
+    /**
+     * Load the user's password from an environment variable determined by the environment.
+     * @param environment the environment
+     * @return the user's password
+     */
+    private static String getUserPassword(EnvironmentEnum environment) {
+        return System.getenv(environment.getPasswordKey());
+    }
 
-		cr.setPublicClient(false); // Client authentication
-		cr.setAuthorizationServicesEnabled(false); // Authorization
+    /**
+     * Create multiple Keycloak clients and return their credentials.
+     * @param configProperties the properties defining the session
+     * @param numberOfClients the number of clients to create
+     * @param clientStartNumber the ID of the first client
+     * @return a set of credentials for each client
+     */
+    public List<ClientCredentials> addClients(Properties configProperties, int numberOfClients, int clientStartNumber) {
+        logger.info("Begin addClients...");
 
-		cr.setStandardFlowEnabled(false); // Standard flow
-		cr.setImplicitFlowEnabled(false); // Implicit flow
-		cr.setDirectAccessGrantsEnabled(false); // Direct access grants
-		cr.setServiceAccountsEnabled(true); // Service accounts roles
+        // Load the client resource from Keycloak.
+        ClientsResource clientsResource = realmResource.clients();
 
-		cr.setFrontchannelLogout(false);
+        // Declare the list if client credentials.
+        List<ClientCredentials> clientCredentials = new ArrayList<>();
 
-		cr.setClientAuthenticatorType(AUTH_TYPE_CLIENT_JWT); // Client Authenticator
+        // Load the list of scopes that each client will be assigned.
+        List<String> clientScopes = retrieveClientScopes(configProperties);
 
-//		Configure client scopes by setting default scopes. This removes any predetermined defaults by overwriting them with those in the provided list.
-		cr.setDefaultClientScopes(scropes);
+        try {
+            for (int i = 0; i < numberOfClients; i++) {
+                ClientCredentials clientCredential = addClient(clientsResource, clientScopes, clientStartNumber + i);
 
-		/* Add an Audience mapper */
-		cr.setProtocolMappers(createAudienceProtocolMapper());
-	}
+                if (clientCredentials != null) {
+                    clientCredentials.add(clientCredential);
+                }
+            }
 
-	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String expiryDate) {
-		ClientCredentials cc = new ClientCredentials();
-		cc.setClientId(clientId);
-		cc.setCertFileName(keyStoreConfig.getKeyAlias() + fileExtension);
-		cc.setCertAlias(keyStoreConfig.getKeyAlias());
-		cc.setKeyPassword(keyStoreConfig.getKeyPassword());
-		cc.setStorePassword(keyStoreConfig.getStorePassword());
-		cc.setExpirtyDate(expiryDate);
-		return cc;
-	}
+            writeCsvFromBean(clientCredentials);
+        } catch (Exception e) {
+            logger.error("Error during batch run. Stopping processing. All created clients will be removed. Please fix error and retry. Error was: {}", e.getMessage());
+            processClientsCleanUp(clientCredentials);
+        }
+
+        logger.info("End addClients.");
+        return clientCredentials;
+    }
+
+    /**
+     * Create a single Keycloak client and return its credentials.
+     * @param clientsResource the authenticated and authorized Keycloak client resource
+     * @param scopes the list of scopes the client will be assigned
+     * @param clientIteration the numeric ID of the client
+     * @return the new client's credentials
+     */
+    public ClientCredentials addClient(ClientsResource clientsResource, List<String> scopes, int clientIteration) throws Exception {
+        logger.info("Begin addingClient...");
+
+        // Generate the client ID suffix based on the numeric ID.
+        String clientSuffix = StringUtils.leftPad(Integer.toString(clientIteration), 8, "0");
+        logger.info("Using clientSuffix: {}", clientSuffix);
+
+        // Generate the full client ID and client name.
+        String clientId = CLIENT_ID_BASE + clientSuffix;
+        String clientName = CLIENT_NAME_BASE + clientSuffix;
+        logger.info("Creating: {} : {}", clientId, clientName);
+
+        // Initialize the Keycloak client representation.
+        ClientRepresentation cr = new ClientRepresentation();
+        cr.setClientId(clientId);
+        cr.setName(clientName);
+        cr.setDescription(CLIENT_DESCRIPTION);
+
+        // Configure the default parameters of the client representation.
+        populateDefaultsClientRepresentation(cr, scopes);
+
+        // Delete the client and remove files created for it.
+        // TODO Remove or add a flag so this can be turned off when not in test mode
+        processClientCleanUp(cr.getClientId(), clientsResource);
+
+        // Log a warning if the client already exists.
+        if (existsClient(clientId, clientsResource)) {
+            logger.warn("Client {} already exists", clientId);
+            return null;
+        }
+
+        // Create the client and store the response.
+        Response response = clientsResource.create(cr);
+
+        logger.info("Status: {}", response.getStatus());
+
+        if (response.getStatus() != 201) {
+            throw new Exception(response.getStatusInfo().getReasonPhrase());
+        }
+
+        ClientRepresentation clientRepresentation = retrieveClient(clientsResource, cr.getClientId());
+        ClientResource clientResource = clientsResource.get(clientRepresentation.getId());
+
+        if (clientResource == null) {
+            throw new Exception("New Client not found");
+        }
+
+        KeyStoreConfig keyStoreConfig = createKeyStoreConfig(clientId);
+
+        KeyStore keyStore = uploadKeyAndCertificate(clientId, keyStoreConfig.getKeyPassword(), clientResource);
+
+        X509Certificate x509Certificate = (X509Certificate) keyStore.getCertificate(clientId);
+        ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig, x509Certificate.getNotAfter().toString());
+        logger.info(cc.toString());
+
+        return cc;
+    }
+
+    private void populateDefaultsClientRepresentation(ClientRepresentation cr, List<String> scopes) {
+        cr.setEnabled(true);
+
+        cr.setPublicClient(false); // Client authentication
+        cr.setAuthorizationServicesEnabled(false); // Authorization
+
+        cr.setStandardFlowEnabled(false); // Standard flow
+        cr.setImplicitFlowEnabled(false); // Implicit flow
+        cr.setDirectAccessGrantsEnabled(false); // Direct access grants
+        cr.setServiceAccountsEnabled(true); // Service accounts roles
+
+        cr.setFrontchannelLogout(false);
+
+        cr.setClientAuthenticatorType(AUTH_TYPE_CLIENT_JWT); // Client Authenticator
+
+        // Configure client scopes by setting default scopes. This removes any
+        // predetermined defaults by overwriting them with those in the provided
+        // list.
+        cr.setDefaultClientScopes(scopes);
+
+        /* Add an Audience mapper */
+        cr.setProtocolMappers(createAudienceProtocolMapper());
+    }
+
+    private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String expiryDate) {
+        ClientCredentials cc = new ClientCredentials();
+        cc.setClientId(clientId);
+        cc.setCertFileName(keyStoreConfig.getKeyAlias() + fileExtension);
+        cc.setCertAlias(keyStoreConfig.getKeyAlias());
+        cc.setKeyPassword(keyStoreConfig.getKeyPassword());
+        cc.setStorePassword(keyStoreConfig.getStorePassword());
+        cc.setExpirtyDate(expiryDate);
+        return cc;
+    }
 
     public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
-
-        //Generate a keypair
-    	KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        // Generate a keypair.
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
         KeyPair kp = kpg.generateKeyPair();
 
-        //Generate an x509 certificate using the keypair (required for creating java key stores)
+        // Generate an x509 certificate using the keypair (required for creating
+        // java key stores).
         X509Certificate x509Certificate = generateX509(kp, 1, clientId);
         X509Certificate[] certChain = new X509Certificate[1];
         certChain[0] = x509Certificate;
 
-        //Generate a java key store
+        // Generate a java key store.
         KeyStore keyStore = KeyStore.getInstance(PKCS12.toString());
         char[] password = keystorePassword.toCharArray();
         keyStore.load(null, password);
-        
-        //Add the entries
+
+        // Add the entries.
         keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
 
-        //TODO If needed add realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys        
-        
+        // TODO If needed add realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys
+
         StringWriter sw = new StringWriter();
         try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
             pw.writeObject(x509Certificate);
@@ -314,10 +353,12 @@ public class KeycloakService {
         FileOutputStream certFos = new FileOutputStream(x509CertificatePath, false);
         certFos.write(sw.toString().getBytes(StandardCharsets.UTF_8));
         certFos.close();
-        
-        //Upload the newly created public cert to the keycloak client's as its JWT signing public key, the private key will be sent to the client in the pfx file created later
-        
-		ClientAttributeCertificateResource certificateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
+
+        // Upload the newly created public cert to the keycloak client as its
+        // JWT signing public key, the private key will be sent to the client in
+        // the pfx file created later.
+
+        ClientAttributeCertificateResource certificateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
 
         MultipartFormDataOutput keyCertForm = new MultipartFormDataOutput();
 
@@ -327,7 +368,7 @@ public class KeycloakService {
         keyCertForm.addFormData("storePassword", keystorePassword, MediaType.TEXT_PLAIN_TYPE);
 
         FileInputStream fs = new FileInputStream(x509CertificatePath);
-        byte [] x509CertificateContent = fs.readAllBytes();
+        byte[] x509CertificateContent = fs.readAllBytes();
         fs.close();
 
         MultipartFormDataOutput form = new MultipartFormDataOutput();
@@ -337,31 +378,31 @@ public class KeycloakService {
         logger.debug("Certificate: {}", uploadedJksCertificate.getCertificate());
         logger.debug("privateKey not included: {}", uploadedJksCertificate.getPrivateKey());
 
-		File f = new File(outputLocationCerts + clientId + fileExtension);
-		FileOutputStream fos = new FileOutputStream(f);
-		keyStore.store(fos, keystorePassword.toCharArray());
-		
-		return keyStore;
+        File f = new File(outputLocationCerts + clientId + fileExtension);
+        FileOutputStream fos = new FileOutputStream(f);
+        keyStore.store(fos, keystorePassword.toCharArray());
+
+        return keyStore;
     }
 
     private X509Certificate generateX509(KeyPair keyPair, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-    	return generateX509(keyPair.getPublic(), keyPair.getPrivate(), certExpiryYears, clientId);
+        return generateX509(keyPair.getPublic(), keyPair.getPrivate(), certExpiryYears, clientId);
     }
-    
-    private X509Certificate generateX509(PublicKey publicKey, PrivateKey privateKey, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 
-        //Setup effective and expiry dates
-        //Bouncy Castle currently only works with java.util.Date but it's still nicer to create them with java.time.LocalDate
+    private X509Certificate generateX509(PublicKey publicKey, PrivateKey privateKey, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        // Setup effective and expiry dates.
+        // Bouncy Castle currently only works with java.util.Date but it's still
+        // nicer to create them with java.time.LocalDate.
         LocalDate effectiveLocalDate = LocalDate.now();
         LocalDate expiryLocalDate = effectiveLocalDate.plusYears(certExpiryYears);
 
         Date effectiveDate = java.sql.Date.valueOf(effectiveLocalDate);
         Date expiryDate = java.sql.Date.valueOf(expiryLocalDate);
 
-        //Random for the cert serial
+        // Random for the cert serial.
         SecureRandom random = new SecureRandom();
 
-        //Set X509 initialization properties
+        // Set X509 initialization properties.
         X500Name issuer = new X500Name("CN=" + clientId);
         BigInteger serial = new BigInteger(160, random);
         Time notBefore = new Time(effectiveDate);
@@ -369,13 +410,16 @@ public class KeycloakService {
         X500Name subject = new X500Name("CN=" + clientId);
         SubjectPublicKeyInfo publicKeyInfo = SubjectPublicKeyInfo.getInstance(publicKey.getEncoded());
 
-        //Create cert builder
+        // Create cert builder.
         X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(issuer, serial, notBefore, notAfter, subject, publicKeyInfo);
-        //Create cert signer using private key
+
+        // Create cert signer using private key.
         ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSAEncryption").build(privateKey);
-        //Create the X509 certificate
+
+        // Create the X509 certificate.
         X509CertificateHolder certHolder = certBuilder.build(signer);
-        //Extract X509 cert from custom Bouncy Castle wrapper
+
+        // Extract X509 cert from custom Bouncy Castle wrapper.
         X509Certificate cert = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider()).getCertificate(certHolder);
 
         cert.verify(publicKey);
@@ -384,196 +428,211 @@ public class KeycloakService {
     }
 
     private KeyStoreConfig createKeyStoreConfig(String clientId) {
-		KeyStoreConfig keyStoreConfig = new KeyStoreConfig();
+        KeyStoreConfig keyStoreConfig = new KeyStoreConfig();
 
-		String password = generatePassword();
-		
-		logger.info("ClienID: {} : Password {}", clientId, password);
+        String password = generatePassword();
 
-		keyStoreConfig.setRealmCertificate(true);
-		keyStoreConfig.setRealmAlias(realm);
-		keyStoreConfig.setKeyAlias(clientId);
-		keyStoreConfig.setKeyPassword(password);
-		keyStoreConfig.setStorePassword(password);
-		keyStoreConfig.setFormat(keystoreFormat);
-		return keyStoreConfig;
-	}
+        logger.info("ClienID: {} : Password {}", clientId, password);
 
-	private String generatePassword() {
-		RandomStringGenerator generator = new RandomStringGenerator.Builder()
-				.selectFrom(PASSWORD_CHARACTERS.toCharArray())
-		        .build();
-		String password = generator.generate(16);
-		return password;
-	}
+        keyStoreConfig.setRealmCertificate(true);
+        keyStoreConfig.setRealmAlias(realm);
+        keyStoreConfig.setKeyAlias(clientId);
+        keyStoreConfig.setKeyPassword(password);
+        keyStoreConfig.setStorePassword(password);
+        keyStoreConfig.setFormat(keystoreFormat);
+        return keyStoreConfig;
+    }
 
-	/*
-	 * Creates an Audience Mapper
-	 */
-	private List<ProtocolMapperRepresentation> createAudienceProtocolMapper() {
+    private String generatePassword() {
+        RandomStringGenerator generator = new RandomStringGenerator.Builder()
+                .selectFrom(PASSWORD_CHARACTERS.toCharArray())
+                .build();
+        String password = generator.generate(16);
+        return password;
+    }
 
-//		Sample Mapper config from existing client with Audience mapper
-//		Protocol: openid-connect
-//		ProtocolMapper: oidc-audience-mapper
-//		ConsentText: null
-//		ID: 590d6374-6f6b-4870-b1ac-4d0856262eb3
-//		Name: Pharmanet Audience
-//		Key: id.token.claim; Value: false
-//		Key: access.token.claim; Value: true
-//		Key: included.custom.audience; Value: pharmanet
+    /*
+     * Creates an Audience Mapper
+     */
+    private List<ProtocolMapperRepresentation> createAudienceProtocolMapper() {
 
-		ProtocolMapperRepresentation pmr = new ProtocolMapperRepresentation();
-		pmr.setName("Pharmanet Audience");
-		pmr.setProtocol("openid-connect");
-		pmr.setProtocolMapper("oidc-audience-mapper");
+        // Sample Mapper config from existing client with Audience mapper.
+        // Protocol: openid-connect
+        // ProtocolMapper: oidc-audience-mapper
+        // ConsentText: null
+        // ID: 590d6374-6f6b-4870-b1ac-4d0856262eb3
+        // Name: Pharmanet Audience
+        // Key: id.token.claim; Value: false
+        // Key: access.token.claim; Value: true
+        // Key: included.custom.audience; Value: pharmanet
 
-		Map<String, String> audienceMapperConfig = new HashMap<>();
-		audienceMapperConfig.put("included.custom.audience", "pharmanet");
-		audienceMapperConfig.put("id.token.claim", "false");
-		audienceMapperConfig.put("access.token.claim", "true");
-		pmr.setConfig(audienceMapperConfig);
+        ProtocolMapperRepresentation pmr = new ProtocolMapperRepresentation();
+        pmr.setName("Pharmanet Audience");
+        pmr.setProtocol("openid-connect");
+        pmr.setProtocolMapper("oidc-audience-mapper");
 
-		List<ProtocolMapperRepresentation> pmrs = new ArrayList<>();
-		pmrs.add(pmr);
-		
-		return pmrs;
-	}
+        Map<String, String> audienceMapperConfig = new HashMap<>();
+        audienceMapperConfig.put("included.custom.audience", "pharmanet");
+        audienceMapperConfig.put("id.token.claim", "false");
+        audienceMapperConfig.put("access.token.claim", "true");
+        pmr.setConfig(audienceMapperConfig);
 
-	/*
-	 * Retrieve the client scopes from the properties file
-	 */
-	private List<String> retrieveClientScopes(Properties configProperties) {
-		String scopes = configProperties.getProperty(CONFIG_PROPERTY_SCOPES);
-		logger.info("Scopes: {}", scopes);
-		String[] scopesArray = StringUtils.split(scopes.strip().replace(" ", ""), ",");
-		return Arrays.asList(scopesArray);
-	}
+        List<ProtocolMapperRepresentation> pmrs = new ArrayList<>();
+        pmrs.add(pmr);
 
-	private void writeCsvFromBean(List<ClientCredentials> clientCredentials) throws Exception {
+        return pmrs;
+    }
 
-		Path path = Paths.get(outputFile);
-		try (Writer writer = new FileWriter(path.toString())) {
+    /*
+     * Retrieve the client scopes from the properties file
+     */
+    private List<String> retrieveClientScopes(Properties configProperties) {
+        String scopes = configProperties.getProperty(CONFIG_PROPERTY_SCOPES);
+        logger.info("Scopes: {}", scopes);
+        String[] scopesArray = StringUtils.split(scopes.strip().replace(" ", ""), ",");
+        return Arrays.asList(scopesArray);
+    }
 
-			StatefulBeanToCsv<ClientCredentials> sbc = new StatefulBeanToCsvBuilder<ClientCredentials>(writer)
-					.withQuotechar(ICSVWriter.NO_QUOTE_CHARACTER)
-					.withSeparator(CSVWriter.DEFAULT_SEPARATOR).build();
+    private void writeCsvFromBean(List<ClientCredentials> clientCredentials) throws Exception {
 
-			sbc.write(clientCredentials);
-		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-			logger.error("Error writing client details", e.getMessage());
-			throw new Exception("Error writing file");
-		}
-	}
+        Path path = Paths.get(outputFile);
+        try (Writer writer = new FileWriter(path.toString())) {
 
-	public void processClientsCleanUp(List<ClientCredentials> clientCredentials) {
-		
-		ClientsResource clientsResource = realmResource.clients();
-		
-		clientCredentials.forEach(cc -> {
-			processClientCleanUp(cc.getClientId(), clientsResource);
-		});
-	}
+            StatefulBeanToCsv<ClientCredentials> sbc = new StatefulBeanToCsvBuilder<ClientCredentials>(writer)
+                    .withQuotechar(ICSVWriter.NO_QUOTE_CHARACTER)
+                    .withSeparator(CSVWriter.DEFAULT_SEPARATOR).build();
 
-	public void processClientCleanUp(String clientId, ClientsResource clientsResource) {
-		ClientRepresentation clientRepresentation = retrieveClient(clientsResource, clientId);
-		if (clientRepresentation != null) {
-			printClientDetails(clientRepresentation);
-			deleteClient(clientsResource, clientRepresentation.getId());
-			deleteKeystore(clientId);
-		}
-	}
+            sbc.write(clientCredentials);
+        } catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
+            logger.error("Error writing client details", e.getMessage());
+            throw new Exception("Error writing file");
+        }
+    }
 
-	private void deleteKeystore(String clientId) {
-		File f = new File(outputLocationCerts + clientId + fileExtension);
-		logger.info("Deleting {}", f.getAbsolutePath());
-		boolean deleted = f.delete();
-		if (deleted) {
-			logger.info("Deleted {}", f.getAbsolutePath());
-		} else {
-			logger.info("Failed to delete {}", f.getAbsolutePath());
-		}
-	}
+    public void processClientsCleanUp(List<ClientCredentials> clientCredentials) {
 
-	private ClientRepresentation retrieveClient(ClientsResource clientsResource, String clientId) {
-		List<ClientRepresentation> clientRepresentations = clientsResource.findByClientId(clientId);
-		if (clientRepresentations.size() == 1) {
-			return clientRepresentations.get(0);
-		}
-		return null;
-	}
+        ClientsResource clientsResource = realmResource.clients();
 
-	private boolean existsClient(String clientId, ClientsResource clientsResource) {
-		return retrieveClient(clientsResource, clientId) != null;
-	}
+        clientCredentials.forEach(cc -> {
+            processClientCleanUp(cc.getClientId(), clientsResource);
+        });
+    }
 
-	private void deleteClient(ClientsResource clientsResource, String id) {
-		logger.info("Removing client ID: {}", id);
-		ClientResource clientResource = clientsResource.get(id);
-		clientResource.remove();
-		logger.info("Removed client ID: {}", id);
-	}
+    public void processClientCleanUp(String clientId, ClientsResource clientsResource) {
+        ClientRepresentation clientRepresentation = retrieveClient(clientsResource, clientId);
+        if (clientRepresentation != null) {
+            printClientDetails(clientRepresentation);
+            deleteClient(clientsResource, clientRepresentation.getId());
+            deleteKeystore(clientId);
+        }
+    }
 
-	private void printClientDetails(ClientRepresentation clientRepresentation) {
-		List<ProtocolMapperRepresentation> protocolMapperRepresentations = clientRepresentation
-				.getProtocolMappers();
-		protocolMapperRepresentations.forEach(pm -> {
-			logger.debug("Protocol: {}", pm.getProtocol());
-			logger.debug("ProtocolMapper: {}", pm.getProtocolMapper());
-			logger.debug("ID: {}", pm.getId());
-			logger.debug("Name: {}", pm.getName());
-			Map<String, String> config = pm.getConfig();
-			config.forEach((key, value) -> {
-				logger.debug("Config Key: {}; Value: {}", key, value);
-			});
-		});
+    private void deleteKeystore(String clientId) {
+        File f = new File(outputLocationCerts + clientId + fileExtension);
+        logger.info("Deleting {}", f.getAbsolutePath());
+        boolean deleted = f.delete();
+        if (deleted) {
+            logger.info("Deleted {}", f.getAbsolutePath());
+        } else {
+            logger.info("Failed to delete {}", f.getAbsolutePath());
+        }
+    }
 
-		logger.debug("Client Rep getClientAuthenticatorType: {}",
-				clientRepresentation.getClientAuthenticatorType());
-		logger.debug("Client Rep AuthorizationSettings: {}", clientRepresentation.getAuthorizationSettings());
-		logger.debug("Client Rep RegistrationAccessToken: {}",
-				clientRepresentation.getRegistrationAccessToken());
-		logger.debug("Client Rep AuthorizationServicesEnabled: {}",
-				clientRepresentation.getAuthorizationServicesEnabled());
-		logger.debug("Client Rep Protocol: {}", clientRepresentation.getProtocol());
+    private ClientRepresentation retrieveClient(ClientsResource clientsResource, String clientId) {
+        List<ClientRepresentation> clientRepresentations = clientsResource.findByClientId(clientId);
+        if (clientRepresentations.size() == 1) {
+            return clientRepresentations.get(0);
+        }
+        return null;
+    }
 
-		Map<String, String> attributes = clientRepresentation.getAttributes();
-		attributes.forEach((k, v) -> {
-			logger.debug("Attribute Key: {}; Value: {}", k, v);
-		});
-	}
+    private boolean existsClient(String clientId, ClientsResource clientsResource) {
+        return retrieveClient(clientsResource, clientId) != null;
+    }
 
-	private void initOutput(Properties configProperties) throws Exception {
-		logger.debug("Initializing file location.");
-		
-		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
-		outputLocationCerts = outputLocation + "\\certs\\";
-		outputLocationX509Certs = outputLocation + "\\certs\\x509\\";
-		
-		outputFile = outputLocation + "\\client_information_" + batchNumber + ".csv";
-		
-		File outputLocationX509CertsDir = new File(outputLocationX509Certs);
-		if (!outputLocationX509CertsDir.exists()) {
-			logger.debug("File location directory [{}] did not exist so it will be created.", outputLocationX509Certs);			
-			boolean dirCreated = outputLocationX509CertsDir.mkdirs();
-			if (!dirCreated) {
-				logger.error("Failed to initialize output dir: {}", outputLocationX509CertsDir.getAbsolutePath());
-				throw new Exception("Failed to initialize output dir");
-			}
-		}
-		File outputFileFile = new File(outputFile);		
-		if (outputFileFile.exists()) {
-			throw new Exception(String.format("Output file %s already exists. Assign new batch number for this run.", outputFile));
-		}
-		logger.info("Output file is: {}. Certs are in: {}", outputFile, outputLocationCerts);			
-	}
+    private void deleteClient(ClientsResource clientsResource, String id) {
+        logger.info("Removing client ID: {}", id);
+        ClientResource clientResource = clientsResource.get(id);
+        clientResource.remove();
+        logger.info("Removed client ID: {}", id);
+    }
 
-	private String determineFileExtenstion() {
-		
-		switch (KeystoreFormat.valueOf(keystoreFormat)) {
-		case PKCS12: return FILE_EXTENSION_PFX;
-		case JKS: return FILE_EXTENSION_JKS;
-		default: return null;
-		}
-	}
+    private void printClientDetails(ClientRepresentation clientRepresentation) {
+        List<ProtocolMapperRepresentation> protocolMapperRepresentations = clientRepresentation
+                .getProtocolMappers();
+        protocolMapperRepresentations.forEach(pm -> {
+            logger.debug("Protocol: {}", pm.getProtocol());
+            logger.debug("ProtocolMapper: {}", pm.getProtocolMapper());
+            logger.debug("ID: {}", pm.getId());
+            logger.debug("Name: {}", pm.getName());
+            Map<String, String> config = pm.getConfig();
+            config.forEach((key, value) -> {
+                logger.debug("Config Key: {}; Value: {}", key, value);
+            });
+        });
+
+        logger.debug("Client Rep getClientAuthenticatorType: {}",
+                clientRepresentation.getClientAuthenticatorType());
+        logger.debug("Client Rep AuthorizationSettings: {}", clientRepresentation.getAuthorizationSettings());
+        logger.debug("Client Rep RegistrationAccessToken: {}",
+                clientRepresentation.getRegistrationAccessToken());
+        logger.debug("Client Rep AuthorizationServicesEnabled: {}",
+                clientRepresentation.getAuthorizationServicesEnabled());
+        logger.debug("Client Rep Protocol: {}", clientRepresentation.getProtocol());
+
+        Map<String, String> attributes = clientRepresentation.getAttributes();
+        attributes.forEach((k, v) -> {
+            logger.debug("Attribute Key: {}; Value: {}", k, v);
+        });
+    }
+
+    /**
+     * Initialize the output files and directories for this Keycloak session.
+     * @param configPropertiesthe properties defining the session's output locations
+     * @throws IOException if the output directory cannot be created or if the output file already exists
+     */
+    private void initOutput(Properties configProperties) throws Exception {
+        logger.debug("Initializing file location.");
+
+        // Build the output paths.
+        outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
+        outputLocationCerts = outputLocation + "\\certs\\";
+        outputLocationX509Certs = outputLocation + "\\certs\\x509\\";
+        outputFile = outputLocation + "\\client_information_" + batchNumber + ".csv";
+
+        File outputLocationX509CertsDir = new File(outputLocationX509Certs);
+
+        // Create the certificate output directory if it doesn't already exist.
+        if (!outputLocationX509CertsDir.exists()) {
+            logger.debug("File location directory [{}] did not exist so it will be created.", outputLocationX509Certs);
+            boolean dirCreated = outputLocationX509CertsDir.mkdirs();
+
+            // Throw an exception if the directory could not be created.
+            if (!dirCreated) {
+                logger.error("Failed to initialize output dir: {}", outputLocationX509CertsDir.getAbsolutePath());
+                throw new IOException("Failed to initialize output dir");
+            }
+        }
+
+        File outputFileFile = new File(outputFile);
+
+        // Verify that the output file does not already exist.
+        if (outputFileFile.exists()) {
+            throw new IOException(String.format("Output file %s already exists. Assign new batch number for this run.", outputFile));
+        }
+
+        logger.info("Output file is: {}. Certs are in: {}", outputFile, outputLocationCerts);
+    }
+
+    private String determineFileExtension() {
+        switch (KeystoreFormat.valueOf(keystoreFormat)) {
+            case PKCS12:
+                return FILE_EXTENSION_PFX;
+            case JKS:
+                return FILE_EXTENSION_JKS;
+            default:
+                return null;
+        }
+    }
 
 }
