@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ClientCredentialsGrant;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -58,6 +59,9 @@ public class KeycloakServiceTest {
 	private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
 
 	private static String configFileName;
+
+	private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
+
 	private static Properties configProperties;
 
 	/**
@@ -112,74 +116,66 @@ public class KeycloakServiceTest {
 	 */
 	@Test
 	public void testBulkClientGeneration_verify_authentication() throws Exception, URISyntaxException, GeneralSecurityException, IOException, JOSEException, ParseException {
-		// Initialize the Keycloak actor.
 		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);
+	    List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, 1, 25828545);
 
-		// Create the client and retrieve its credentials.
-		List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, 1, 20);
+	    assertEquals(1, clientCredentials.size());
+	    
+        URI tokenEndpoint = new URI(configProperties.getProperty(CONFIG_PROPERTY_URL) + "/realms/" + configProperties.getProperty(CONFIG_PROPERTY_REALM) + "/protocol/openid-connect/token");
 
-		// Validate the number of clients created.
-		assertEquals(1, clientCredentials.size(), "Incorrect number of client credentials returned.");
+        // Construct the client credentials grant type
+        AuthorizationGrant clientGrant = new ClientCredentialsGrant();
 
-		// Build the Keycloak token endpoint URI.
-		URI tokenEndpoint = new URI(configProperties.getProperty(CONFIG_PROPERTY_URL) + "/realms/" + configProperties.getProperty(CONFIG_PROPERTY_REALM) + "/protocol/openid-connect/token");
+        // Get the client authentication method
+        ClientAuthentication clientAuthentication = buildAuthenticationMethod(clientCredentials.get(0), tokenEndpoint);
 
-		// Construct the client credentials grant type.
-		AuthorizationGrant clientGrant = new ClientCredentialsGrant();
+        // Make the token request
+        Scope requiredScopes = new Scope("openid system/*.write system/*.read system/Claim.read system/Claim.write system/Patient.read system/Patient.write".split(" "));
+        TokenRequest tokenRequest = new TokenRequest(tokenEndpoint, clientAuthentication, clientGrant, requiredScopes);
 
-		// Get the client authentication method.
-		ClientAuthentication clientAuthentication = buildAuthenticationMethod(clientCredentials.get(0), tokenEndpoint);
+        TokenResponse tokenResponse = TokenResponse.parse(tokenRequest.toHTTPRequest().send());
 
-		// Declare the scopes and make the token request.
-		Scope requiredScopes = new Scope("openid,system/*.write,system/*.read,system/Claim.read,system/Claim.write,system/Patient.read,system/Patient.write".split(","));
-		TokenRequest tokenRequest = new TokenRequest(tokenEndpoint, clientAuthentication, clientGrant, requiredScopes);
+        // Check if we got a 2xx response back from the server
+        assertTrue(tokenResponse.indicatesSuccess());
 
-		// Send, receive, and parse the token response.
-		TokenResponse tokenResponse = TokenResponse.parse(tokenRequest.toHTTPRequest().send());
+        AccessTokenResponse successResponse = tokenResponse.toSuccessResponse();
 
-		// Check that the server returned a successful response.
-		assertTrue(tokenResponse.indicatesSuccess(), "Token response indicates failed authentication.");
+        // Get the access token and set the expiry time
+        AccessToken accessToken = successResponse.getTokens().getAccessToken();
+        
+        logger.info("Token: {}", accessToken.getValue());
+	    
+        String authorizationHeader = accessToken.toAuthorizationHeader();
 
-		// Get the access token.
-		AccessToken accessToken = tokenResponse.toSuccessResponse().getTokens().getAccessToken();
-		logger.info("Token: {}", accessToken.getValue());
-
-		// Embed the access token in an authorization header.
-		String authorizationHeader = accessToken.toAuthorizationHeader();
-
-		// Load the sample message.
-		HttpRequest.BodyPublisher messagePublisher = HttpRequest.BodyPublishers.ofString(SAMPLE_MESSAGE_PATIENT);
-
-		// Initialize the HTTP client and build the HTTP request.
-		HttpClient httpClient = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest
-				// .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Claim"))
-				.newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Patient"))
-				// .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/MedicationStatement"))
-				.setHeader("Authorization", authorizationHeader)
-				.POST(messagePublisher)
-				.setHeader("Content-Type", "application/json")
-				.build();
-
-		try {
-			HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-
-			int statusCode = response.statusCode();
-			System.out.println("HTTP status: " + statusCode);
-
-			/*
-			 * Note, the response returned depends on PPM API app PharmaNet's endpoint so
-			 * this test result may vary but it's purpose is to determine if
-			 * authentication was succcessful, this can be confirmed by finding the log
-			 * entry:
-			 *   "Informational: HL7v2 Authorization Success! Scope(s) provided are correct for the HL7v2 message"
-			 * in the Pod for the Patient service at https://console.apps.silver.devops.gov.bc.ca/k8s/ns/2f77cb-dev/deploymentconfigs/patientservice-dev-ppmservice.
-			 */
-		} catch (InterruptedException | IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		keycloakService.processClientsCleanUp(clientCredentials);
+        HttpRequest.BodyPublisher messagePublisher = HttpRequest.BodyPublishers.ofString(SAMPLE_MESSAGE_PATIENT);  
+        
+        HttpClient httpClient = HttpClient.newHttpClient();  
+        HttpRequest request = HttpRequest  
+//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Claim"))
+                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Patient"))
+//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/MedicationStatement"))
+                .setHeader("Authorization", authorizationHeader)
+                .POST(messagePublisher)  
+                .setHeader("Content-Type", "application/json")  
+                .build();  
+      
+        try {  
+            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());  
+      
+            int statusCode = response.statusCode();  
+            System.out.println("HTTP status: " + statusCode);  
+      
+            /* Note, the response returned depends on PPM API app PharmaNet's endpoint so this test result may vary but it's purpose is to determine if
+             * authentication was succcessful, this can be confirmed by finding the log entry:
+             *  "Informational: HL7v2 Authorization Success! Scope(s) provided are correct for the HL7v2 message"
+             *  in the Pod for the Patient service at https://console.apps.silver.devops.gov.bc.ca/k8s/ns/2f77cb-dev/deploymentconfigs/patientservice-dev-ppmservice.
+             */            
+        }  
+        catch (InterruptedException | IOException e) {  
+            throw new RuntimeException(e);  
+        }  
+	    
+	    keycloakService.processClientsCleanUp(clientCredentials);
 	}
 
 	/**
@@ -194,7 +190,7 @@ public class KeycloakServiceTest {
 	 */
 	public ClientAuthentication buildAuthenticationMethod(ClientCredentials clientCredentials, URI tokenEndpoint) throws GeneralSecurityException, IOException, JOSEException {
 		// Access the client's certificate file.
-		File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "/certs/" + clientCredentials.getCertFileName());
+        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER) + "\\certs\\" + clientCredentials.getCertFileName());
 
 		// Unlock and load the key store from the certificate file.
 		KeyStore keyStore = KeystoreTools.loadKeyStore(certFile, clientCredentials.getStorePassword(), configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT));

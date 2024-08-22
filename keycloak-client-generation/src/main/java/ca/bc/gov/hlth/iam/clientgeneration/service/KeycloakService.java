@@ -24,6 +24,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -322,42 +323,45 @@ public class KeycloakService {
 		return cc;
 	}
 
-	public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
-		// Generate a keypair.
-		KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-		kpg.initialize(2048);
-		KeyPair kp = kpg.generateKeyPair();
+    public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
 
-		// Generate an x509 certificate using the keypair (required for creating
-		// java key stores).
-		X509Certificate x509Certificate = generateX509(kp, 1, clientId);
-		X509Certificate[] certChain = new X509Certificate[1];
+		CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+//		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
+		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
+        
+		//Generate a keypair
+    	KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        KeyPair kp = kpg.generateKeyPair();
+
+        X509Certificate[] certChain = new X509Certificate[1];
+        //Generate an x509 certificate using the keypair (required for creating java key stores)
+        X509Certificate x509Certificate = generateX509(kp, 1, clientId);
 		certChain[0] = x509Certificate;
 
-		// Generate a java key store.
-		KeyStore keyStore = KeyStore.getInstance(PKCS12.toString());
-		char[] password = keystorePassword.toCharArray();
-		keyStore.load(null, password);
+        //Generate a java key store
+        KeyStore keyStore = KeyStore.getInstance(PKCS12.toString());
+        char[] password = keystorePassword.toCharArray();
+        keyStore.load(null, password);
+        
+        //Add the entries
+        keyStore.setCertificateEntry("moh_applications", realmCert);
+        keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
 
-		// Add the entries.
-		keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
-
-		// TODO If needed add realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys
-
-		StringWriter sw = new StringWriter();
-		try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
-			pw.writeObject(x509Certificate);
-		}
-		// Store the public key in cert format
-		String x509CertificatePath = outputLocationX509Certs + clientId + FILE_EXTENSION_CRT;
-		FileOutputStream certFos = new FileOutputStream(x509CertificatePath, false);
-		certFos.write(sw.toString().getBytes(StandardCharsets.UTF_8));
-		certFos.close();
-
-		// Upload the newly created public cert to the keycloak client as its
-		// JWT signing public key, the private key will be sent to the client in
-		// the pfx file created later.
-
+        //TODO If needed add realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys        
+        
+        StringWriter sw = new StringWriter();
+        try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
+            pw.writeObject(x509Certificate);
+        }
+        // Store the public key in cert format
+        String x509CertificatePath = outputLocationX509Certs + clientId + FILE_EXTENSION_CRT;
+        FileOutputStream certFos = new FileOutputStream(x509CertificatePath, false);
+        certFos.write(sw.toString().getBytes(StandardCharsets.UTF_8));
+        certFos.close();
+        
+        //Upload the newly created public cert to the keycloak client's as its JWT signing public key, the private key will be sent to the client in the pfx file created later
+        
 		ClientAttributeCertificateResource certificateResource = clientResource.getCertficateResource(JWT_CREDENTIAL);
 
 		MultipartFormDataOutput keyCertForm = new MultipartFormDataOutput();
