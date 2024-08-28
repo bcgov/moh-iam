@@ -12,14 +12,17 @@ package ca.bc.gov.hlth.iam.dataloader.service;
  *
  */
 public enum UsernameTypeEnum {
-
+	BCPROVIDER("@bcp", false), // BC Provider: username@bcp
+	BCSC("@bcp", false), // BCSC: username@bcsc
+	BCEID_BUSINESS("@bcp", false), // BCeID Business: username@bceid_business
+	FNHA("@bcp", false), // FNHA: username@fnha
 	IDIR("@idir", false),		// IDIR: username@idir
 	FHA("sfhr\\", true),		// Fraser Health: sfhr\\username
 	IHA("iha\\", true),			// Interior Health: iha\\username
 	NHA("nirhb\\", true),		// Northern Health: nirhb\\username AKA NHA
 	PHSA("phsabc\\", true),		// Provincial Health: phsabc\\username
 	VCH("vch\\", true),			// Vancouver Coastal Health: vch\\username
-	VRHB("vrhb\\", true),		// Vancouver Coastal Health: vrhb\\username	
+	VRHB("vrhb\\", true),		// Vancouver Coastal Health: vrhb\\username
 	PHC("infosys\\", true),		// Providence Health Care: infosys\\username
 	VIHA("viha\\", true),		// Island Health: viha\\username
 	

@@ -1,5 +1,8 @@
 package ca.bc.gov.hlth.iam.dataloader.service;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,5 +44,21 @@ public class CSVFileService {
 	    logger.info("Extracted records: {}", csvList.size());
 	    
 	    return csvList;
-	}	
+	}
+
+	public void generateCsvFile(List<UserRepresentation> users, String filePath) throws IOException {
+		try (FileWriter fileWriter = new FileWriter(filePath);
+			 PrintWriter printWriter = new PrintWriter(fileWriter)) {
+
+			printWriter.println("USERNAME,ID");
+
+			for (UserRepresentation user : users) {
+				printWriter.println(user.getUsername() + "," + user.getId());
+			}
+			logger.info("File created at this location: {}", filePath);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
