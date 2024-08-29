@@ -1,10 +1,9 @@
 package ca.bc.gov.hlth.iam.clientgeneration;
 
-import java.util.Arrays;
-import java.util.Properties;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,20 +51,19 @@ public class Main {
 			return;
 		}
 
-		KeycloakService keycloakService;
+		try {			
+			KeycloakService keycloakService = new KeycloakService(configProperties, environment);
+			
+			keycloakService.initOutput(configProperties);
 
-		// Try to instantiate the Keycloak actor.
-		try {
-			keycloakService = new KeycloakService(configProperties, environment);
-		}
-		catch (Exception e) {
-			logger.error("Failed to create Keycloak service: ", e);
-			logger.error("Abort.");
+			keycloakService.addClients(configProperties, determineNumberOfClients(args), determineClientStartNumber(args));
+
+	    	logger.info("Completed creating clients.");
+		} catch (Exception e) {
+			logger.error("Creating clients could not be completed due to: " + e.getMessage());
 			return;
 		}
 
-		// Add the clients.
-		keycloakService.addClients(configProperties, determineNumberOfClients(args), determineClientStartNumber(args));
 		logger.info("Completed creating clients.");
 	}
 

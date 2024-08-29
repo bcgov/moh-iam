@@ -38,6 +38,7 @@ import java.util.Properties;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.RandomStringGenerator;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -80,7 +81,7 @@ public class KeycloakService {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
 
-	private static final String CLIENT_ID_BASE = "ppm-api-BC";
+	public static final String CLIENT_ID_BASE = "ppm-api-BC";
 
 	private static final String CLIENT_NAME_BASE = "PPM API ";
 
@@ -113,7 +114,9 @@ public class KeycloakService {
 
 	private static final String FILE_EXTENSION_CRT = ".crt";
 
-	private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&^";
+	private static final String PASSWORD_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&";
+
+	private static final String MOH_APPLICATIONS = "moh_applications";
 
 	private String realm;
 
@@ -170,8 +173,7 @@ public class KeycloakService {
 
 		batchNumber = configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER);
 
-		// Initialize the output locations.
-		initOutput(configProperties);
+		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
 
 		logger.info("Keycloak connection initialized.");
 	}
@@ -216,7 +218,7 @@ public class KeycloakService {
 			writeCsvFromBean(clientCredentials);
 		} catch (Exception e) {
 			logger.error("Error during batch run. Stopping processing. All created clients will be removed. Please fix error and retry. Error was: {}", e.getMessage());
-			processClientsCleanUp(clientCredentials);
+			cleanUp(clientCredentials);
 		}
 
 		logger.info("End addClients.");
@@ -233,9 +235,7 @@ public class KeycloakService {
 	public ClientCredentials addClient(ClientsResource clientsResource, List<String> scopes, int clientIteration) throws Exception {
 		logger.info("Begin addingClient...");
 
-		// Generate the client ID suffix based on the numeric ID.
-		String clientSuffix = StringUtils.leftPad(Integer.toString(clientIteration), 8, "0");
-		logger.info("Using clientSuffix: {}", clientSuffix);
+		String clientSuffix = generateClientIDSuffix(clientIteration);
 
 		// Generate the full client ID and client name.
 		String clientId = CLIENT_ID_BASE + clientSuffix;
@@ -251,14 +251,10 @@ public class KeycloakService {
 		// Configure the default parameters of the client representation.
 		populateDefaultsClientRepresentation(cr, scopes);
 
-		// Delete the client and remove files created for it.
-		// TODO Remove or add a flag so this can be turned off when not in test mode
-		processClientCleanUp(cr.getClientId(), clientsResource);
-
 		// Log a warning if the client already exists.
 		if (existsClient(clientId, clientsResource)) {
-			logger.warn("Client {} already exists", clientId);
-			return null;
+			logger.error("Client {} already exists", clientId);
+			throw new Exception("Client already exists");
 		}
 
 		// Create the client and store the response.
@@ -282,10 +278,18 @@ public class KeycloakService {
 		KeyStore keyStore = uploadKeyAndCertificate(clientId, keyStoreConfig.getKeyPassword(), clientResource);
 
 		X509Certificate x509Certificate = (X509Certificate) keyStore.getCertificate(clientId);
-		ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig, x509Certificate.getNotAfter().toString());
+		ClientCredentials cc = createClientCredentials(clientId, keyStoreConfig, x509Certificate.getNotBefore().toString(), x509Certificate.getNotAfter().toString());
 		logger.info(cc.toString());
 
 		return cc;
+	}
+
+	// Generate the client ID suffix based on the numeric ID.
+	//TODO refactor to util
+	public String generateClientIDSuffix(int clientIteration) {
+		String clientSuffix = StringUtils.leftPad(Integer.toString(clientIteration), 8, "0");
+		logger.info("Using clientSuffix: {}", clientSuffix);
+		return clientSuffix;
 	}
 
 	private void populateDefaultsClientRepresentation(ClientRepresentation cr, List<String> scopes) {
@@ -312,19 +316,21 @@ public class KeycloakService {
 		cr.setProtocolMappers(createAudienceProtocolMapper());
 	}
 
-	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String expiryDate) {
+	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String validFromDate, String expiryDate) {
 		ClientCredentials cc = new ClientCredentials();
 		cc.setClientId(clientId);
 		cc.setCertFileName(keyStoreConfig.getKeyAlias() + fileExtension);
 		cc.setCertAlias(keyStoreConfig.getKeyAlias());
 		cc.setKeyPassword(keyStoreConfig.getKeyPassword());
 		cc.setStorePassword(keyStoreConfig.getStorePassword());
+		cc.setValidFromDate(validFromDate);
 		cc.setExpirtyDate(expiryDate);
 		return cc;
 	}
 
     public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
 
+//    	Add the realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys
 		CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
 //		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
 		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
@@ -345,10 +351,8 @@ public class KeycloakService {
         keyStore.load(null, password);
         
         //Add the entries
-        keyStore.setCertificateEntry("moh_applications", realmCert);
+        keyStore.setCertificateEntry(MOH_APPLICATIONS, realmCert);
         keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
-
-        //TODO If needed add realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys        
         
         StringWriter sw = new StringWriter();
         try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
@@ -513,6 +517,17 @@ public class KeycloakService {
 		}
 	}
 
+	/**
+	 * Remove all items produced for these clients. Including
+	 * 	Keycloak client entry
+	 * 	all output files saved to drive for this batch
+	 * @param clientCredentials
+	 */
+	public void cleanUp(List<ClientCredentials> clientCredentials) {
+		processClientsCleanUp(clientCredentials);
+		deleteArtifacts();
+	}
+	
 	public void processClientsCleanUp(List<ClientCredentials> clientCredentials) {
 
 		ClientsResource clientsResource = realmResource.clients();
@@ -522,12 +537,11 @@ public class KeycloakService {
 		});
 	}
 
-	public void processClientCleanUp(String clientId, ClientsResource clientsResource) {
+	private void processClientCleanUp(String clientId, ClientsResource clientsResource) {
 		ClientRepresentation clientRepresentation = retrieveClient(clientsResource, clientId);
 		if (clientRepresentation != null) {
 			printClientDetails(clientRepresentation);
 			deleteClient(clientsResource, clientRepresentation.getId());
-			deleteKeystore(clientId);
 		}
 	}
 
@@ -539,7 +553,19 @@ public class KeycloakService {
 			logger.info("Deleted {}", f.getAbsolutePath());
 		} else {
 			logger.info("Failed to delete {}", f.getAbsolutePath());
+		}		
+	}
+
+	private void deleteArtifacts() {
+		logger.info("Deleting {}", outputLocation);
+		
+		try {
+			File batchLocation = new File(outputLocation);			
+			FileUtils.deleteDirectory(batchLocation);
+		} catch (IOException e) {
+			logger.info("Failed to delete {}", outputLocation);
 		}
+		logger.info("Deleted {}", outputLocation);
 	}
 
 	private ClientRepresentation retrieveClient(ClientsResource clientsResource, String clientId) {
@@ -595,11 +621,10 @@ public class KeycloakService {
 	 * @param configPropertiesthe properties defining the session's output locations
 	 * @throws IOException if the output directory cannot be created or if the output file already exists
 	 */
-	private void initOutput(Properties configProperties) throws Exception {
+	public void initOutput(Properties configProperties) throws Exception {
 		logger.debug("Initializing file location.");
 
 		// Build the output paths.
-		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
 		outputLocationCerts = outputLocation + "\\certs\\";
 		outputLocationX509Certs = outputLocation + "\\certs\\x509\\";
 		outputFile = outputLocation + "\\client_information_" + batchNumber + ".csv";

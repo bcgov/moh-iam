@@ -2,6 +2,7 @@ package ca.bc.gov.hlth.iam.clientgeneration.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +15,12 @@ import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +89,7 @@ public class KeycloakServiceTest {
 	 * Create a batch of clients and remove them when done.
 	 * @throws Exception if an error occurs during the creation of the Keycloak actor
 	 */
+	@Disabled("System test to be run only when load testing the bulk generation")
 	@Test
 	public void testBulkClientGenerationLoad() throws Exception {
 		int numberOfClientsToCreate = 500;
@@ -114,68 +118,88 @@ public class KeycloakServiceTest {
 	 * @throws JOSEException if the JWT could not be signed
 	 * @throws ParseException if the HTTP response couldn't be parsed to a token response
 	 */
+	@Disabled("System test to be run only when end to end testing client generation")
 	@Test
 	public void testBulkClientGeneration_verify_authentication() throws Exception, URISyntaxException, GeneralSecurityException, IOException, JOSEException, ParseException {
-		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);
-	    List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, 1, 25828545);
+	    int clientStartNumber = 25828547;
+		List<ClientCredentials> clientCredentials = new ArrayList<>();
 
-	    assertEquals(1, clientCredentials.size());
-	    
-        URI tokenEndpoint = new URI(configProperties.getProperty(CONFIG_PROPERTY_URL) + "/realms/" + configProperties.getProperty(CONFIG_PROPERTY_REALM) + "/protocol/openid-connect/token");
-
-        // Construct the client credentials grant type
-        AuthorizationGrant clientGrant = new ClientCredentialsGrant();
-
-        // Get the client authentication method
-        ClientAuthentication clientAuthentication = buildAuthenticationMethod(clientCredentials.get(0), tokenEndpoint);
-
-        // Make the token request
-        Scope requiredScopes = new Scope("openid system/*.write system/*.read system/Claim.read system/Claim.write system/Patient.read system/Patient.write".split(" "));
-        TokenRequest tokenRequest = new TokenRequest(tokenEndpoint, clientAuthentication, clientGrant, requiredScopes);
-
-        TokenResponse tokenResponse = TokenResponse.parse(tokenRequest.toHTTPRequest().send());
-
-        // Check if we got a 2xx response back from the server
-        assertTrue(tokenResponse.indicatesSuccess());
-
-        AccessTokenResponse successResponse = tokenResponse.toSuccessResponse();
-
-        // Get the access token and set the expiry time
-        AccessToken accessToken = successResponse.getTokens().getAccessToken();
-        
-        logger.info("Token: {}", accessToken.getValue());
-	    
-        String authorizationHeader = accessToken.toAuthorizationHeader();
-
-        HttpRequest.BodyPublisher messagePublisher = HttpRequest.BodyPublishers.ofString(SAMPLE_MESSAGE_PATIENT);  
-        
-        HttpClient httpClient = HttpClient.newHttpClient();  
-        HttpRequest request = HttpRequest  
-//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Claim"))
-                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Patient"))
-//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/MedicationStatement"))
-                .setHeader("Authorization", authorizationHeader)
-                .POST(messagePublisher)  
-                .setHeader("Content-Type", "application/json")  
-                .build();  
-      
-        try {  
-            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());  
-      
-            int statusCode = response.statusCode();  
-            System.out.println("HTTP status: " + statusCode);  
-      
-            /* Note, the response returned depends on PPM API app PharmaNet's endpoint so this test result may vary but it's purpose is to determine if
-             * authentication was succcessful, this can be confirmed by finding the log entry:
-             *  "Informational: HL7v2 Authorization Success! Scope(s) provided are correct for the HL7v2 message"
-             *  in the Pod for the Patient service at https://console.apps.silver.devops.gov.bc.ca/k8s/ns/2f77cb-dev/deploymentconfigs/patientservice-dev-ppmservice.
-             */            
-        }  
-        catch (InterruptedException | IOException e) {  
-            throw new RuntimeException(e);  
-        }  
-	    
-	    keycloakService.processClientsCleanUp(clientCredentials);
+	    KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);		
+		
+		ClientCredentials cc = new ClientCredentials();
+		cc.setClientId(KeycloakService.CLIENT_ID_BASE + keycloakService.generateClientIDSuffix(clientStartNumber));
+		clientCredentials.add(cc);
+		
+		keycloakService.cleanUp(clientCredentials);
+		keycloakService.initOutput(configProperties);		
+		
+		try {
+			clientCredentials = keycloakService.addClients(configProperties, 1, clientStartNumber);
+	
+		    assertEquals(1, clientCredentials.size());
+		    
+	        URI tokenEndpoint = new URI(configProperties.getProperty(CONFIG_PROPERTY_URL) + "/realms/" + configProperties.getProperty(CONFIG_PROPERTY_REALM) + "/protocol/openid-connect/token");
+	
+	        // Construct the client credentials grant type
+	        AuthorizationGrant clientGrant = new ClientCredentialsGrant();
+	
+	        // Get the client authentication method
+	        ClientAuthentication clientAuthentication = buildAuthenticationMethod(clientCredentials.get(0), tokenEndpoint);
+	
+	        // Make the token request
+	        Scope requiredScopes = new Scope("openid system/*.write system/*.read system/Claim.read system/Claim.write system/Patient.read system/Patient.write".split(" "));
+	        TokenRequest tokenRequest = new TokenRequest(tokenEndpoint, clientAuthentication, clientGrant, requiredScopes);
+	
+	        TokenResponse tokenResponse = TokenResponse.parse(tokenRequest.toHTTPRequest().send());
+	
+	        // Check if we got a 2xx response back from the server
+	        assertTrue(tokenResponse.indicatesSuccess());
+	
+	        AccessTokenResponse successResponse = tokenResponse.toSuccessResponse();
+	
+	        // Get the access token and set the expiry time
+	        AccessToken accessToken = successResponse.getTokens().getAccessToken();
+	        
+	        logger.info("Token: {}", accessToken.getValue());
+		    
+	        String authorizationHeader = accessToken.toAuthorizationHeader();
+	
+	        HttpRequest.BodyPublisher messagePublisher = HttpRequest.BodyPublishers.ofString(SAMPLE_MESSAGE_PATIENT);  
+	        
+	        HttpClient httpClient = HttpClient.newHttpClient();  
+	        HttpRequest request = HttpRequest  
+	//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Claim"))
+	                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/Patient"))
+	//                .newBuilder(URI.create("https://pnet-dev.api.gov.bc.ca/api/v1/MedicationStatement"))
+	                .setHeader("Authorization", authorizationHeader)
+	                .POST(messagePublisher)  
+	                .setHeader("Content-Type", "application/json")  
+	                .build();  
+	      
+	        try {  
+	            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());  
+	      
+	            int statusCode = response.statusCode();
+	            System.out.println("HTTP status: " + statusCode);  
+	      
+	            /* Note, the response returned depends on PPM API app PharmaNet's endpoint so this test result may vary but it's purpose is to determine if
+	             * authentication was succcessful, this can be confirmed by finding the log entry:
+	             *  "Informational: HL7v2 Authorization Success! Scope(s) provided are correct for the HL7v2 message"
+	             *  in the Pod for the Patient service at https://console.apps.silver.devops.gov.bc.ca/k8s/ns/2f77cb-dev/deploymentconfigs/patientservice-dev-ppmservice.
+	             */            
+	        }  
+	        catch (InterruptedException | IOException e) {
+	            System.out.println("HTTP status: " + e.getMessage());  
+	            throw new RuntimeException(e);  
+	        } 
+	        
+	        //Clean up all generated items after test run. Can be commented out if you wish to inspect the generated items.
+	    	keycloakService.cleanUp(clientCredentials);
+		}
+	    catch (Exception ex) {
+	    	keycloakService.cleanUp(clientCredentials);
+	    	fail("Test failed due to " + ex.getMessage(), ex.getCause());
+	    }
 	}
 
 	/**

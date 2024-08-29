@@ -20,6 +20,9 @@ public class ClientCredentials {
 	private String storePassword;
 	
 	@CsvBindByPosition(position = 5)
+	private String validFromDate;
+
+	@CsvBindByPosition(position = 6)
 	private String expirtyDate;
 
 	public String getClientId() {
@@ -62,6 +65,14 @@ public class ClientCredentials {
 		this.storePassword = storePassword;
 	}
 	
+	public String getValidFromDate() {
+		return validFromDate;
+	}
+
+	public void setValidFromDate(String validFromDate) {
+		this.validFromDate = validFromDate;
+	}
+
 	public String getExpirtyDate() {
 		return expirtyDate;
 	}
