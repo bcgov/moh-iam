@@ -13,9 +13,9 @@ package ca.bc.gov.hlth.iam.dataloader.service;
  */
 public enum UsernameTypeEnum {
 	BCPROVIDER("@bcp", false), // BC Provider: username@bcp
-	BCSC("@bcp", false), // BCSC: username@bcsc
-	BCEID_BUSINESS("@bcp", false), // BCeID Business: username@bceid_business
-	FNHA("@bcp", false), // FNHA: username@fnha
+	BCSC("@bcsc", false), // BCSC: username@bcsc
+	BCEID_BUSINESS("@bceid_business", false), // BCeID Business: username@bceid_business
+	FNHA("@fnha", false), // FNHA: username@fnha
 	IDIR("@idir", false),		// IDIR: username@idir
 	FHA("sfhr\\", true),		// Fraser Health: sfhr\\username
 	IHA("iha\\", true),			// Interior Health: iha\\username
