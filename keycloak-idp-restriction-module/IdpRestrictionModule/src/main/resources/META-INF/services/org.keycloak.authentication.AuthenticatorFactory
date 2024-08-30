@@ -1,0 +1,3 @@
+ca.bc.gov.hlth.auth.provider.authenticator.CookieStopAuthenticatorFactory
+ca.bc.gov.hlth.auth.provider.authenticator.IdentityProviderStopAuthenticatorFactory
+ca.bc.gov.hlth.auth.provider.browser.IdentityProviderStopFormFactory
