@@ -180,7 +180,7 @@ public class KeycloakServiceTest {
 	            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());  
 	      
 	            int statusCode = response.statusCode();
-	            System.out.println("HTTP status: " + statusCode);  
+	            logger.info("HTTP status: {}", statusCode);  
 	      
 	            /* Note, the response returned depends on PPM API app PharmaNet's endpoint so this test result may vary but it's purpose is to determine if
 	             * authentication was succcessful, this can be confirmed by finding the log entry:
@@ -189,7 +189,7 @@ public class KeycloakServiceTest {
 	             */            
 	        }  
 	        catch (InterruptedException | IOException e) {
-	            System.out.println("HTTP status: " + e.getMessage());  
+	        	logger.error("HTTP status: {}", e.getMessage());  
 	            throw new RuntimeException(e);  
 	        } 
 	        
