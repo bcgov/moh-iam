@@ -51,7 +51,13 @@ public class KeycloakService {
 	private RealmResource realmResource;
 
 	private List<String[]> usersCreated = new ArrayList<>();
-	
+
+	private List<UserRepresentation> usersCreatedOrUpdated = new ArrayList<>();
+
+	public List<UserRepresentation> getUsersCreatedOrUpdated() {
+		return usersCreatedOrUpdated;
+	}
+
 	public KeycloakService(Properties configProperties, EnvironmentEnum environment) {
 		super();
 		init(configProperties, environment);
@@ -116,11 +122,11 @@ public class KeycloakService {
 				logger.error("Could not find user for {}", username);
 				throw new RuntimeException(String.format("Could not find user for {}", username));
 			}
+			usersCreatedOrUpdated.add(userRepresentation);
 			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
 		});
-
 		printSummary();
-		
+
 		logger.info("Completed updating Keycloak data...");
 	}
 
@@ -288,5 +294,4 @@ public class KeycloakService {
 		});
 		logger.info("Created usernames list: {}", Arrays.toString(usernames.toArray()));
 	}
-
 }
