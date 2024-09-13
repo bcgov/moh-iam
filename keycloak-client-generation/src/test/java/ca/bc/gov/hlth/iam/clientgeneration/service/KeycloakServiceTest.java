@@ -63,8 +63,6 @@ public class KeycloakServiceTest {
 
 	private static String configFileName;
 
-	private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
-
 	private static Properties configProperties;
 
 	/**
@@ -95,7 +93,7 @@ public class KeycloakServiceTest {
 		int numberOfClientsToCreate = 500;
 
 		// Initialize the Keycloak actor.
-		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);
+		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV, "0001");
 
 		// Create the clients and retrieve their credentials.
 		List<ClientCredentials> clientCredentials = keycloakService.addClients(configProperties, numberOfClientsToCreate, 1);
@@ -122,9 +120,10 @@ public class KeycloakServiceTest {
 	@Test
 	public void testBulkClientGeneration_verify_authentication() throws Exception, URISyntaxException, GeneralSecurityException, IOException, JOSEException, ParseException {
 	    int clientStartNumber = 509;
-		List<ClientCredentials> clientCredentials = new ArrayList<>();
+	    String batchNumber = "0001";
+	    List<ClientCredentials> clientCredentials = new ArrayList<>();
 
-	    KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);		
+		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV, batchNumber);		
 		
 		ClientCredentials cc = new ClientCredentials();
 		cc.setClientId(KeycloakService.CLIENT_ID_BASE + keycloakService.generateClientIDSuffix(clientStartNumber));
@@ -144,7 +143,7 @@ public class KeycloakServiceTest {
 	        AuthorizationGrant clientGrant = new ClientCredentialsGrant();
 	
 	        // Get the client authentication method
-	        ClientAuthentication clientAuthentication = buildAuthenticationMethod(clientCredentials.get(0), tokenEndpoint);
+	        ClientAuthentication clientAuthentication = buildAuthenticationMethod(batchNumber, clientCredentials.get(0), tokenEndpoint);
 	
 	        // Make the token request
 	        Scope requiredScopes = new Scope("openid system/*.write system/*.read system/Claim.read system/Claim.write system/Patient.read system/Patient.write".split(" "));
@@ -180,7 +179,7 @@ public class KeycloakServiceTest {
 	            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());  
 	      
 	            int statusCode = response.statusCode();
-	            logger.info("HTTP status: {}", statusCode);  
+	            logger.info("Service call response HTTP status: {}", statusCode);  
 	      
 	            /* Note, the response returned depends on PPM API app PharmaNet's endpoint so this test result may vary but it's purpose is to determine if
 	             * authentication was succcessful, this can be confirmed by finding the log entry:
@@ -189,7 +188,7 @@ public class KeycloakServiceTest {
 	             */            
 	        }  
 	        catch (InterruptedException | IOException e) {
-	        	logger.error("HTTP status: {}", e.getMessage());  
+	        	logger.error("batchNumberHTTP status: {}", e.getMessage());  
 	            throw new RuntimeException(e);  
 	        } 
 	        
@@ -205,6 +204,7 @@ public class KeycloakServiceTest {
 	/**
 	 * Use the given client credentials to create and sign a JWT suitable for
 	 * authentication to the PNET API.
+	 * @param batchNumber 
 	 * @param clientCredentials the credentials of the client that will be used for authentication
 	 * @param tokenEndpoint the URI of the Keycloak token endpoint that will distribute the access token
 	 * @return a signed JWT with a five-minute lifetime
@@ -212,9 +212,9 @@ public class KeycloakServiceTest {
 	 * @throws IOException if an error occurs while loading the key store from the certificate file
 	 * @throws JOSEException if the JWT could not be signed
 	 */
-	public ClientAuthentication buildAuthenticationMethod(ClientCredentials clientCredentials, URI tokenEndpoint) throws GeneralSecurityException, IOException, JOSEException {
+	public ClientAuthentication buildAuthenticationMethod(String batchNumber, ClientCredentials clientCredentials, URI tokenEndpoint) throws GeneralSecurityException, IOException, JOSEException {
 		// Access the client's certificate file.
-        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER) + "\\certs\\" + clientCredentials.getCertFilename());
+        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber + "\\certs\\" + clientCredentials.getCertFilename());
 
 		// Unlock and load the key store from the certificate file.
 		KeyStore keyStore = KeystoreTools.loadKeyStore(certFile, clientCredentials.getStorePassword(), configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT));

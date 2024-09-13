@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ public class Main {
 		}
 
 		try {			
-			KeycloakService keycloakService = new KeycloakService(configProperties, environment);
+			KeycloakService keycloakService = new KeycloakService(configProperties, environment, determineBatchNumber(args));
 			
 			keycloakService.initOutput();
 
@@ -83,6 +84,22 @@ public class Main {
 	}
 
 	/**
+	 * Identify the batch number for this script run.
+	 * @param args the command-line arguments
+	 * @return the batch number
+	 */
+	private static String determineBatchNumber(String[] args) {
+		Integer batchNumber = 1;
+
+		if (args.length >= 2) {
+			batchNumber = Integer.valueOf(args[1]);
+			logger.info("Batch number: {}", batchNumber);
+		}
+
+		return StringUtils.leftPad(batchNumber.toString(), 4, "0");
+	}
+
+	/**
 	 * Identify the number of clients to be created from the command-line arguments.
 	 * @param args the command-line arguments
 	 * @return the number of clients
@@ -90,8 +107,8 @@ public class Main {
 	private static int determineNumberOfClients(String[] args) {
 		int numberOfClients = 1;
 
-		if (args.length >= 2) {
-			numberOfClients = Integer.valueOf(args[1]);
+		if (args.length >= 3) {
+			numberOfClients = Integer.valueOf(args[2]);
 			logger.info("Number of clients to be created: {}", numberOfClients);
 		}
 
@@ -106,8 +123,8 @@ public class Main {
 	private static int determineClientStartNumber(String[] args) {
 		int clientStartNumber = 1;
 
-		if (args.length >= 3) {
-			clientStartNumber = Integer.valueOf(args[2]);
+		if (args.length >= 4) {
+			clientStartNumber = Integer.valueOf(args[3]);
 			logger.info("Client start number: {}", clientStartNumber);
 		}
 

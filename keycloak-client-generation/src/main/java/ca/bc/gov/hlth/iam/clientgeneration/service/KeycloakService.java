@@ -100,8 +100,6 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
 
-	private static final String CONFIG_PROPERTY_BATCH_NUMBER = "batch-number";
-
 	private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
 
 	private static final String AUTH_TYPE_CLIENT_JWT = "client-jwt";
@@ -143,11 +141,14 @@ public class KeycloakService {
 	 * Create and initialize a client to interact with a Keycloak realm.
 	 * @param configProperties the properties defining the session
 	 * @param environment the environment for the current session
+	 * @param batchNumber 
 	 * @throws IOException if the output locations cannot be initialized
 	 */
-	public KeycloakService(Properties configProperties, EnvironmentEnum environment) throws Exception {
+	public KeycloakService(Properties configProperties, EnvironmentEnum environment, String batchNumber) throws Exception {
 		logger.info("Initializing Keycloak connection against: {}", configProperties.getProperty(CONFIG_PROPERTY_URL));
 
+		this.batchNumber = batchNumber;
+		
 		realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
 		logger.info("Using Realm: {}", realm);
 
@@ -170,8 +171,6 @@ public class KeycloakService {
 		};
 
 		fileExtension = determineFileExtension();
-
-		batchNumber = configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER);
 
 		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
 
@@ -251,10 +250,10 @@ public class KeycloakService {
 		// Configure the default parameters of the client representation.
 		populateDefaultsClientRepresentation(cr, scopes);
 
-		// Log a warning if the client already exists.
+		// Throw an error if the client already exists.
 		if (existsClient(clientId, clientsResource)) {
 			logger.error("Client {} already exists", clientId);
-			throw new Exception("Client already exists");
+			throw new Exception(String.format("Client [%s] already exists", clientId));
 		}
 
 		// Create the client and store the response.
