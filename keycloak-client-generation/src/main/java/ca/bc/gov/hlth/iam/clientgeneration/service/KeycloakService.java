@@ -69,13 +69,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
-import com.opencsv.ICSVWriter;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import ca.bc.gov.hlth.iam.clientgeneration.model.csv.ClientCredentials;
+import ca.bc.gov.hlth.iam.clientgeneration.model.csv.CustomColumnPositionStrategy;
 
 public class KeycloakService {
 
@@ -319,7 +319,7 @@ public class KeycloakService {
 	private ClientCredentials createClientCredentials(String clientId, KeyStoreConfig keyStoreConfig, String validFromDate, String expiryDate) {
 		ClientCredentials cc = new ClientCredentials();
 		cc.setClientId(clientId);
-		cc.setCertFileName(keyStoreConfig.getKeyAlias() + fileExtension);
+		cc.setCertFilename(keyStoreConfig.getKeyAlias() + fileExtension);
 		cc.setCertAlias(keyStoreConfig.getKeyAlias());
 		cc.setKeyPassword(keyStoreConfig.getKeyPassword());
 		cc.setStorePassword(keyStoreConfig.getStorePassword());
@@ -506,9 +506,14 @@ public class KeycloakService {
 		Path path = Paths.get(outputFile);
 		try (Writer writer = new FileWriter(path.toString())) {
 
-			StatefulBeanToCsv<ClientCredentials> sbc = new StatefulBeanToCsvBuilder<ClientCredentials>(writer)
-					.withQuotechar(ICSVWriter.NO_QUOTE_CHARACTER)
-					.withSeparator(CSVWriter.DEFAULT_SEPARATOR).build();
+			CustomColumnPositionStrategy<ClientCredentials> mappingStrategy = new CustomColumnPositionStrategy<ClientCredentials>();
+	        mappingStrategy.setType(ClientCredentials.class);
+
+	        StatefulBeanToCsv<ClientCredentials> sbc = new StatefulBeanToCsvBuilder<ClientCredentials>(writer)
+					.withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+					.withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+					.withMappingStrategy(mappingStrategy)
+					.build();
 
 			sbc.write(clientCredentials);
 		} catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
@@ -621,7 +626,7 @@ public class KeycloakService {
 	 * @param configPropertiesthe properties defining the session's output locations
 	 * @throws IOException if the output directory cannot be created or if the output file already exists
 	 */
-	public void initOutput(Properties configProperties) throws Exception {
+	public void initOutput() throws Exception {
 		logger.debug("Initializing file location.");
 
 		// Build the output paths.

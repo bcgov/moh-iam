@@ -54,7 +54,7 @@ public class Main {
 		try {			
 			KeycloakService keycloakService = new KeycloakService(configProperties, environment);
 			
-			keycloakService.initOutput(configProperties);
+			keycloakService.initOutput();
 
 			keycloakService.addClients(configProperties, determineNumberOfClients(args), determineClientStartNumber(args));
 

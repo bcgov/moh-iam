@@ -1,28 +1,36 @@
 package ca.bc.gov.hlth.iam.clientgeneration.model.csv;
 
+import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
 public class ClientCredentials {
 
 	@CsvBindByPosition(position = 0)
+	@CsvBindByName(column = "Client Id", required = true)
 	private String clientId;
 	
 	@CsvBindByPosition(position = 1)
-	private String certFileName;
+	@CsvBindByName(column = "Cert Filename", required = true)
+	private String certFilename;
 	
 	@CsvBindByPosition(position = 2)
+	@CsvBindByName(column = "Cert Alias", required = true)
 	private String certAlias;
 	
 	@CsvBindByPosition(position = 3)
+	@CsvBindByName(column = "Key Password", required = true)
 	private String keyPassword;
 	
 	@CsvBindByPosition(position = 4)
+	@CsvBindByName(column = "Store Password", required = true)
 	private String storePassword;
 	
 	@CsvBindByPosition(position = 5)
+	@CsvBindByName(column = "Valid From Date", required = true)
 	private String validFromDate;
 
 	@CsvBindByPosition(position = 6)
+	@CsvBindByName(column = "Expirty Date", required = true)
 	private String expirtyDate;
 
 	public String getClientId() {
@@ -33,12 +41,12 @@ public class ClientCredentials {
 		this.clientId = clientId;
 	}
 
-	public String getCertFileName() {
-		return certFileName;
+	public String getCertFilename() {
+		return certFilename;
 	}
 
-	public void setCertFileName(String certFileName) {
-		this.certFileName = certFileName;
+	public void setCertFilename(String certFilename) {
+		this.certFilename = certFilename;
 	}
 
 	public String getCertAlias() {
@@ -83,9 +91,9 @@ public class ClientCredentials {
 
 	@Override
 	public String toString() {
-		return "ClientCredentials [clientId=" + clientId + ", certFileName=" + certFileName + ", certAlias=" + certAlias
-				+ ", keyPassword=" + keyPassword + ", storePassword=" + storePassword + ", expirtyDate=" + expirtyDate
-				+ "]";
+		return "ClientCredentials [clientId=" + clientId + ", certFilename=" + certFilename + ", certAlias=" + certAlias
+				+ ", keyPassword=" + keyPassword + ", storePassword=" + storePassword + ", validFromDate="
+				+ validFromDate + ", expirtyDate=" + expirtyDate + "]";
 	}
-	
+
 }

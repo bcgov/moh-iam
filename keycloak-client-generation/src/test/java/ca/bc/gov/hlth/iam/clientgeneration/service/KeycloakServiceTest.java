@@ -121,7 +121,7 @@ public class KeycloakServiceTest {
 	@Disabled("System test to be run only when end to end testing client generation")
 	@Test
 	public void testBulkClientGeneration_verify_authentication() throws Exception, URISyntaxException, GeneralSecurityException, IOException, JOSEException, ParseException {
-	    int clientStartNumber = 25828547;
+	    int clientStartNumber = 509;
 		List<ClientCredentials> clientCredentials = new ArrayList<>();
 
 	    KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV);		
@@ -131,7 +131,7 @@ public class KeycloakServiceTest {
 		clientCredentials.add(cc);
 		
 		keycloakService.cleanUp(clientCredentials);
-		keycloakService.initOutput(configProperties);		
+		keycloakService.initOutput();		
 		
 		try {
 			clientCredentials = keycloakService.addClients(configProperties, 1, clientStartNumber);
@@ -214,7 +214,7 @@ public class KeycloakServiceTest {
 	 */
 	public ClientAuthentication buildAuthenticationMethod(ClientCredentials clientCredentials, URI tokenEndpoint) throws GeneralSecurityException, IOException, JOSEException {
 		// Access the client's certificate file.
-        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER) + "\\certs\\" + clientCredentials.getCertFileName());
+        File certFile = new File(configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + configProperties.getProperty(CONFIG_PROPERTY_BATCH_NUMBER) + "\\certs\\" + clientCredentials.getCertFilename());
 
 		// Unlock and load the key store from the certificate file.
 		KeyStore keyStore = KeystoreTools.loadKeyStore(certFile, clientCredentials.getStorePassword(), configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT));
