@@ -64,7 +64,6 @@ public class Main {
 			return;
 		}
 
-		logger.info("Completed creating clients.");
 	}
 
 	/**
