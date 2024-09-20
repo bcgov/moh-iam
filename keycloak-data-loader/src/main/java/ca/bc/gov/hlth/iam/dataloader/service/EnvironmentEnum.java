@@ -2,25 +2,25 @@ package ca.bc.gov.hlth.iam.dataloader.service;
 
 public enum EnvironmentEnum {
 
-	DEV("dev", "DATA_LOADER_USER_PASSWORD_DEV"),
-	TEST("test", "DATA_LOADER_USER_PASSWORD_TEST"),
-	PROD("prod", "DATA_LOADER_USER_PASSWORD_PROD");
+	DEV("dev", "BULK-USER-UPLOAD-CLIENT-SECRET-DEV"),
+	TEST("test", "BULK-USER-UPLOAD-CLIENT-SECRET-TEST"),
+	PROD("prod", "BULK-USER-UPLOAD-CLIENT-SECRET-PROD");
 
 	private String value;
 	
-	private String passwordKey;
+	private String clientSecret;
 
-	private EnvironmentEnum(String value, String passwordKey) {
+	private EnvironmentEnum(String value, String clientSecret) {
 		this.value = value;
-		this.passwordKey = passwordKey;
+		this.clientSecret = clientSecret;
 	}
 
 	public String getValue() {
 		return value;
 	}
 
-	public String getPasswordKey() {
-		return passwordKey;
+	public String getClientSecret() {
+		return clientSecret;
 	}
 
 }
