@@ -38,8 +38,6 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
 
-	private static final String CONFIG_PROPERTY_USERNAME = "username";
-	
 	private static final String CONFIG_PROPERTY_USERNAME_TYPE = "username-type";
 
 	private static final String ZERO_WIDTH_NOBREAK_SPACE = "\ufeff"; //Zero Width No-Break Space (BOM, ZWNBSP) https://www.compart.com/en/unicode/U+FEFF
@@ -51,7 +49,13 @@ public class KeycloakService {
 	private RealmResource realmResource;
 
 	private List<String[]> usersCreated = new ArrayList<>();
-	
+
+	private List<UserRepresentation> usersCreatedOrUpdated = new ArrayList<>();
+
+	public List<UserRepresentation> getUsersCreatedOrUpdated() {
+		return usersCreatedOrUpdated;
+	}
+
 	public KeycloakService(Properties configProperties, EnvironmentEnum environment) {
 		super();
 		init(configProperties, environment);
@@ -67,10 +71,9 @@ public class KeycloakService {
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
 				.realm(realm)
-				.grantType(OAuth2Constants.PASSWORD)
-				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID)) //
-				.username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME))
-				.password(getUserPassword(environment))
+				.grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID))
+				.clientSecret(getClientSecret(environment))
 				.build();
 				
 		realmResource = keycloak.realm(realm);
@@ -116,11 +119,11 @@ public class KeycloakService {
 				logger.error("Could not find user for {}", username);
 				throw new RuntimeException(String.format("Could not find user for {}", username));
 			}
+			usersCreatedOrUpdated.add(userRepresentation);
 			processRoles(clientRepresentation, usersResource, clientRoles, ud, username, userRepresentation);
 		});
-
 		printSummary();
-		
+
 		logger.info("Completed updating Keycloak data...");
 	}
 
@@ -272,8 +275,8 @@ public class KeycloakService {
 		return isComplete;
 	}
 
-    private static String getUserPassword(EnvironmentEnum environment) {        
-        return System.getenv(environment.getPasswordKey());
+    private static String getClientSecret(EnvironmentEnum environment) {
+        return System.getenv(environment.getClientSecret());
     }
 
 	private void printSummary() {
@@ -288,5 +291,4 @@ public class KeycloakService {
 		});
 		logger.info("Created usernames list: {}", Arrays.toString(usernames.toArray()));
 	}
-
 }

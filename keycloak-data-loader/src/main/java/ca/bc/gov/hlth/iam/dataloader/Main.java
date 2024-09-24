@@ -41,6 +41,7 @@ public class Main {
 	private static final String CONFIG_FILE_NAME_TEMPLATE = "configuration-%s.properties";
 	
     private static final String CONFIG_PROPERTY_DATA_FILE_LOCATION = "data-file-location";
+    private static final String CONFIG_PROPERTY_OUTPUT_FILE_LOCATION = "output-file-location";
 
 	private static final String CONFIG_PROPERTY_APPLICATION = "application";
 
@@ -60,7 +61,7 @@ public class Main {
 
 		try {			
 		    keycloakService.updateKeycloakData(configProperties.getProperty(CONFIG_PROPERTY_APPLICATION), userDataList);
-
+			csvFileService.generateCsvFile(keycloakService.getUsersCreatedOrUpdated(), configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_FILE_LOCATION));
 	    	logger.info("Completed loading Keycloak user data.");
 		} catch (Exception e) {
 			logger.error("Loading Keycloak user data could not be completed due to: " + e.getMessage());
