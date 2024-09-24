@@ -156,10 +156,9 @@ public class KeycloakService {
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
 				.realm(realm)
-				.grantType(OAuth2Constants.PASSWORD)
+				.grantType(OAuth2Constants.CLIENT_CREDENTIALS)
 				.clientId(configProperties.getProperty(CONFIG_PROPERTY_CLIENT_ID))
-				.username(configProperties.getProperty(CONFIG_PROPERTY_USERNAME))
-				.password(getUserPassword(environment))
+				.clientSecret(getClientSecret(environment))				
 				.build();
 
 		// Get the realm resources.
@@ -178,12 +177,12 @@ public class KeycloakService {
 	}
 
 	/**
-	 * Load the user's password from an environment variable determined by the environment.
+	 * Load the client secret from an environment variable determined by the environment.
 	 * @param environment the environment
-	 * @return the user's password
+	 * @return the cliet secret
 	 */
-	private static String getUserPassword(EnvironmentEnum environment) {
-		return System.getenv(environment.getPasswordKey());
+	private static String getClientSecret(EnvironmentEnum environment) {
+		return System.getenv(environment.getClientSecret());
 	}
 
 	/**
