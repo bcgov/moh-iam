@@ -19,6 +19,17 @@ import ca.bc.gov.hlth.iam.clientgeneration.service.KeycloakService;
  * The main characteristic of these clients is that they authenticate by "Signed
  * JWT".
  * 
+ * The program takes the following four arguments:
+ * 	- The environment in which it should be run, valid vaues are 
+ * 		- dev
+ * 		- prod
+ *	- The batch number e.g. 3 if this the third time it is being run in this environment
+ *	- The number of clients to be created.
+ *	- The seed number for the first client.
+ * 
+ * It can be run using the maven exec command with provided arguments e.g.
+ *	 mvn compile exec:java -Dexec.args="dev 4 1 520"
+ *
  * Currently this program will output a CVS file containing:
  *   - A list of Client IDs for the newly created clients
  *   - The client's associated cert info which includes:
