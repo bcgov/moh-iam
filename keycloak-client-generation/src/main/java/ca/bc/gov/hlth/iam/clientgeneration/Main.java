@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.Scanner;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,23 +37,32 @@ public class Main {
 
 	private static final String CONFIG_FILE_NAME_TEMPLATE = "configuration-%s.properties";
 
-	public static void main(String[] args) {
+	private static final String PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG = "Production environment will be updated";
+
+	private static final int NUMBER_OF_CLIENTS_MAX = 50;
+
+	private static final int NUMBER_OF_CLIENTS_WARN = 20;
+
+	public static void main(String[] args) throws Exception {
 		logger.info("Begin processing clients with args: {}", Arrays.toString(args));
 
 		EnvironmentEnum environment = determineEnvironment(args);
+		
+		if (!verifyEnvironment(environment)) {
+			return;
+		}
+		
 		Properties configProperties;
-
 		// Try to load the batch properties.
 		try {
 			configProperties = getProperties(environment);
 		}
 		catch (IOException e) {
 			logger.error("Failed to load properties: ", e);
-			logger.error("Abort.");
 			return;
 		}
 
-		try {			
+		try {
 			KeycloakService keycloakService = new KeycloakService(configProperties, environment, determineBatchNumber(args));
 			
 			keycloakService.initOutput();
@@ -103,12 +113,29 @@ public class Main {
 	 * Identify the number of clients to be created from the command-line arguments.
 	 * @param args the command-line arguments
 	 * @return the number of clients
+	 * @throws Exception 
 	 */
-	private static int determineNumberOfClients(String[] args) {
+	private static int determineNumberOfClients(String[] args) throws Exception {
 		int numberOfClients = 1;
 
 		if (args.length >= 3) {
 			numberOfClients = Integer.valueOf(args[2]);
+			if (numberOfClients > NUMBER_OF_CLIENTS_MAX) {
+				numberOfClients = 0;
+				logger.info("Too many clients requested, must be less than {}, no clients will be created.", NUMBER_OF_CLIENTS_MAX);
+			} else if (numberOfClients > NUMBER_OF_CLIENTS_WARN) {
+				Scanner reader = new Scanner(System.in);
+				System.out.println(String.format("You are creating %d clients. To continue, enter the number of clients requested:", numberOfClients));
+				int input = reader.nextInt(); 
+				logger.info("Entered: {}", input);
+				reader.close();
+				
+				if (numberOfClients != input) {
+					numberOfClients = 0;
+					logger.info("Incorrect number entered, no clients will be created.");
+				}
+
+			}
 			logger.info("Number of clients to be created: {}", numberOfClients);
 		}
 
@@ -129,6 +156,22 @@ public class Main {
 		}
 
 		return clientStartNumber;
+	}
+
+	private static boolean verifyEnvironment(EnvironmentEnum environment) {
+		if (environment.equals(EnvironmentEnum.PROD)) {
+			Scanner reader = new Scanner(System.in);
+			System.out.println(String.format("You are running the script against the Production environment. Type '%s' to continue:", PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG));
+			String input = reader.nextLine(); 
+			logger.info("Text entered: {}", input);
+			reader.close();
+			
+			if (!PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG.equals(input)) {
+				logger.info("Correct text not entered");
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
