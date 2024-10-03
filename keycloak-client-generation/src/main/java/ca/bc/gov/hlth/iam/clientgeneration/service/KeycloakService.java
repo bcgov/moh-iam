@@ -94,8 +94,6 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_CLIENT_ID = "client-id";
 
-	private static final String CONFIG_PROPERTY_USERNAME = "username";
-
 	private static final String CONFIG_PROPERTY_SCOPES = "scopes";
 
 	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
@@ -546,17 +544,6 @@ public class KeycloakService {
 			printClientDetails(clientRepresentation);
 			deleteClient(clientsResource, clientRepresentation.getId());
 		}
-	}
-
-	private void deleteKeystore(String clientId) {
-		File f = new File(outputLocationCerts + clientId + fileExtension);
-		logger.info("Deleting {}", f.getAbsolutePath());
-		boolean deleted = f.delete();
-		if (deleted) {
-			logger.info("Deleted {}", f.getAbsolutePath());
-		} else {
-			logger.info("Failed to delete {}", f.getAbsolutePath());
-		}		
 	}
 
 	private void deleteArtifacts() {
