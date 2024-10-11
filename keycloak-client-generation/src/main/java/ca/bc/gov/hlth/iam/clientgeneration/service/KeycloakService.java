@@ -81,9 +81,9 @@ public class KeycloakService {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeycloakService.class);
 
-	public static final String CLIENT_ID_BASE = "ppm-api-BC";
+	public static final String CLIENT_ID_BASE = "PNET-";
 
-	private static final String CLIENT_NAME_BASE = "PPM API ";
+	private static final String CLIENT_NAME_BASE = "PNET API ";
 
 	private static final String CLIENT_DESCRIPTION = "Batch generated client for use with clients that wish to onboard to using PPM API.";
 
