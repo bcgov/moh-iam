@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigInteger;
@@ -27,6 +28,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -74,6 +76,7 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
+import ca.bc.gov.hlth.iam.clientgeneration.Main;
 import ca.bc.gov.hlth.iam.clientgeneration.model.csv.ClientCredentials;
 import ca.bc.gov.hlth.iam.clientgeneration.model.csv.CustomColumnPositionStrategy;
 
@@ -96,9 +99,13 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_SCOPES = "scopes";
 
+	private static final String CONFIG_TILL_CERT_CERT_EXPIRY = "time-till-cert-expiry";
+
 	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
 
 	private static final String CONFIG_PROPERTY_OUTPUT_LOCATION = "output-location";
+
+	private static final String CERTIFICATE_TYPE_X509 = "X.509";
 
 	private static final String AUTH_TYPE_CLIENT_JWT = "client-jwt";
 
@@ -115,7 +122,12 @@ public class KeycloakService {
 	private static final String MOH_APPLICATIONS = "moh_applications";
 
 	private String realm;
-
+	
+	// The number of years until the cert expires
+	private int timeTillCertExpiry;
+	
+	private X509Certificate realmCert;
+	
 	// default to PKCS12
 	private String keystoreFormat = PKCS12.toString();
 
@@ -170,6 +182,19 @@ public class KeycloakService {
 		fileExtension = determineFileExtension();
 
 		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
+		
+//    	Get the realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys. This will be chained to the cert
+		CertificateFactory certificateFactory = CertificateFactory.getInstance(CERTIFICATE_TYPE_X509);
+		InputStream realmCertInputStream = Main.class.getClassLoader().getResourceAsStream("input/moh_applications.cer");
+		realmCert = (X509Certificate)certificateFactory.generateCertificate(realmCertInputStream);
+				
+		// Set the location for the chained cert 
+		if (StringUtils.isNoneBlank(configProperties.getProperty(CONFIG_TILL_CERT_CERT_EXPIRY))) {
+			timeTillCertExpiry = Integer.valueOf(configProperties.getProperty(CONFIG_TILL_CERT_CERT_EXPIRY));
+			logger.info("Cert expiry: {}", timeTillCertExpiry);
+		} else {
+			throw new Exception("Cert expiry must be set");
+		}
 
 		logger.info("Keycloak connection initialized.");
 	}
@@ -326,11 +351,6 @@ public class KeycloakService {
 
     public KeyStore uploadKeyAndCertificate(String clientId, String keystorePassword, ClientResource clientResource) throws Exception {
 
-//    	Add the realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys
-		CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-//		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
-		X509Certificate realmCert = (X509Certificate)certificateFactory.generateCertificate(new FileInputStream(new File("C:\\Users\\dave.p.barrett\\Documents\\Projects\\PPM\\Documents\\BulkClientGeneration\\SampleCerts\\realm\\fromKeycloakGeneratedCert\\moh_applications.cer")));
-        
 		//Generate a keypair
     	KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
@@ -338,7 +358,7 @@ public class KeycloakService {
 
         X509Certificate[] certChain = new X509Certificate[1];
         //Generate an x509 certificate using the keypair (required for creating java key stores)
-        X509Certificate x509Certificate = generateX509(kp, 1, clientId);
+        X509Certificate x509Certificate = generateX509(kp.getPublic(), kp.getPrivate(), timeTillCertExpiry, clientId);
 		certChain[0] = x509Certificate;
 
         //Generate a java key store
@@ -346,6 +366,11 @@ public class KeycloakService {
         char[] password = keystorePassword.toCharArray();
         keyStore.load(null, password);
         
+		/* The realm cert must be valid for at least the cert time. In practice this cert normally has a much longer expiry time but must be checked and renewed manually before running the script
+		 * to ensure it has at least the same length until it expires as the overall cert expiry date.
+		*/
+		realmCert.checkValidity(x509Certificate.getNotAfter());
+		
         //Add the entries
         keyStore.setCertificateEntry(MOH_APPLICATIONS, realmCert);
         keyStore.setKeyEntry(clientId, kp.getPrivate(), password, certChain);
@@ -389,19 +414,13 @@ public class KeycloakService {
 		return keyStore;
 	}
 
-	private X509Certificate generateX509(KeyPair keyPair, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-		return generateX509(keyPair.getPublic(), keyPair.getPrivate(), certExpiryYears, clientId);
-	}
-
 	private X509Certificate generateX509(PublicKey publicKey, PrivateKey privateKey, int certExpiryYears, String clientId) throws OperatorCreationException, CertificateException, NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 		// Setup effective and expiry dates.
-		// Bouncy Castle currently only works with java.util.Date but it's still
-		// nicer to create them with java.time.LocalDate.
 		LocalDate effectiveLocalDate = LocalDate.now();
 		LocalDate expiryLocalDate = effectiveLocalDate.plusYears(certExpiryYears);
 
-		Date effectiveDate = java.sql.Date.valueOf(effectiveLocalDate);
-		Date expiryDate = java.sql.Date.valueOf(expiryLocalDate);
+		Date effectiveDate = Date.from(effectiveLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date expiryDate = Date.from(expiryLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
 		// Random for the cert serial.
 		SecureRandom random = new SecureRandom();
