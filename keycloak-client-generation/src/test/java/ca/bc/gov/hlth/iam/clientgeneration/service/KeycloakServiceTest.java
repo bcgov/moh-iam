@@ -119,8 +119,8 @@ public class KeycloakServiceTest {
 	@Disabled("System test to be run only when end to end testing client generation")
 	@Test
 	public void testBulkClientGeneration_verify_authentication() throws Exception, URISyntaxException, GeneralSecurityException, IOException, JOSEException, ParseException {
-	    int clientStartNumber = 509;
-	    String batchNumber = "0001";
+	    int clientStartNumber = 31232116;
+	    String batchNumber = "0003";
 	    List<ClientCredentials> clientCredentials = new ArrayList<>();
 
 		KeycloakService keycloakService = new KeycloakService(configProperties, EnvironmentEnum.DEV, batchNumber);		

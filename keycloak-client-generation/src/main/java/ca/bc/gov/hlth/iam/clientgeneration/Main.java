@@ -50,7 +50,7 @@ public class Main {
 
 	private static final String PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG = "Production environment will be updated";
 
-	private static final int NUMBER_OF_CLIENTS_MAX = 50;
+	private static final int NUMBER_OF_CLIENTS_MAX = 201;
 
 	private static final int NUMBER_OF_CLIENTS_WARN = 20;
 
