@@ -54,8 +54,12 @@ public class Main {
 
 	private static final int NUMBER_OF_CLIENTS_WARN = 20;
 
+	private static Scanner reader;
+	
 	public static void main(String[] args) throws Exception {
 		logger.info("Begin processing clients with args: {}", Arrays.toString(args));
+
+		reader = new Scanner(System.in);
 
 		EnvironmentEnum environment = determineEnvironment(args);
 		
@@ -135,15 +139,13 @@ public class Main {
 				numberOfClients = 0;
 				logger.info("Too many clients requested, must be less than {}, no clients will be created.", NUMBER_OF_CLIENTS_MAX);
 			} else if (numberOfClients > NUMBER_OF_CLIENTS_WARN) {
-				Scanner reader = new Scanner(System.in);
-				System.out.println(String.format("You are creating %d clients. To continue, enter the number of clients requested:", numberOfClients));
+				System.out.println(String.format("You are about to create %d clients. To continue, please confirm by entering the number of clients requested:", numberOfClients));
 				int input = reader.nextInt(); 
 				logger.info("Entered: {}", input);
-				reader.close();
 				
 				if (numberOfClients != input) {
 					numberOfClients = 0;
-					logger.info("Incorrect number entered, no clients will be created.");
+					logger.info("Number entered did not match the original requested amount in the command line. No clients will be created.");
 				}
 
 			}
@@ -171,11 +173,9 @@ public class Main {
 
 	private static boolean verifyEnvironment(EnvironmentEnum environment) {
 		if (environment.equals(EnvironmentEnum.PROD)) {
-			Scanner reader = new Scanner(System.in);
 			System.out.println(String.format("You are running the script against the Production environment. Type '%s' to continue:", PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG));
 			String input = reader.nextLine(); 
 			logger.info("Text entered: {}", input);
-			reader.close();
 			
 			if (!PRODUCTION_ENVIRONMENT_WILL_BE_UPDATED_MSG.equals(input)) {
 				logger.info("Correct text not entered");
