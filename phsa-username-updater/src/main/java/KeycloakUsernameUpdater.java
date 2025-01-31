@@ -23,7 +23,16 @@ public class KeycloakUsernameUpdater {
 
     public static final String INPUT_FILE_PATH = "C:\\Users\\david.a.sharpe\\Documents\\corrected_usernames.txt";
 
+    // Simulation mode flag
+    private static boolean SIMULATION_MODE = true;  // Default to simulation mode
+
     public static void main(String[] args) throws IOException {
+        // Check if the mode is passed as an argument
+        if (args.length > 0 && args[0].equalsIgnoreCase("real")) {
+            SIMULATION_MODE = false;
+        }
+
+        System.out.println("Running in " + (SIMULATION_MODE ? "SIMULATION" : "REAL") + " mode.");
 
         // Load username mappings from the file
         Map<String, String> usernameMappings = loadUsernameMappings(INPUT_FILE_PATH);
@@ -46,7 +55,7 @@ public class KeycloakUsernameUpdater {
                     successUpdates.add(String.format("Updated %s -> %s", oldUsername, newUsername));
                     break;
                 case NOT_FOUND:
-//                    System.out.println(String.format("[INFO] User not found: %s", oldUsername));
+                    // Suppress output for not found users
                     break;
                 case ERROR:
                     failedUpdates.add(String.format("Failed to update %s -> %s due to an error. Check logs for details.", oldUsername, newUsername));
@@ -55,7 +64,7 @@ public class KeycloakUsernameUpdater {
         });
 
         // Output results
-        System.out.println("Update Results (SIMULATION):");
+        System.out.println("Update Results (" + (SIMULATION_MODE ? "SIMULATION" : "REAL") + "):");
         successUpdates.forEach(System.out::println);
         System.out.println("\nFailed Updates:");
         failedUpdates.forEach(System.out::println);
@@ -120,9 +129,13 @@ public class KeycloakUsernameUpdater {
 
             // Update username for the matched user
             UserRepresentation userToUpdate = matchedUser.get();
-            System.out.println(String.format("[SIMULATION] Would update username for %s to %s", oldUsername, newUsername));
-//            userToUpdate.setUsername(newUsername);
-//            keycloak.realm(REALM).users().get(userToUpdate.getId()).update(userToUpdate);
+            if (SIMULATION_MODE) {
+                System.out.printf("[SIMULATION] Would update username for %s to %s%n", oldUsername, newUsername);
+            } else {
+                System.out.printf("[REAL] Updating username for %s to %s%n", oldUsername, newUsername);
+                userToUpdate.setUsername(newUsername);
+                keycloak.realm(REALM).users().get(userToUpdate.getId()).update(userToUpdate);
+            }
 
             return UpdateResult.SUCCESS;
 
