@@ -11,15 +11,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class KeycloakUsernameUpdater {
 
     // Keycloak configuration
+    private static final String KEYCLOAK_URL = "https://common-logon.hlth.gov.bc.ca/auth";
+    private static final String REALM = "moh_applications";
+    private static final String CLIENT_ID = "DAVID_SHARPE_DELETE_PROD_20250210.1650";
+    private static final String CLIENT_SECRET = System.getenv("DAVID_SHARPE_DELETE_PROD_20250210.1650");
+
 //    private static final String KEYCLOAK_URL = "https://common-logon-test.hlth.gov.bc.ca/auth";
 //    private static final String REALM = "moh_applications";
 //    private static final String CLIENT_ID = "DAVID_SHARPE_DELETE_TEST_20250120.1634";
 //    private static final String CLIENT_SECRET = System.getenv("DAVID_SHARPE_DELETE_TEST_20250120.1634");
 
-    private static final String KEYCLOAK_URL = "https://common-logon-dev.hlth.gov.bc.ca/auth";
-    private static final String REALM = "moh_applications";
-    private static final String CLIENT_ID = "DAVID_SHARPE_DELETE_20250120.0924";
-    private static final String CLIENT_SECRET = System.getenv("DAVID_SHARPE_DELETE_20250120.0924");
+//    private static final String KEYCLOAK_URL = "https://common-logon-dev.hlth.gov.bc.ca/auth";
+//    private static final String REALM = "moh_applications";
+//    private static final String CLIENT_ID = "DAVID_SHARPE_DELETE_20250120.0924";
+//    private static final String CLIENT_SECRET = System.getenv("DAVID_SHARPE_DELETE_20250120.0924");
 
     public static final String INPUT_FILE_PATH = "C:\\Users\\david.a.sharpe\\Documents\\corrected_usernames.txt";
 
@@ -47,7 +52,7 @@ public class KeycloakUsernameUpdater {
         // Process username updates in parallel
         usernameMappings.entrySet().parallelStream().forEach(entry -> {
             String oldUsername = entry.getKey();
-            String newUsername = entry.getValue();
+            String newUsername = entry.getValue() + "@phsa";
             UpdateResult result = updateUsernameInKeycloak(keycloak, oldUsername, newUsername);
 
             switch (result) {
@@ -130,9 +135,9 @@ public class KeycloakUsernameUpdater {
             // Update username for the matched user
             UserRepresentation userToUpdate = matchedUser.get();
             if (SIMULATION_MODE) {
-                System.out.printf("[SIMULATION] Would update username for %s to %s%n", oldUsername, newUsername);
+                System.out.printf("[SIMULATION] Would update username for %s to %s (ID: %s)%n", userToUpdate.getUsername(), newUsername, userToUpdate.getId());
             } else {
-                System.out.printf("[REAL] Updating username for %s to %s%n", oldUsername, newUsername);
+                System.out.printf("[REAL] Updating username for %s to %s (ID: %s)%n", userToUpdate.getUsername(), newUsername, userToUpdate.getId());
                 userToUpdate.setUsername(newUsername);
                 keycloak.realm(REALM).users().get(userToUpdate.getId()).update(userToUpdate);
             }
