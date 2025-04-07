@@ -11,9 +11,15 @@ The application is configured using the configuration.properties as a template a
 
 The Keycloak connection related properties must be provided by the AM team. See https://hlth.atlassian.net/wiki/spaces/HA/pages/515620798/PNET+API+-+Certificate+Creation+and+Rotation#PNETAPI-CertificateCreationandRotation-ProdConfiguration for further information on configuration.
 
-A cooresponding client secret value must be set as local variable named CLIENT_GENERATION_CLIENT_SECRET_{ENV_NAME} e.g. CLIENT_GENERATION_CLIENT_SECRET_DEV
+A cooresponding client secret value must be set as a local System Environment Variable named CLIENT_GENERATION_CLIENT_SECRET_{ENV_NAME} e.g. CLIENT_GENERATION_CLIENT_SECRET_DEV
+
+The Keycloak realm cert moh_applications.cer must be added to the local project under resources/input. This is a Keycloak cert used during PFX file creation. Check the expiry date and if it will expire before the expiry date of the certs being created then it must be updated with another from Keycloak that has an expiry date greater than the expiry date of the PFX files being created.
 
 ## Running the program
+
+- Prerequisite
+	- JDK 13 or higher
+    - Maven
 
 The program takes the following four arguments:
 - The environment in which it should be run, valid vaues are:

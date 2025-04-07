@@ -90,6 +90,8 @@ public class KeycloakService {
 
 	private static final String CLIENT_DESCRIPTION = "Batch generated client for use with clients that wish to onboard to using PPM API.";
 
+	private static final String INPUT_MOH_APPLICATIONS_CER = "input/moh_applications.cer";
+
 	// TODO Move config props to common file
 	private static final String CONFIG_PROPERTY_URL = "url";
 
@@ -99,7 +101,7 @@ public class KeycloakService {
 
 	private static final String CONFIG_PROPERTY_SCOPES = "scopes";
 
-	private static final String CONFIG_TILL_CERT_CERT_EXPIRY = "time-till-cert-expiry";
+	private static final String CONFIG_TIME_TILL_CERT_EXPIRY = "time-till-cert-expiry";
 
 	private static final String CONFIG_PROPERTY_KEYSTORE_FORMAT = "keystore-format";
 
@@ -162,6 +164,10 @@ public class KeycloakService {
 		realm = configProperties.getProperty(CONFIG_PROPERTY_REALM);
 		logger.info("Using Realm: {}", realm);
 
+		verifyExpiryTime(configProperties.getProperty(CONFIG_TIME_TILL_CERT_EXPIRY));
+
+		setUpRealmCert();
+		
 		// Get the Keycloak client and authenticate.
 		Keycloak keycloak = KeycloakBuilder.builder()
 				.serverUrl(configProperties.getProperty(CONFIG_PROPERTY_URL))
@@ -171,32 +177,47 @@ public class KeycloakService {
 				.clientSecret(getClientSecret(environment))				
 				.build();
 
+		logger.info("Keycloak client has been built.");
+		
 		// Get the realm resources.
 		realmResource = keycloak.realm(realm);
+
+		logger.info("Keycloak realm selected.");
 
 		// If defined, set the keystore format.
 		if (StringUtils.isNoneBlank(configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT))) {
 			keystoreFormat = configProperties.getProperty(CONFIG_PROPERTY_KEYSTORE_FORMAT);
 		};
 
+		logger.info("keystoreFormat being used is: {}", keystoreFormat);
+
 		fileExtension = determineFileExtension();
 
 		outputLocation = configProperties.getProperty(CONFIG_PROPERTY_OUTPUT_LOCATION) + "\\" + batchNumber;
 		
-//    	Get the realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys. This will be chained to the cert
-		CertificateFactory certificateFactory = CertificateFactory.getInstance(CERTIFICATE_TYPE_X509);
-		InputStream realmCertInputStream = Main.class.getClassLoader().getResourceAsStream("input/moh_applications.cer");
-		realmCert = (X509Certificate)certificateFactory.generateCertificate(realmCertInputStream);
-				
-		// Set the location for the chained cert 
-		if (StringUtils.isNoneBlank(configProperties.getProperty(CONFIG_TILL_CERT_CERT_EXPIRY))) {
-			timeTillCertExpiry = Integer.valueOf(configProperties.getProperty(CONFIG_TILL_CERT_CERT_EXPIRY));
+		logger.info("Keycloak connection initialized.");
+	}
+
+	private void verifyExpiryTime(String configTimeTillCertExpiryValue) throws Exception {
+		if (StringUtils.isNoneBlank(configTimeTillCertExpiryValue)) {
+			timeTillCertExpiry = Integer.valueOf(configTimeTillCertExpiryValue);
 			logger.info("Cert expiry: {}", timeTillCertExpiry);
 		} else {
 			throw new Exception("Cert expiry must be set");
 		}
+	}
 
-		logger.info("Keycloak connection initialized.");
+	private void setUpRealmCert() throws CertificateException, Exception {
+		// Get the realm cert for the realm e.g. v2_pos Certificate from https://common-logon-dev.hlth.gov.bc.ca/auth/admin/master/console/#/v2_pos/realm-settings/keys. This will be chained to the cert
+		CertificateFactory certificateFactory = CertificateFactory.getInstance(CERTIFICATE_TYPE_X509);
+		InputStream realmCertInputStream = Main.class.getClassLoader().getResourceAsStream(INPUT_MOH_APPLICATIONS_CER);
+		realmCert = (X509Certificate)certificateFactory.generateCertificate(realmCertInputStream);
+						
+		LocalDate certsExpiry = LocalDate.now().plusYears(timeTillCertExpiry);
+		LocalDate realmCertExpiry = realmCert.getNotAfter().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();		
+		if(realmCertExpiry.isBefore(certsExpiry)) {
+			throw new Exception(String.format("The Keycloak realm cert located in %s will expire before the certs being created.", INPUT_MOH_APPLICATIONS_CER));
+		}
 	}
 
 	/**
