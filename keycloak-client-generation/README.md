@@ -4,7 +4,7 @@ This application handles bulk generation of Keycloak Clients and their certs. Th
 clients for use by PNet API clients. The main characteristic of these clients is that they authenticate by "Signed JWT".
 
 ## Configuring the application
-The application is configured using the configuration.properties as a template and creating an environmetn specific configuration file named configuration-{ENV_NAME}.properties e.g. configuration-dev.properties. Valid environments are:
+The application is configured using the configuration.properties as a template and creating an environment specific configuration file named configuration-{ENV_NAME}.properties e.g. configuration-dev.properties. Valid environments are:
     - dev
     - test
     - prod
