@@ -157,6 +157,9 @@ modules.xml
 
 ### Secure properties ###
 **/src/main/resources/configuration-*.properties
+### Secure resources; e.g. this location stores the realm certs ###
+**/src/main/resources/input/
+**/src/test/resources/input/
 
 ### STS ###
 .apt_generated
