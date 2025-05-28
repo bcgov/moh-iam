@@ -185,7 +185,7 @@ public class KeycloakUserNameUpdater {
 	}
 	
 	public static String removeParenthesesFromUserName(String name) {
-		return name.replaceAll("\\([^()]*\\)", "");
+		return name.replaceAll("\\([^()]*\\)", "").trim();
 	}
 
 	private static void loadProperties() {
