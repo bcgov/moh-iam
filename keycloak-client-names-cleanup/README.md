@@ -2,28 +2,13 @@
 
 ---
 keycloak uses validator to check if the value is a valid person name as an additional barrier for attacks such as script injection. 
-The validation is based on a default RegEx pattern that blocks characters not common in person names.
-
-## Regular expression
-
-The following regular expression is used based on Keycloak 26 code.
-
- - ^ [^ <>&\"\\v$%!#?§;*~/\\\\|^=\\[\\]{}()\\p{Cntrl}]+$
+The validation is based on a default RegEx pattern that blocks characters not common in person names.This script remove all parentheses 
+from users first and last name
 
 ## Users Identification
 
-Run the following SQL query on the Database and save the result to csv file.
- 
-~~~~sql
-	 
-	 select id,realm_id
-		from user_entity
-	 where (
-			REGEXP_LIKE (last_name, '[<>#(){}]+')
-			or
-			 REGEXP_LIKE (first_name, '[<>#(){}]+'));
-~~~~			 
-
+Run the SQL query located in userList.sql file and save the result to csv file.
+ 		 
 ## Fix
 
 #### Update config.properties

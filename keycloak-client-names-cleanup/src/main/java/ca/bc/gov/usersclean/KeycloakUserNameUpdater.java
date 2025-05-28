@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -38,6 +40,8 @@ public class KeycloakUserNameUpdater {
 		SIMULATION = Boolean.parseBoolean(prop.getProperty(SIMULATION_MODE));
 		updateUsers();
 		
+
+		
 	}
     
     private static Keycloak authenticateWithKeycloak() {
@@ -48,10 +52,9 @@ public class KeycloakUserNameUpdater {
                 .clientSecret(System.getenv(prop.getProperty(CLIENT_SECRET)))
                 .grantType("client_credentials")
                 .build();
-    }
+    }    
     
-    
-    private static void updateUsers(){
+    private static void updateUsers() {
     	
     	System.out.println("-----------Begin UpdateUsers-----------");
     	
@@ -80,7 +83,6 @@ public class KeycloakUserNameUpdater {
                     break;
                 case ERROR:
                     failedUpdates.add(String.format("Failed to update userID [%s] -> Realm_id [%s] due to an error. Check logs for details.", id, realm));
-                    break;
             }
         });
         
@@ -143,24 +145,24 @@ public class KeycloakUserNameUpdater {
 
 			if (SIMULATION) {
 				if (flagFirstName) {
-					System.out.printf("[SIMULATION] Would update userID: [%s] firstName: [%s] with firstName: [%s] %n", id, firstName, getNameWithoutParentheses(firstName));
+					System.out.printf("[SIMULATION] Would update userID: [%s] firstName: [%s] with firstName: [%s] %n", id, firstName, removeParenthesesFromUserName(firstName));
 					result = UpdateResult.SUCCESS; 
 				}
 				if (flagLastName) {
-					System.out.printf("[SIMULATION] Would update userID: [%s] lastName: [%s] with lastName: [%s] %n", id, lastName, getNameWithoutParentheses(lastName));
+					System.out.printf("[SIMULATION] Would update userID: [%s] lastName: [%s] with lastName: [%s] %n", id, lastName, removeParenthesesFromUserName(lastName));
 					result = UpdateResult.SUCCESS; 
 				}
 
 			} else {
 
 				if (flagFirstName) {
-					System.out.printf("[REAL] Updating update userID: [%s] firstName: [%s] with firstName: [%s] %n", id, firstName, getNameWithoutParentheses(firstName));
-					userRepresentation.setFirstName(getNameWithoutParentheses(firstName));
+					System.out.printf("[REAL] Updating update userID: [%s] firstName: [%s] with firstName: [%s] %n", id, firstName, removeParenthesesFromUserName(firstName));
+					userRepresentation.setFirstName(removeParenthesesFromUserName(firstName));
 					result = UpdateResult.SUCCESS; 
 				}
 				if (flagLastName) {
-					System.out.printf("[REAL] Updating update userID: [%s] lastName: [%s] with lastName: [%s] %n", id, lastName, getNameWithoutParentheses(lastName));
-					userRepresentation.setLastName(getNameWithoutParentheses(lastName));
+					System.out.printf("[REAL] Updating update userID: [%s] lastName: [%s] with lastName: [%s] %n", id, lastName, removeParenthesesFromUserName(lastName));
+					userRepresentation.setLastName(removeParenthesesFromUserName(lastName));
 					result = UpdateResult.SUCCESS; 
 				}
 
@@ -171,27 +173,19 @@ public class KeycloakUserNameUpdater {
 
 		} catch (Exception e) {
 			System.err.println("Error updating userId : " + id + ": " + e.getMessage());
-			e.printStackTrace();
 			return UpdateResult.ERROR; // General error occurred
 		}
 	}
 
-	private static String getNameWithoutParentheses(String name) {
-
-		int index = name.indexOf(PARENTHESES_OPEN);
-
-		if (index != -1) {
-			String substring = name.substring(0, index);
-			return substring.trim();
-		} else {
-			System.out.println("Parentheses not found");
-			return name;
-		}
-
+	
+	private static boolean containsParentheses(String name) {
+		Pattern pattern = Pattern.compile("\\((.*)\\)");
+		Matcher matcher = pattern.matcher(name);
+		return matcher.find();
 	}
 	
-	private static boolean containsParentheses(String str) {
-		return str.contains("(") || str.contains(")");
+	public static String removeParenthesesFromUserName(String name) {
+		return name.replaceAll("\\([^()]*\\)", "");
 	}
 
 	private static void loadProperties() {
