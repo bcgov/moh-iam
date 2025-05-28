@@ -32,6 +32,8 @@ public class KeycloakUserNameUpdater {
     private static String SIMULATION_MODE = "SIMULATION_MODE";  // Default to simulation mode
     private static String PARENTHESES_OPEN = "(";
     private static boolean SIMULATION = true;
+    private static String REGEX_PARENTHESES = "\\((.*)\\)";
+    private static String REGEX_PARENTHESES_REMOVE = "\\([^()]*\\)";
     
     private static Properties prop = new Properties();
     
@@ -39,8 +41,6 @@ public class KeycloakUserNameUpdater {
 		loadProperties();
 		SIMULATION = Boolean.parseBoolean(prop.getProperty(SIMULATION_MODE));
 		updateUsers();
-		
-
 		
 	}
     
@@ -179,13 +179,13 @@ public class KeycloakUserNameUpdater {
 
 	
 	private static boolean containsParentheses(String name) {
-		Pattern pattern = Pattern.compile("\\((.*)\\)");
+		Pattern pattern = Pattern.compile(REGEX_PARENTHESES);
 		Matcher matcher = pattern.matcher(name);
 		return matcher.find();
 	}
 	
 	public static String removeParenthesesFromUserName(String name) {
-		return name.replaceAll("\\([^()]*\\)", "").trim();
+		return name.replaceAll(REGEX_PARENTHESES_REMOVE, "").trim();
 	}
 
 	private static void loadProperties() {
