@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class KeycloakUserNameUpdater {
+public class KeycloakFirstLastNameFixer {
 	
     private static final String KEYCLOAK_URL = "KEYCLOAK_URL";
     private static final String CLIENT_ID = "CLIENT_ID";
@@ -177,7 +177,7 @@ public class KeycloakUserNameUpdater {
 
 	private static void loadProperties() throws IOException {
 
-		try (InputStream input = KeycloakUserNameUpdater.class.getClassLoader().getResourceAsStream("config.properties")) {
+		try (InputStream input = KeycloakFirstLastNameFixer.class.getClassLoader().getResourceAsStream("config.properties")) {
 
 			if (input == null) {
 				System.out.println("config.properties not found");
