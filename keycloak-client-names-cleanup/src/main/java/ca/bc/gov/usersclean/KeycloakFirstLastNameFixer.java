@@ -1,26 +1,22 @@
 package ca.bc.gov.usersclean;
 
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.UserRepresentation;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.FederatedIdentityRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
-
-public class KeycloakUserNameUpdater {
+public class KeycloakFirstLastNameFixer {
 	
     private static final String KEYCLOAK_URL = "KEYCLOAK_URL";
     private static final String CLIENT_ID = "CLIENT_ID";
@@ -41,20 +37,19 @@ public class KeycloakUserNameUpdater {
 		loadProperties();
 		SIMULATION = Boolean.parseBoolean(prop.getProperty(SIMULATION_MODE));
 		updateUsers();
-		
 	}
     
     private static Keycloak authenticateWithKeycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(prop.getProperty(KEYCLOAK_URL))
                 .realm(prop.getProperty(REALM))
-                .clientId(System.getenv(prop.getProperty(CLIENT_ID)))
+                .clientId(prop.getProperty(CLIENT_ID))
                 .clientSecret(System.getenv(prop.getProperty(CLIENT_SECRET)))
                 .grantType("client_credentials")
                 .build();
     }    
     
-    private static void updateUsers() {
+    private static void updateUsers() throws IOException {
     	
     	System.out.println("-----------Begin UpdateUsers-----------");
     	
@@ -74,16 +69,11 @@ public class KeycloakUserNameUpdater {
             String realm = entry.getValue();
             UpdateResult result = updateUsernameInKeycloak(keycloak, id, realm);
 
-            switch (result) {
-                case SUCCESS:
-                    successUpdates.add(String.format("Updated userID [%s] -> Realm_id [%s]", id, realm));
-                    break;
-                case NOCHANGES:
-                    noChanges.add(String.format("No changes have been made for userID [%s] Realm_id [%s]", id, realm));
-                    break;
-                case ERROR:
-                    failedUpdates.add(String.format("Failed to update userID [%s] -> Realm_id [%s] due to an error. Check logs for details.", id, realm));
-            }
+			switch (result) {
+				case SUCCESS -> successUpdates.add(String.format("Updated userID [%s] -> Realm_id [%s]", id, realm));
+				case NOCHANGES -> noChanges.add(String.format("No changes have been made for userID [%s] Realm_id [%s]", id, realm));
+				case ERROR -> failedUpdates.add(String.format("Failed to update userID [%s] -> Realm_id [%s] due to an error. Check logs for details.", id, realm));
+			}
         });
         
         // Output results
@@ -101,7 +91,7 @@ public class KeycloakUserNameUpdater {
 
     }
     
-    private static Map<String, String> loadUsernameMappings(String filePath) {
+    private static Map<String, String> loadUsernameMappings(String filePath) throws IOException {
         Map<String, String> mappings = new HashMap<>();
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(filePath))) {
             String line;
@@ -115,11 +105,7 @@ public class KeycloakUserNameUpdater {
                     mappings.put(parts[0], parts[1]); // userID : realm
                 }
             }
-        } catch (IOException e) {
-			System.out.println("Exception during file reading " + e.getMessage());
-			e.printStackTrace();
-			return null;
-		}
+        }
         return mappings;
     }
 
@@ -172,6 +158,7 @@ public class KeycloakUserNameUpdater {
 			return result;
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println("Error updating userId : " + id + ": " + e.getMessage());
 			return UpdateResult.ERROR; // General error occurred
 		}
@@ -188,9 +175,9 @@ public class KeycloakUserNameUpdater {
 		return name.replaceAll(REGEX_PARENTHESES_REMOVE, "").trim();
 	}
 
-	private static void loadProperties() {
+	private static void loadProperties() throws IOException {
 
-		try (InputStream input = KeycloakUserNameUpdater.class.getClassLoader().getResourceAsStream("config.properties")) {
+		try (InputStream input = KeycloakFirstLastNameFixer.class.getClassLoader().getResourceAsStream("config.properties")) {
 
 			if (input == null) {
 				System.out.println("config.properties not found");
@@ -199,11 +186,7 @@ public class KeycloakUserNameUpdater {
 
 			prop.load(input);
 
-		} catch (IOException e) {
-			System.out.println("Exception during loading properties file" + e.getMessage());
-			return;
 		}
-
 	}
 	
     // Enum to represent the result of an update attempt
