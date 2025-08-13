@@ -33,5 +33,5 @@ The service account must have the following realm-level roles in the `moh_applic
 The client secret for each environment must be set as an environment variable, using the client ID as the variable name. For example:
 
 ```bash
-export svc-keycloak-cli-offboarder-prod="your-client-secret"
+export svc-keycloak-cli-RFC-20250811="your-client-secret"
 ```
