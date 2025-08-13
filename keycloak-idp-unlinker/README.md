@@ -13,3 +13,25 @@ Keycloak was previously misconfigured to use email as the username for PHSA_AAD 
 ```bash
 java KeycloakIdpUnlinker --input bad_user_ids.txt --env TEST
 java KeycloakIdpUnlinker --input bad_user_ids.txt --env PROD --real
+````
+
+## Configuration
+
+The script includes built-in configuration for each environment, including its Keycloak base URL and service account client ID:
+
+```java
+DEV("https://common-logon-dev.hlth.gov.bc.ca/auth", "svc-keycloak-cli-RFC-20250811"),
+TEST("https://common-logon-test.hlth.gov.bc.ca/auth", "..."),
+PROD("https://common-logon.hlth.gov.bc.ca/auth", "...")
+```
+
+The service account must have the following realm-level roles in the `moh_applications` realm:
+
+- manage-users
+- view-users
+
+The client secret for each environment must be set as an environment variable, using the client ID as the variable name. For example:
+
+```bash
+export svc-keycloak-cli-offboarder-prod="your-client-secret"
+```
