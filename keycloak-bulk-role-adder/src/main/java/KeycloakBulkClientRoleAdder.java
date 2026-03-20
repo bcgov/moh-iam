@@ -19,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("CallToPrintStackTrace")
 public class KeycloakBulkClientRoleAdder {
 
     private static boolean SIMULATION_MODE = true;
@@ -171,6 +170,7 @@ public class KeycloakBulkClientRoleAdder {
             try {
                 f.get();
             } catch (Exception e) {
+                //noinspection CallToPrintStackTrace
                 e.printStackTrace();
             }
         }
