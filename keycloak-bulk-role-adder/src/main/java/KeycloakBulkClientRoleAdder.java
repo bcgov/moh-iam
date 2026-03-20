@@ -1,4 +1,5 @@
 import jakarta.annotation.Nonnull;
+import jakarta.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UserResource;
@@ -29,6 +30,71 @@ public class KeycloakBulkClientRoleAdder {
     private static final String CYAN = "\u001B[36m";
 
     public static void main(String[] args) {
+
+        // 1. Parse + validate input
+        CliConfig config = parseArgs(args);
+        EnvConfig targetEnv = resolveEnvironment(config.env);
+
+        validateClientSecret(targetEnv);
+
+        // 2. Load input + setup logging
+        List<UserRoleEntry> entries = loadUserRoleEntries(config.inputFilePath);
+        setupLoggingToFile();
+
+        printStartupSummary(targetEnv, entries.size());
+        printEnvironmentBanner(targetEnv.url);
+
+        // 3. Safety check
+        confirmProductionRun(targetEnv);
+
+        // 4. Connect + preflight
+        Keycloak keycloak = authenticate(targetEnv);
+        preflight(keycloak, config.realm, config.clientId);
+
+        String clientUuid = requireClientUuid(keycloak, config.realm, config.clientId);
+
+        Map<String, RoleRepresentation> clientRoleMap =
+                loadClientRoleMap(keycloak, config.realm, clientUuid);
+
+        preflightRoles(
+                collectRequestedRoleNames(entries),
+                clientRoleMap,
+                config.clientId
+        );
+
+        // 5. Execute
+        runBulkProcessing(keycloak, config.realm, clientUuid, clientRoleMap, entries);
+
+        // 6. Shutdown
+        keycloak.close();
+
+        System.out.println("\nProcessed " + entries.size() + " entries in " + targetEnv.name() + ".");
+        System.out.println("Done.");
+    }
+
+    static void validateClientSecret(EnvConfig env) {
+        if (env.clientSecret == null || env.clientSecret.isEmpty()) {
+            System.err.println(RED + "Missing client secret for environment " + env.name() + RESET);
+            System.err.println("Expected env var name: " + CYAN + env.clientId + RESET);
+            System.exit(1);
+        }
+    }
+
+    static class CliConfig {
+        final String inputFilePath;
+        final String env;
+        final String realm;
+        final String clientId;
+
+        CliConfig(String inputFilePath, String env, String realm, String clientId) {
+            this.inputFilePath = inputFilePath;
+            this.env = env;
+            this.realm = realm;
+            this.clientId = clientId;
+        }
+    }
+
+    static CliConfig parseArgs(String[] args) {
         String inputFilePath = null;
         String envArg = null;
         String realm = null;
@@ -56,66 +122,47 @@ public class KeycloakBulkClientRoleAdder {
         }
 
         if (inputFilePath == null || envArg == null || realm == null || clientId == null) {
-            System.err.println("Usage: java KeycloakBulkClientRoleAdder --input file.csv --env DEV|TEST|PROD --realm REALM_NAME --client CLIENT_ID [--real]");
+            System.err.println("Usage: ...");
             System.exit(1);
         }
 
-        EnvConfig targetEnv;
+        return new CliConfig(inputFilePath, envArg, realm, clientId);
+    }
+
+    static EnvConfig resolveEnvironment(String envArg) {
         try {
-            targetEnv = EnvConfig.valueOf(envArg);
+            return EnvConfig.valueOf(envArg);
         } catch (IllegalArgumentException e) {
             System.err.println("Invalid environment: " + envArg);
-            System.err.println("Valid values are: DEV, TEST, PROD");
             System.exit(1);
-            return;
+            return null;
         }
+    }
 
-        // ===== Early secret check (no network hit yet) =====
-        if (targetEnv.clientSecret.isEmpty()) {
-            System.err.println(RED + "Missing client secret for environment " + targetEnv.name() + RESET);
-            System.err.println("Expected env var name: " + CYAN + targetEnv.clientId + RESET);
-            System.err.println("Set it and re-run. Example (bash):");
-            System.err.println("  export " + targetEnv.clientId + "='<secret-value>'");
-            System.exit(1);
-        }
-
-        List<UserRoleEntry> entries = loadUserRoleEntries(inputFilePath);
-        setupLoggingToFile();
-
-        System.out.println("Running in " + (SIMULATION_MODE ? GREEN + "SIMULATION" : RED + "REAL") + RESET + " mode.");
-        System.out.println("Target environment: " + CYAN + targetEnv.name() + RESET);
-        System.out.println("Loaded " + entries.size() + " user/role entries.");
-
-        printEnvironmentBanner(targetEnv.url);
-
-        confirmProductionRun(targetEnv);
-
-        Keycloak keycloak = authenticate(targetEnv);
-
-        // ===== Auth + permission preflight (fast failure with helpful hints) =====
-        preflight(keycloak, realm, clientId);
-
-        String clientUuid = getClientUuid(keycloak, realm, clientId);
-        if (clientUuid == null) {
+    static String requireClientUuid(Keycloak keycloak, String realm, String clientId) {
+        String uuid = getClientUuid(keycloak, realm, clientId);
+        if (uuid == null) {
             System.err.println(RED + "Client not found: " + clientId + RESET);
             System.exit(1);
         }
+        return uuid;
+    }
 
-        // Build role cache
-        Map<String, RoleRepresentation> clientRoleMap = loadClientRoleMap(keycloak, realm, clientUuid);
-
-        // Verify roles exist
-        preflightRoles(collectRequestedRoleNames(entries), clientRoleMap, clientId);
-
+    static void runBulkProcessing(
+            Keycloak keycloak,
+            String realm,
+            String clientUuid,
+            Map<String, RoleRepresentation> clientRoleMap,
+            List<UserRoleEntry> entries
+    ) {
         int threads = Math.min(10, Runtime.getRuntime().availableProcessors() * 2);
         ExecutorService executor = Executors.newFixedThreadPool(threads);
 
         List<Future<?>> futures = new ArrayList<>();
 
         for (UserRoleEntry entry : entries) {
-            String finalRealm = realm;
             futures.add(executor.submit(() -> {
-                ProcessingContext ctx = new ProcessingContext(keycloak, finalRealm, clientUuid, clientRoleMap);
+                ProcessingContext ctx = new ProcessingContext(keycloak, realm, clientUuid, clientRoleMap);
                 processUser(ctx, entry);
             }));
         }
@@ -129,10 +176,12 @@ public class KeycloakBulkClientRoleAdder {
         }
 
         executor.shutdown();
+    }
 
-        keycloak.close();
-        System.out.println("\nProcessed " + entries.size() + " entries in " + targetEnv.name() + ".");
-        System.out.println("Done.");
+    static void printStartupSummary(EnvConfig env, int count) {
+        System.out.println("Running in " + (SIMULATION_MODE ? GREEN + "SIMULATION" : RED + "REAL") + RESET + " mode.");
+        System.out.println("Target environment: " + CYAN + env.name() + RESET);
+        System.out.println("Loaded " + count + " user/role entries.");
     }
 
     private static void confirmProductionRun(EnvConfig targetEnv) {
@@ -253,11 +302,17 @@ public class KeycloakBulkClientRoleAdder {
             newUser.setUsername(entry.username);
             newUser.setEnabled(true);
 
-            try {
-                ctx.keycloak.realm(ctx.realm).users().create(newUser);
+            try (Response response = ctx.keycloak.realm(ctx.realm).users().create(newUser)) {
+
+                if (response.getStatus() >= 300) {
+                    ctx.log("ERROR creating user " + entry.username + ": HTTP " + response.getStatus());
+                    return null;
+                }
+
                 ctx.log("[REAL] Created user: " + entry.username);
 
-                List<UserRepresentation> created = ctx.keycloak.realm(ctx.realm).users().search(entry.username, true);
+                List<UserRepresentation> created =
+                        ctx.keycloak.realm(ctx.realm).users().search(entry.username, true);
 
                 return created.stream()
                         .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
@@ -363,6 +418,7 @@ public class KeycloakBulkClientRoleAdder {
     static class UserRoleEntry {
         String username;
         List<String> roles;
+
         UserRoleEntry(String username, List<String> roles) {
             this.username = username;
             this.roles = roles;
