@@ -1,3 +1,5 @@
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UserResource;
@@ -86,15 +88,7 @@ public class KeycloakBulkClientRoleAdder {
 
         printEnvironmentBanner(targetEnv.url);
 
-        if (!SIMULATION_MODE && targetEnv.isProd()) {
-            System.out.print(RED + "You are running in PRODUCTION and REAL mode. Type 'I UNDERSTAND' to continue: " + RESET);
-            Scanner scanner = new Scanner(System.in);
-            String confirm = scanner.nextLine().trim();
-            if (!confirm.equalsIgnoreCase("I UNDERSTAND")) {
-                System.out.println("Aborted.");
-                System.exit(1);
-            }
-        }
+        confirmProductionRun(targetEnv);
 
         Keycloak keycloak = authenticate(targetEnv);
 
@@ -140,6 +134,18 @@ public class KeycloakBulkClientRoleAdder {
         System.out.println("Done.");
     }
 
+    private static void confirmProductionRun(EnvConfig targetEnv) {
+        if (!SIMULATION_MODE && targetEnv.isProd()) {
+            System.out.print(RED + "You are running in PRODUCTION and REAL mode. Type 'I UNDERSTAND' to continue: " + RESET);
+            Scanner scanner = new Scanner(System.in);
+            String confirm = scanner.nextLine().trim();
+            if (!confirm.equalsIgnoreCase("I UNDERSTAND")) {
+                System.out.println("Aborted.");
+                System.exit(1);
+            }
+        }
+    }
+
     static void processUser(
             Keycloak keycloak,
             String realm,
@@ -150,87 +156,18 @@ public class KeycloakBulkClientRoleAdder {
         StringBuilder log = new StringBuilder();
 
         try {
-            List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
-            UserRepresentation user = found.stream()
-                    .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (user == null) {
-                if (!CREATE_MISSING_USERS) {
-                    log.append("User not found: ").append(entry.username).append("\n");
-                    flush(log);
-                    return;
-                }
-
-                if (SIMULATION_MODE) {
-                    log.append("[SIMULATION] Would create user: ").append(entry.username).append("\n");
-                    flush(log);
-                    return;
-                }
-
-                // REAL + CREATE enabled
-                UserRepresentation newUser = new UserRepresentation();
-                newUser.setUsername(entry.username);
-                newUser.setEnabled(true);
-
-                try {
-                    keycloak.realm(realm).users().create(newUser);
-                    log.append("[REAL] Created user: ").append(entry.username).append("\n");
-
-                    // re-fetch created user
-                    List<UserRepresentation> created = keycloak.realm(realm).users().search(entry.username, true);
-                    user = created.stream()
-                            .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
-                            .findFirst()
-                            .orElse(null);
-
-                    if (user == null) {
-                        log.append("ERROR: Failed to re-fetch created user: ").append(entry.username).append("\n");
-                        flush(log);
-                        return;
-                    }
-
-                } catch (Exception e) {
-                    log.append("ERROR creating user ").append(entry.username).append(": ").append(e.getMessage()).append("\n");
-                    flush(log);
-                    return;
-                }
-            }
+            UserRepresentation user = findOrCreateUser(keycloak, realm, entry, log);
+            if (user == null) return;
 
             log.append("\nUser: ").append(user.getUsername())
                     .append(" (").append(user.getId()).append(")\n");
 
             UserResource userRes = keycloak.realm(realm).users().get(user.getId());
-            List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
+            Set<String> existingRoleNames = getExistingRoleNames(userRes, clientUuid);
 
-            Set<String> existingRoleNames = existingRoles.stream()
-                    .map(RoleRepresentation::getName)
-                    .collect(Collectors.toSet());
+            List<RoleRepresentation> rolesToAdd = determineRolesToAdd(clientRoleMap, entry, existingRoleNames, log);
 
-            List<RoleRepresentation> rolesToAdd = new ArrayList<>();
-            for (String roleName : entry.roles) {
-                RoleRepresentation role = clientRoleMap.get(roleName);
-
-                if (!existingRoleNames.contains(roleName)) {
-                    rolesToAdd.add(role);
-                } else {
-                    log.append("Role already assigned: ").append(roleName).append("\n");
-                }
-            }
-
-            if (rolesToAdd.isEmpty()) {
-                log.append("No new roles to add.\n");
-            } else if (SIMULATION_MODE) {
-                log.append("[SIMULATION] Would add roles ")
-                        .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
-                        .append(" to user ").append(user.getUsername()).append("\n");
-            } else {
-                userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
-                log.append("[REAL] Added roles ")
-                        .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
-                        .append(" to user ").append(user.getUsername()).append("\n");
-            }
+            applyRoles(clientUuid, rolesToAdd, log, user, userRes);
 
         } catch (Exception e) {
             log.append("Error processing user ")
@@ -241,6 +178,94 @@ public class KeycloakBulkClientRoleAdder {
         }
 
         flush(log);
+    }
+
+    private static void applyRoles(String clientUuid, List<RoleRepresentation> rolesToAdd, StringBuilder log, UserRepresentation user, UserResource userRes) {
+        if (rolesToAdd.isEmpty()) {
+            log.append("No new roles to add.\n");
+        } else if (SIMULATION_MODE) {
+            log.append("[SIMULATION] Would add roles ")
+                    .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
+                    .append(" to user ").append(user.getUsername()).append("\n");
+        } else {
+            userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
+            log.append("[REAL] Added roles ")
+                    .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
+                    .append(" to user ").append(user.getUsername()).append("\n");
+        }
+    }
+
+    @Nonnull
+    private static Set<String> getExistingRoleNames(UserResource userRes, String clientUuid) {
+        List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
+
+        Set<String> existingRoleNames = existingRoles.stream()
+                .map(RoleRepresentation::getName)
+                .collect(Collectors.toSet());
+        return existingRoleNames;
+    }
+
+    @Nonnull
+    private static List<RoleRepresentation> determineRolesToAdd(Map<String, RoleRepresentation> clientRoleMap, UserRoleEntry entry, Set<String> existingRoleNames, StringBuilder log) {
+        List<RoleRepresentation> rolesToAdd = new ArrayList<>();
+        for (String roleName : entry.roles) {
+            RoleRepresentation role = clientRoleMap.get(roleName);
+
+            if (!existingRoleNames.contains(roleName)) {
+                rolesToAdd.add(role);
+            } else {
+                log.append("Role already assigned: ").append(roleName).append("\n");
+            }
+        }
+        return rolesToAdd;
+    }
+
+    @Nullable
+    private static UserRepresentation findOrCreateUser(Keycloak keycloak, String realm, UserRoleEntry entry, StringBuilder log) {
+        List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
+        UserRepresentation user = found.stream()
+                .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            if (!CREATE_MISSING_USERS) {
+                log.append("User not found: ").append(entry.username).append("\n");
+                return null;
+            }
+
+            if (SIMULATION_MODE) {
+                log.append("[SIMULATION] Would create user: ").append(entry.username).append("\n");
+                return null;
+            }
+
+            // REAL + CREATE enabled
+            UserRepresentation newUser = new UserRepresentation();
+            newUser.setUsername(entry.username);
+            newUser.setEnabled(true);
+
+            try {
+                keycloak.realm(realm).users().create(newUser);
+                log.append("[REAL] Created user: ").append(entry.username).append("\n");
+
+                // re-fetch created user
+                List<UserRepresentation> created = keycloak.realm(realm).users().search(entry.username, true);
+                user = created.stream()
+                        .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (user == null) {
+                    log.append("ERROR: Failed to re-fetch created user: ").append(entry.username).append("\n");
+                    return null;
+                }
+
+            } catch (Exception e) {
+                log.append("ERROR creating user ").append(entry.username).append(": ").append(e.getMessage()).append("\n");
+                return null;
+            }
+        }
+        return user;
     }
 
     static synchronized void flush(StringBuilder log) {
