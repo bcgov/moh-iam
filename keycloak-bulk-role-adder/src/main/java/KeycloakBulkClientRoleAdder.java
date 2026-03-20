@@ -258,7 +258,7 @@ public class KeycloakBulkClientRoleAdder {
 
     enum EnvConfig {
         DEV("https://common-logon-dev.hlth.gov.bc.ca/auth", "admin-safety-toggle-dev"),
-        TEST("https://common-logon-test.hlth.gov.bc.ca/auth", "admin-safety-toggle-test"),
+        TEST("https://common-logon-test.hlth.gov.bc.ca/auth", "immsbc-bulk-load-serviceaccount"),
         PROD("https://common-logon.hlth.gov.bc.ca/auth", "admin-safety-toggle-prod");
 
         public final String url;
