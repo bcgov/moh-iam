@@ -12,6 +12,9 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class KeycloakBulkClientRoleAdder {
@@ -106,61 +109,89 @@ public class KeycloakBulkClientRoleAdder {
         // Verify roles exist
         preflightRoles(collectRequestedRoleNames(entries), clientRoleMap, clientId);
 
+        int threads = Math.min(10, Runtime.getRuntime().availableProcessors() * 2);
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+
+        List<Future<?>> futures = new ArrayList<>();
+
         for (UserRoleEntry entry : entries) {
+            String finalRealm = realm;
+            futures.add(executor.submit(() -> {
+                processUser(keycloak, finalRealm, clientUuid, clientRoleMap, entry);
+            }));
+        }
+
+        for (Future<?> f : futures) {
             try {
-                List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
-                UserRepresentation user = found.stream()
-                        .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (user == null) {
-                    System.err.printf("User not found: %s%n", entry.username);
-                    continue;
-                }
-
-                System.out.printf("\nUser: %s (%s)%n", user.getUsername(), user.getId());
-
-                UserResource userRes = keycloak.realm(realm).users().get(user.getId());
-                List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
-
-                Set<String> existingRoleNames = existingRoles.stream()
-                        .map(RoleRepresentation::getName)
-                        .collect(Collectors.toSet());
-
-                List<RoleRepresentation> rolesToAdd = new ArrayList<>();
-                for (String roleName : entry.roles) {
-                    RoleRepresentation role = clientRoleMap.get(roleName);
-
-                    if (!existingRoleNames.contains(roleName)) {
-                        rolesToAdd.add(role);
-                    } else {
-                        System.out.printf("Role already assigned: %s%n", roleName);
-                    }
-                }
-
-                if (rolesToAdd.isEmpty()) {
-                    System.out.println("No new roles to add.");
-                } else if (SIMULATION_MODE) {
-                    System.out.printf("[SIMULATION] Would add roles %s to user %s%n",
-                            rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
-                            user.getUsername());
-                } else {
-                    userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
-                    System.out.printf("[REAL] Added roles %s to user %s%n",
-                            rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
-                            user.getUsername());
-                }
-
+                f.get();
             } catch (Exception e) {
-                System.err.printf("Error processing user %s: %s%n", entry.username, e.getMessage());
                 e.printStackTrace();
             }
         }
 
+        executor.shutdown();
+
         keycloak.close();
         System.out.println("\nProcessed " + entries.size() + " entries in " + targetEnv.name() + ".");
         System.out.println("Done.");
+    }
+
+    static void processUser(
+            Keycloak keycloak,
+            String realm,
+            String clientUuid,
+            Map<String, RoleRepresentation> clientRoleMap,
+            UserRoleEntry entry
+    ) {
+        try {
+            List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
+            UserRepresentation user = found.stream()
+                    .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (user == null) {
+                System.err.printf("User not found: %s%n", entry.username);
+                return;
+            }
+
+            System.out.printf("\nUser: %s (%s)%n", user.getUsername(), user.getId());
+
+            UserResource userRes = keycloak.realm(realm).users().get(user.getId());
+            List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
+
+            Set<String> existingRoleNames = existingRoles.stream()
+                    .map(RoleRepresentation::getName)
+                    .collect(Collectors.toSet());
+
+            List<RoleRepresentation> rolesToAdd = new ArrayList<>();
+            for (String roleName : entry.roles) {
+                RoleRepresentation role = clientRoleMap.get(roleName);
+
+                if (!existingRoleNames.contains(roleName)) {
+                    rolesToAdd.add(role);
+                } else {
+                    System.out.printf("Role already assigned: %s%n", roleName);
+                }
+            }
+
+            if (rolesToAdd.isEmpty()) {
+                System.out.println("No new roles to add.");
+            } else if (SIMULATION_MODE) {
+                System.out.printf("[SIMULATION] Would add roles %s to user %s%n",
+                        rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
+                        user.getUsername());
+            } else {
+                userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
+                System.out.printf("[REAL] Added roles %s to user %s%n",
+                        rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
+                        user.getUsername());
+            }
+
+        } catch (Exception e) {
+            System.err.printf("Error processing user %s: %s%n", entry.username, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // --- Preflight auth + perms ---
