@@ -1,5 +1,4 @@
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.UserResource;
@@ -19,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("CallToPrintStackTrace")
 public class KeycloakBulkClientRoleAdder {
 
     private static boolean SIMULATION_MODE = true;
@@ -115,7 +115,8 @@ public class KeycloakBulkClientRoleAdder {
         for (UserRoleEntry entry : entries) {
             String finalRealm = realm;
             futures.add(executor.submit(() -> {
-                processUser(keycloak, finalRealm, clientUuid, clientRoleMap, entry);
+                ProcessingContext ctx = new ProcessingContext(keycloak, finalRealm, clientUuid, clientRoleMap);
+                processUser(ctx, entry);
             }));
         }
 
@@ -146,52 +147,52 @@ public class KeycloakBulkClientRoleAdder {
         }
     }
 
-    static void processUser(
-            Keycloak keycloak,
-            String realm,
-            String clientUuid,
-            Map<String, RoleRepresentation> clientRoleMap,
-            UserRoleEntry entry
-    ) {
-        StringBuilder log = new StringBuilder();
-
+    static void processUser(ProcessingContext ctx, UserRoleEntry entry) {
         try {
-            UserRepresentation user = findOrCreateUser(keycloak, realm, entry, log);
-            if (user == null) return;
+            UserRepresentation user = findOrCreateUser(ctx, entry);
+            if (user == null) {
+                flush(ctx.log);
+                return;
+            }
 
-            log.append("\nUser: ").append(user.getUsername())
-                    .append(" (").append(user.getId()).append(")\n");
+            ctx.log("\nUser: " + user.getUsername() + " (" + user.getId() + ")");
 
-            UserResource userRes = keycloak.realm(realm).users().get(user.getId());
-            Set<String> existingRoleNames = getExistingRoleNames(userRes, clientUuid);
+            UserResource userRes = ctx.keycloak.realm(ctx.realm).users().get(user.getId());
 
-            List<RoleRepresentation> rolesToAdd = determineRolesToAdd(clientRoleMap, entry, existingRoleNames, log);
+            Set<String> existingRoleNames = getExistingRoleNames(userRes, ctx.clientUuid);
 
-            applyRoles(clientUuid, rolesToAdd, log, user, userRes);
+            List<RoleRepresentation> rolesToAdd =
+                    determineRolesToAdd(ctx, entry, existingRoleNames);
+
+            applyRoles(ctx, rolesToAdd, user, userRes);
 
         } catch (Exception e) {
-            log.append("Error processing user ")
-                    .append(entry.username)
-                    .append(": ")
-                    .append(e.getMessage())
-                    .append("\n");
+            ctx.log("Error processing user " + entry.username + ": " + e.getMessage());
         }
 
-        flush(log);
+        flush(ctx.log);
     }
 
-    private static void applyRoles(String clientUuid, List<RoleRepresentation> rolesToAdd, StringBuilder log, UserRepresentation user, UserResource userRes) {
+    private static void applyRoles(
+            ProcessingContext ctx,
+            List<RoleRepresentation> rolesToAdd,
+            UserRepresentation user,
+            UserResource userRes
+    ) {
         if (rolesToAdd.isEmpty()) {
-            log.append("No new roles to add.\n");
-        } else if (SIMULATION_MODE) {
-            log.append("[SIMULATION] Would add roles ")
-                    .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
-                    .append(" to user ").append(user.getUsername()).append("\n");
+            ctx.log("No new roles to add.");
+            return;
+        }
+
+        String roleNames = rolesToAdd.stream()
+                .map(RoleRepresentation::getName)
+                .collect(Collectors.joining(", "));
+
+        if (SIMULATION_MODE) {
+            ctx.log("[SIMULATION] Would add roles " + roleNames + " to user " + user.getUsername());
         } else {
-            userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
-            log.append("[REAL] Added roles ")
-                    .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
-                    .append(" to user ").append(user.getUsername()).append("\n");
+            userRes.roles().clientLevel(ctx.clientUuid).add(rolesToAdd);
+            ctx.log("[REAL] Added roles " + roleNames + " to user " + user.getUsername());
         }
     }
 
@@ -199,30 +200,39 @@ public class KeycloakBulkClientRoleAdder {
     private static Set<String> getExistingRoleNames(UserResource userRes, String clientUuid) {
         List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
 
-        Set<String> existingRoleNames = existingRoles.stream()
+        return existingRoles.stream()
                 .map(RoleRepresentation::getName)
                 .collect(Collectors.toSet());
-        return existingRoleNames;
     }
 
-    @Nonnull
-    private static List<RoleRepresentation> determineRolesToAdd(Map<String, RoleRepresentation> clientRoleMap, UserRoleEntry entry, Set<String> existingRoleNames, StringBuilder log) {
+    private static List<RoleRepresentation> determineRolesToAdd(
+            ProcessingContext ctx,
+            UserRoleEntry entry,
+            Set<String> existingRoleNames
+    ) {
         List<RoleRepresentation> rolesToAdd = new ArrayList<>();
+
         for (String roleName : entry.roles) {
-            RoleRepresentation role = clientRoleMap.get(roleName);
+            RoleRepresentation role = ctx.clientRoleMap.get(roleName);
+
+            if (role == null) {
+                ctx.log("ERROR: Role not found in map: " + roleName);
+                continue;
+            }
 
             if (!existingRoleNames.contains(roleName)) {
                 rolesToAdd.add(role);
             } else {
-                log.append("Role already assigned: ").append(roleName).append("\n");
+                ctx.log("Role already assigned: " + roleName);
             }
         }
+
         return rolesToAdd;
     }
 
-    @Nullable
-    private static UserRepresentation findOrCreateUser(Keycloak keycloak, String realm, UserRoleEntry entry, StringBuilder log) {
-        List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
+    private static UserRepresentation findOrCreateUser(ProcessingContext ctx, UserRoleEntry entry) {
+        List<UserRepresentation> found = ctx.keycloak.realm(ctx.realm).users().search(entry.username, true);
+
         UserRepresentation user = found.stream()
                 .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
                 .findFirst()
@@ -230,41 +240,36 @@ public class KeycloakBulkClientRoleAdder {
 
         if (user == null) {
             if (!CREATE_MISSING_USERS) {
-                log.append("User not found: ").append(entry.username).append("\n");
+                ctx.log("User not found: " + entry.username);
                 return null;
             }
 
             if (SIMULATION_MODE) {
-                log.append("[SIMULATION] Would create user: ").append(entry.username).append("\n");
+                ctx.log("[SIMULATION] Would create user: " + entry.username);
                 return null;
             }
 
-            // REAL + CREATE enabled
             UserRepresentation newUser = new UserRepresentation();
             newUser.setUsername(entry.username);
             newUser.setEnabled(true);
 
             try {
-                keycloak.realm(realm).users().create(newUser);
-                log.append("[REAL] Created user: ").append(entry.username).append("\n");
+                ctx.keycloak.realm(ctx.realm).users().create(newUser);
+                ctx.log("[REAL] Created user: " + entry.username);
 
-                // re-fetch created user
-                List<UserRepresentation> created = keycloak.realm(realm).users().search(entry.username, true);
-                user = created.stream()
+                List<UserRepresentation> created = ctx.keycloak.realm(ctx.realm).users().search(entry.username, true);
+
+                return created.stream()
                         .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
                         .findFirst()
                         .orElse(null);
 
-                if (user == null) {
-                    log.append("ERROR: Failed to re-fetch created user: ").append(entry.username).append("\n");
-                    return null;
-                }
-
             } catch (Exception e) {
-                log.append("ERROR creating user ").append(entry.username).append(": ").append(e.getMessage()).append("\n");
+                ctx.log("ERROR creating user " + entry.username + ": " + e.getMessage());
                 return null;
             }
         }
+
         return user;
     }
 
@@ -331,7 +336,6 @@ public class KeycloakBulkClientRoleAdder {
                 if (trimmed.isEmpty()) continue;
                 String[] parts = trimmed.split(",", 2);
                 if (parts.length < 2) continue;
-                // TODO, let's have error handling to check parts == 2 else error. The file should be perfect.
 
                 String username = parts[0].trim();
                 String rolesPart = parts[1].replaceAll("^\"|\"$", "").trim();
@@ -448,7 +452,6 @@ public class KeycloakBulkClientRoleAdder {
         Map<String, RoleRepresentation> map = new HashMap<>(roleList.size());
         for (RoleRepresentation rr : roleList) {
             map.put(rr.getName(), rr); // keep case sensitivity; KC role names are case-sensitive
-            // TODO: Are Keycloak roles actually case-senstive?
         }
         return map;
     }
@@ -457,7 +460,7 @@ public class KeycloakBulkClientRoleAdder {
         List<String> missing = requestedRoleNames.stream()
                 .filter(r -> !clientRoleMap.containsKey(r))
                 .sorted()
-                .collect(Collectors.toList());
+                .toList();
         if (!missing.isEmpty()) {
             System.err.println(RED + "Missing roles on client '" + clientId + "':" + RESET);
             missing.forEach(r -> System.err.println("  - " + r));
@@ -470,5 +473,26 @@ public class KeycloakBulkClientRoleAdder {
         return entries.stream()
                 .flatMap(e -> e.roles.stream())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    static class ProcessingContext {
+        final Keycloak keycloak;
+        final String realm;
+        final String clientUuid;
+        final Map<String, RoleRepresentation> clientRoleMap;
+
+        final StringBuilder log = new StringBuilder();
+
+        ProcessingContext(Keycloak keycloak, String realm, String clientUuid,
+                          Map<String, RoleRepresentation> clientRoleMap) {
+            this.keycloak = keycloak;
+            this.realm = realm;
+            this.clientUuid = clientUuid;
+            this.clientRoleMap = clientRoleMap;
+        }
+
+        void log(String msg) {
+            log.append(msg).append("\n");
+        }
     }
 }
