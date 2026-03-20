@@ -79,18 +79,7 @@ public class KeycloakBulkClientRoleAdder {
         }
     }
 
-    static class CliConfig {
-        final String inputFilePath;
-        final String env;
-        final String realm;
-        final String clientId;
-
-        CliConfig(String inputFilePath, String env, String realm, String clientId) {
-            this.inputFilePath = inputFilePath;
-            this.env = env;
-            this.realm = realm;
-            this.clientId = clientId;
-        }
+    record CliConfig(String inputFilePath, String env, String realm, String clientId) {
     }
 
     static CliConfig parseArgs(String[] args) {
