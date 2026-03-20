@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class KeycloakBulkClientRoleAdder {
 
     private static boolean SIMULATION_MODE = true;
+    private static boolean CREATE_MISSING_USERS = false;
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
     private static final String GREEN = "\u001B[32m";
@@ -46,6 +47,9 @@ public class KeycloakBulkClientRoleAdder {
             }
             if (args[i].equalsIgnoreCase("--real")) {
                 SIMULATION_MODE = false;
+            }
+            if (args[i].equalsIgnoreCase("--create-missing-users")) {
+                CREATE_MISSING_USERS = true;
             }
         }
 
@@ -153,9 +157,45 @@ public class KeycloakBulkClientRoleAdder {
                     .orElse(null);
 
             if (user == null) {
-                log.append("User not found: ").append(entry.username).append("\n");
-                flush(log);
-                return;
+                if (!CREATE_MISSING_USERS) {
+                    log.append("User not found: ").append(entry.username).append("\n");
+                    flush(log);
+                    return;
+                }
+
+                if (SIMULATION_MODE) {
+                    log.append("[SIMULATION] Would create user: ").append(entry.username).append("\n");
+                    flush(log);
+                    return;
+                }
+
+                // REAL + CREATE enabled
+                UserRepresentation newUser = new UserRepresentation();
+                newUser.setUsername(entry.username);
+                newUser.setEnabled(true);
+
+                try {
+                    keycloak.realm(realm).users().create(newUser);
+                    log.append("[REAL] Created user: ").append(entry.username).append("\n");
+
+                    // re-fetch created user
+                    List<UserRepresentation> created = keycloak.realm(realm).users().search(entry.username, true);
+                    user = created.stream()
+                            .filter(u -> entry.username.equalsIgnoreCase(u.getUsername()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (user == null) {
+                        log.append("ERROR: Failed to re-fetch created user: ").append(entry.username).append("\n");
+                        flush(log);
+                        return;
+                    }
+
+                } catch (Exception e) {
+                    log.append("ERROR creating user ").append(entry.username).append(": ").append(e.getMessage()).append("\n");
+                    flush(log);
+                    return;
+                }
             }
 
             log.append("\nUser: ").append(user.getUsername())
