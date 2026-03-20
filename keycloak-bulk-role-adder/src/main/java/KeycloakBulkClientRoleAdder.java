@@ -143,6 +143,8 @@ public class KeycloakBulkClientRoleAdder {
             Map<String, RoleRepresentation> clientRoleMap,
             UserRoleEntry entry
     ) {
+        StringBuilder log = new StringBuilder();
+
         try {
             List<UserRepresentation> found = keycloak.realm(realm).users().search(entry.username, true);
             UserRepresentation user = found.stream()
@@ -151,11 +153,13 @@ public class KeycloakBulkClientRoleAdder {
                     .orElse(null);
 
             if (user == null) {
-                System.err.printf("User not found: %s%n", entry.username);
+                log.append("User not found: ").append(entry.username).append("\n");
+                flush(log);
                 return;
             }
 
-            System.out.printf("\nUser: %s (%s)%n", user.getUsername(), user.getId());
+            log.append("\nUser: ").append(user.getUsername())
+                    .append(" (").append(user.getId()).append(")\n");
 
             UserResource userRes = keycloak.realm(realm).users().get(user.getId());
             List<RoleRepresentation> existingRoles = userRes.roles().clientLevel(clientUuid).listEffective();
@@ -171,27 +175,36 @@ public class KeycloakBulkClientRoleAdder {
                 if (!existingRoleNames.contains(roleName)) {
                     rolesToAdd.add(role);
                 } else {
-                    System.out.printf("Role already assigned: %s%n", roleName);
+                    log.append("Role already assigned: ").append(roleName).append("\n");
                 }
             }
 
             if (rolesToAdd.isEmpty()) {
-                System.out.println("No new roles to add.");
+                log.append("No new roles to add.\n");
             } else if (SIMULATION_MODE) {
-                System.out.printf("[SIMULATION] Would add roles %s to user %s%n",
-                        rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
-                        user.getUsername());
+                log.append("[SIMULATION] Would add roles ")
+                        .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
+                        .append(" to user ").append(user.getUsername()).append("\n");
             } else {
                 userRes.roles().clientLevel(clientUuid).add(rolesToAdd);
-                System.out.printf("[REAL] Added roles %s to user %s%n",
-                        rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")),
-                        user.getUsername());
+                log.append("[REAL] Added roles ")
+                        .append(rolesToAdd.stream().map(RoleRepresentation::getName).collect(Collectors.joining(", ")))
+                        .append(" to user ").append(user.getUsername()).append("\n");
             }
 
         } catch (Exception e) {
-            System.err.printf("Error processing user %s: %s%n", entry.username, e.getMessage());
-            e.printStackTrace();
+            log.append("Error processing user ")
+                    .append(entry.username)
+                    .append(": ")
+                    .append(e.getMessage())
+                    .append("\n");
         }
+
+        flush(log);
+    }
+
+    static synchronized void flush(StringBuilder log) {
+        System.out.print(log.toString());
     }
 
     // --- Preflight auth + perms ---
